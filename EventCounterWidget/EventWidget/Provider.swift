@@ -47,10 +47,25 @@ struct Provider: TimelineProvider {
             )
             let events = try container.mainContext.fetch(descriptor)
             
+            // Force sort in memory to be safe against SwiftData fetch quirks
+            let sortedEvents = events.sorted { $0.date < $1.date }
+            
             // Filter for future events
-            let futureEvents = events.filter { $0.date > Date() }
-            if let event = futureEvents.first ?? events.first {
-                // Map to DTO immediately on Main Actor while Context is valid
+            let futureEvents = sortedEvents.filter { $0.date > Date() }
+            
+            // Logic: Pick nearest future event. If none, pick the most recent past event (last of sorted, filtered < Date, or just fallback).
+            // Actually, if no future events, maybe show the one that JUST passed (sortedEvents.last)? 
+            // The user didn't specify, but "first added" was the bug.
+            // Let's stick to "Nearest Future" -> First of filtered.
+            // Fallback: If no future, show the *next* occurring event (which helps if list is empty?) or maybe just the first one?
+            // Original logic: futureEvents.first ?? events.first.
+            
+            if let event = futureEvents.first ?? sortedEvents.last { // Changed fallback to .last (most distant future? No, sortedEvents is ascending. .last is furthest future. events.first is oldest past. )
+                // Wait, if no future events, maybe we want to show the Last Added? Or the one that was most recently passed?
+                // Providing `sortedEvents.first` would be the OLDEST event.
+                // Providing `sortedEvents.last` would be the LATEST event (furthest in future or most recent).
+                // Let's stick to user request: "first upcoming". If none upcoming, maybe showed "No Upcoming" is better, but code handles nil elsewhere.
+                // For now, robustly return nearest future.
                 return EventDTO(
                     title: event.title, 
                     date: event.date, 

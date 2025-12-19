@@ -1,13 +1,14 @@
 import SwiftUI
 import SwiftData
 import Foundation
+import WidgetKit
 
 struct EventListView: View {
     @Query() private var events: [Event]
     @Environment(\.modelContext) private var modelContext
     @State private var showingAddEvent = false
 
-    @State private var showingSettings = false
+
 
     var body: some View {
         NavigationStack {
@@ -24,12 +25,9 @@ struct EventListView: View {
             .navigationTitle("Events")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: { showingSettings = true }) {
+                    NavigationLink(destination: SettingsView()) {
                         Image(systemName: "gear")
                     }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
                 }
                 ToolbarItem {
                     Button(action: { showingAddEvent = true }) {
@@ -40,9 +38,6 @@ struct EventListView: View {
             .sheet(isPresented: $showingAddEvent) {
                 AddEventView()
             }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-            }
         }
     }
 
@@ -51,6 +46,8 @@ struct EventListView: View {
             for index in offsets {
                 modelContext.delete(events[index])
             }
+            try? modelContext.save() // Force write to disk
+            WidgetCenter.shared.reloadAllTimelines()
         }
     }
 }

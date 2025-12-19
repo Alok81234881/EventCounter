@@ -36,9 +36,12 @@ struct EventCounterApp: App {
         }
     }()
 
+    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+
     var body: some Scene {
         WindowGroup {
             EventListView()
+                .preferredColorScheme(appTheme == .system ? nil : (appTheme == .dark ? .dark : .light))
         }
         .modelContainer(sharedModelContainer)
     }

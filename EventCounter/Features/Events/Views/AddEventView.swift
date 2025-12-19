@@ -1,10 +1,13 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 import UIKit
 
 struct AddEventView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    
+    var eventToEdit: Event?
     
     @State private var title = ""
     @State private var date = Date()
@@ -43,7 +46,7 @@ struct AddEventView: View {
                         .lineLimit(3...5)
                 }
             }
-            .navigationTitle("New Event")
+            .navigationTitle(eventToEdit == nil ? "New Event" : "Edit Event")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -58,6 +61,16 @@ struct AddEventView: View {
                     .disabled(title.isEmpty)
                 }
             }
+            .onAppear {
+                if let event = eventToEdit {
+                    title = event.title
+                    date = event.date
+                    category = event.category
+                    selectedColor = Color(hex: event.colorHex) ?? .blue
+                    isPinned = event.isPinned
+                    note = event.note ?? ""
+                }
+            }
         }
     }
     
@@ -65,16 +78,33 @@ struct AddEventView: View {
         // Convert Color to Hex String
         let hex = selectedColor.toHex() ?? "#0000FF"
         
-        let newEvent = Event(
-            title: title,
-            date: date,
-            note: note.isEmpty ? nil : note,
-            category: category,
-            colorHex: hex,
-            isPinned: isPinned
-        )
+        if let event = eventToEdit {
+            event.title = title
+            event.date = date
+            event.category = category
+            event.colorHex = hex
+            event.isPinned = isPinned
+            event.note = note.isEmpty ? nil : note
+            
+            // Scheduling notification if needed is handled in EventDetailView via property observers or needs to be re-triggered here.
+            // For now, assuming basic update.
+            if let _ = event.notifyBefore {
+                 NotificationService.shared.scheduleNotification(for: event)
+            }
+        } else {
+            let newEvent = Event(
+                title: title,
+                date: date,
+                note: note.isEmpty ? nil : note,
+                category: category,
+                colorHex: hex,
+                isPinned: isPinned
+            )
+            modelContext.insert(newEvent)
+        }
         
-        modelContext.insert(newEvent)
+        try? modelContext.save() // Force write to disk
+        WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
 }

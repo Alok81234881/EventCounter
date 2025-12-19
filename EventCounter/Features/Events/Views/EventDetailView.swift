@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import WidgetKit
 
 struct EventDetailView: View {
     @Bindable var event: Event
@@ -105,10 +106,24 @@ struct EventDetailView: View {
         }
         .navigationTitle("")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Edit") {
+                    showingEditSheet = true
+                }
+            }
+        }
+        .sheet(isPresented: $showingEditSheet) {
+            AddEventView(eventToEdit: event)
+        }
     }
+    
+    @State private var showingEditSheet = false
     
     private func deleteEvent() {
         modelContext.delete(event)
+        try? modelContext.save() // Force write to disk before widget reloads
+        WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
 }
