@@ -4,23 +4,65 @@ import Foundation
 import WidgetKit
 
 struct EventListView: View {
-    @Query() private var events: [Event]
+    @Query(sort: \Event.date) private var events: [Event]
     @Environment(\.modelContext) private var modelContext
     @State private var showingAddEvent = false
 
-
+    private func upcomingEvents(at date: Date) -> [Event] {
+        events.filter { $0.date > date }
+    }
+    
+    private func passedEvents(at date: Date) -> [Event] {
+        // Show recent passed events first
+        events.filter { $0.date <= date }.reversed()
+    }
 
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(events) { event in
-                    NavigationLink {
-                        EventDetailView(event: event)
-                    } label: {
-                        EventCardView(event: event)
+            TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
+                let now = timeline.date
+                let upcoming = upcomingEvents(at: now)
+                let passed = passedEvents(at: now)
+                
+                List {
+                    if !upcoming.isEmpty {
+                        Section("Upcoming Events") {
+                            ForEach(upcoming) { event in
+                                NavigationLink {
+                                    EventDetailView(event: event)
+                                } label: {
+                                    EventCardView(event: event)
+                                }
+                            }
+                            .onDelete { offsets in
+                                deleteItems(offsets: offsets, from: upcoming)
+                            }
+                        }
+                    }
+                    
+                    if !passed.isEmpty {
+                        Section("Passed Events") {
+                            ForEach(passed) { event in
+                                NavigationLink {
+                                    EventDetailView(event: event)
+                                } label: {
+                                    EventCardView(event: event)
+                                }
+                            }
+                            .onDelete { offsets in
+                                deleteItems(offsets: offsets, from: passed)
+                            }
+                        }
+                    }
+                    
+                    if upcoming.isEmpty && passed.isEmpty {
+                        ContentUnavailableView(
+                            "No Events",
+                            systemImage: "calendar.badge.plus",
+                            description: Text("Tap the + button to add your first countdown!")
+                        )
                     }
                 }
-                .onDelete(perform: deleteItems)
             }
             .navigationTitle("Events")
             .toolbar {
@@ -41,12 +83,13 @@ struct EventListView: View {
         }
     }
 
-    private func deleteItems(offsets: IndexSet) {
+    private func deleteItems(offsets: IndexSet, from dataSource: [Event]) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(events[index])
+                let eventToDelete = dataSource[index]
+                modelContext.delete(eventToDelete)
             }
-            try? modelContext.save() // Force write to disk
+            try? modelContext.save()
             WidgetCenter.shared.reloadAllTimelines()
         }
     }
