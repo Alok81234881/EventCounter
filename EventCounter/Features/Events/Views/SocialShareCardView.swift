@@ -49,9 +49,9 @@ struct SocialShareCardView: View {
                 
                 // Countdown Display
                 HStack(spacing: 20) {
-                    TimeUnitView(value: components.days, unit: "DAYS")
-                    TimeUnitView(value: components.hours, unit: "HOURS")
-                    TimeUnitView(value: components.minutes, unit: "MINS")
+                    SocialTimeUnitView(value: components.days, unit: "DAYS")
+                    SocialTimeUnitView(value: components.hours, unit: "HOURS")
+                    SocialTimeUnitView(value: components.minutes, unit: "MINS")
                 }
                 .padding(.bottom, 40)
                 
@@ -70,24 +70,24 @@ struct SocialShareCardView: View {
     }
 }
 
-//private struct TimeUnitView: View {
-//    let value: Int
-//    let unit: String
-//    
-//    var body: some View {
-//        VStack(spacing: 4) {
-//            Text("\(value)")
-//                .font(.system(size: 34, weight: .bold, design: .monospaced))
-//                .foregroundColor(.white)
-//            Text(unit)
-//                .font(.system(size: 10, weight: .bold))
-//                .foregroundColor(.white.opacity(0.6))
-//        }
-//        .frame(minWidth: 70)
-//        .padding(.vertical, 12)
-//        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.15)))
-//    }
-//}
+private struct SocialTimeUnitView: View {
+    let value: Int
+    let unit: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("\(value)")
+                .font(.system(size: 34, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+            Text(unit)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.white.opacity(0.6))
+        }
+        .frame(minWidth: 70)
+        .padding(.vertical, 12)
+        .background(RoundedRectangle(cornerRadius: 12).fill(.white.opacity(0.15)))
+    }
+}
 
 #Preview {
     SocialShareCardView(

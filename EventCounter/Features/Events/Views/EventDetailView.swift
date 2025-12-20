@@ -111,64 +111,72 @@ struct EventDetailView: View {
                                     }
                                 ))
                                 
-                                HStack {
-                                    Text("Notify 15 mins before")
-                                    Spacer()
-                                    Toggle("", isOn: Binding(
-                                        get: { event.notifyBefore != nil },
-                                        set: { isOn in
-                                            event.notifyBefore = isOn ? 15 : nil
-                                            NotificationService.shared.scheduleNotification(for: event)
-                                            try? modelContext.save()
-                                            WidgetCenter.shared.reloadAllTimelines()
-                                        }
-                                    ))
-                                }
+                                // ))
                             }
-                            .padding()
-                            .background(Color(uiColor: .systemBackground))
-                            .cornerRadius(12)
-                            .shadow(radius: 2)
-                            .padding(.horizontal)
                             
-                            Spacer()
-                            
+                            Picker("Reminder", selection: Binding(
+                                get: { event.notifyBefore },
+                                set: { newValue in
+                                    event.notifyBefore = newValue
+                                    NotificationService.shared.scheduleNotification(for: event)
+                                    try? modelContext.save()
+                                    WidgetCenter.shared.reloadAllTimelines()
+                                }
+                            )) {
+                                Text("None").tag(nil as Int?)
+                                Text("At time of event").tag(0 as Int?)
+                                Text("5 minutes before").tag(5 as Int?)
+                                Text("15 minutes before").tag(15 as Int?)
+                                Text("30 minutes before").tag(30 as Int?)
+                                Text("1 hour before").tag(60 as Int?)
+                                Text("1 day before").tag(1440 as Int?)
+                                Text("1 week before").tag(10080 as Int?)
+                            }
+                        }
+                        .padding()
+                        .background(Color(uiColor: .systemBackground))
+                        .cornerRadius(12)
+                        .shadow(radius: 2)
+                        .padding(.horizontal)
+                        
+                        Spacer()
+                        
+                        Button(role: .destructive) {
+                            LiveActivityService.shared.endLiveActivity(for: event.id)
+                            deleteEvent()
+                        } label: {
+                            Label("Delete Event", systemImage: "trash")
+                        }
+                        .padding(.bottom)
+                        
+                        if Activity<EventActivityAttributes>.activities.contains(where: { $0.attributes.eventID == event.id }) {
                             Button(role: .destructive) {
                                 LiveActivityService.shared.endLiveActivity(for: event.id)
-                                deleteEvent()
                             } label: {
-                                Label("Delete Event", systemImage: "trash")
+                                Label("Stop Live Activity", systemImage: "stop.circle")
+                                    .frame(maxWidth: .infinity)
                             }
+                            .buttonStyle(.bordered)
+                            .padding(.horizontal)
                             .padding(.bottom)
-                            
-                            if Activity<EventActivityAttributes>.activities.contains(where: { $0.attributes.eventID == event.id }) {
-                                Button(role: .destructive) {
-                                    LiveActivityService.shared.endLiveActivity(for: event.id)
-                                } label: {
-                                    Label("Stop Live Activity", systemImage: "stop.circle")
-                                        .frame(maxWidth: .infinity)
+                        } else {
+                            Button {
+                                if !LiveActivityService.shared.startLiveActivity(for: event) {
+                                    showingLiveActivityAlert = true
                                 }
-                                .buttonStyle(.bordered)
-                                .padding(.horizontal)
-                                .padding(.bottom)
-                            } else {
-                                Button {
-                                    if !LiveActivityService.shared.startLiveActivity(for: event) {
-                                        showingLiveActivityAlert = true
-                                    }
-                                } label: {
-                                    Label("Track Live Activity", systemImage: "timer")
-                                        .frame(maxWidth: .infinity)
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .padding(.horizontal)
-                                .padding(.bottom)
+                            } label: {
+                                Label("Track Live Activity", systemImage: "timer")
+                                    .frame(maxWidth: .infinity)
                             }
+                            .buttonStyle(.borderedProminent)
+                            .padding(.horizontal)
+                            .padding(.bottom)
                         }
                     }
                 }
             }
         }
+        
         
         .alert("Activity Already Running", isPresented: $showingLiveActivityAlert) {
             Button("Cancel", role: .cancel) { }
@@ -214,6 +222,7 @@ struct EventDetailView: View {
             AddEventView(eventToEdit: event)
         }
     }
+    
     
     @MainActor
     private func renderShareImage() -> UIImage? {

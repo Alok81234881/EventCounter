@@ -18,6 +18,7 @@ struct AddEventView: View {
     @State private var isPinned = false
     @State private var note = ""
     @State private var recurrence: RecurrenceType = .once
+    @State private var notifyBefore: Int? = 15
     
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImageData: Data?
@@ -101,6 +102,17 @@ struct AddEventView: View {
                 Section("Appearance") {
                     ColorPicker("Event Color", selection: $selectedColor)
                     Toggle("Pin to Top", isOn: $isPinned)
+                    
+                    Picker("Reminder", selection: $notifyBefore) {
+                        Text("None").tag(nil as Int?)
+                        Text("At time of event").tag(0 as Int?)
+                        Text("5 minutes before").tag(5 as Int?)
+                        Text("15 minutes before").tag(15 as Int?)
+                        Text("30 minutes before").tag(30 as Int?)
+                        Text("1 hour before").tag(60 as Int?)
+                        Text("1 day before").tag(1440 as Int?)
+                        Text("1 week before").tag(10080 as Int?)
+                    }
                 }
                 
                 Section("Notes") {
@@ -132,6 +144,7 @@ struct AddEventView: View {
                     isPinned = event.isPinned
                     note = event.note ?? ""
                     recurrence = event.recurrence
+                    notifyBefore = event.notifyBefore
                     selectedImageData = event.imageData
                 }
             }
@@ -158,13 +171,11 @@ struct AddEventView: View {
             event.isPinned = isPinned
             event.note = note.isEmpty ? nil : note
             event.recurrence = recurrence
+            event.notifyBefore = notifyBefore
             event.imageData = selectedImageData
             
-            // Scheduling notification if needed is handled in EventDetailView via property observers or needs to be re-triggered here.
-            // For now, assuming basic update.
-            if let _ = event.notifyBefore {
-                 NotificationService.shared.scheduleNotification(for: event)
-            }
+            // Scheduling notification
+            NotificationService.shared.scheduleNotification(for: event)
         } else {
             let newEvent = Event(
                 title: title,
@@ -173,10 +184,12 @@ struct AddEventView: View {
                 category: category,
                 colorHex: hex,
                 isPinned: isPinned,
+                notifyBefore: notifyBefore,
                 imageData: selectedImageData,
                 recurrence: recurrence
             )
             modelContext.insert(newEvent)
+            NotificationService.shared.scheduleNotification(for: newEvent)
         }
         
         try? modelContext.save() // Force write to disk

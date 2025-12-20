@@ -38,33 +38,57 @@ class NotificationService: NSObject, ObservableObject {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             guard settings.authorizationStatus == .authorized else { return }
             
-            guard let notifyMinutes = event.notifyBefore else {
-                // Cancel if disabled
-                self.cancelNotification(for: event)
-                return
+            // Cancel existing notifications for this event
+            self.cancelNotification(for: event)
+            
+            if let notifyMinutes = event.notifyBefore {
+                self.scheduleSpecificNotification(for: event, minutesBefore: notifyMinutes)
             }
-            
-            // Calculate trigger date: Event Date - Minutes
-            guard let triggerDate = Calendar.current.date(byAdding: .minute, value: -notifyMinutes, to: event.date),
-                  triggerDate > Date() else {
-                return
-            }
-            
-            let content = UNMutableNotificationContent()
-            content.title = "Event Reminder"
-            content.body = "\(event.title) is in \(notifyMinutes) minutes!"
-            content.sound = .default
-            
-            let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
-            let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-            
-            let request = UNNotificationRequest(identifier: event.id.uuidString, content: content, trigger: trigger)
-            
-            UNUserNotificationCenter.current().add(request)
         }
     }
     
+    private func scheduleSpecificNotification(for event: Event, minutesBefore: Int) {
+        guard let triggerDate = Calendar.current.date(byAdding: .minute, value: -minutesBefore, to: event.date),
+              triggerDate > Date() else {
+            return
+        }
+        
+        let content = UNMutableNotificationContent()
+        content.title = "Event Reminder"
+        
+        // Dynamic label based on minutes
+        let label: String
+        if minutesBefore == 0 {
+            label = "Now"
+        } else if minutesBefore < 60 {
+            label = "\(minutesBefore) minutes"
+        } else if minutesBefore < 1440 {
+            label = "\(minutesBefore / 60) hour\(minutesBefore / 60 == 1 ? "" : "s")"
+        } else if minutesBefore < 10080 {
+            label = "\(minutesBefore / 1440) day\(minutesBefore / 1440 == 1 ? "" : "s")"
+        } else {
+            label = "\(minutesBefore / 10080) week\(minutesBefore / 10080 == 1 ? "" : "s")"
+        }
+        
+        content.body = minutesBefore == 0 ? "\(event.title) is happening now!" : "\(event.title) is in \(label)!"
+        content.sound = .default
+        
+        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
+        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        
+        let identifier = event.id.uuidString
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        UNUserNotificationCenter.current().add(request)
+    }
+    
     func cancelNotification(for event: Event) {
-        UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: [event.id.uuidString])
+        let baseID = event.id.uuidString
+        
+        // Cancel the main ID and any older staged IDs from the previous version
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            let relatedIDs = requests.filter { $0.identifier.hasPrefix(baseID) }.map { $0.identifier }
+            UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: relatedIDs)
+        }
     }
 }
