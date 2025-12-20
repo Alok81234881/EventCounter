@@ -2,6 +2,7 @@ import SwiftUI
 import SwiftData
 import WidgetKit
 import UIKit
+import PhotosUI
 
 struct AddEventView: View {
     @Environment(\.modelContext) private var modelContext
@@ -15,6 +16,10 @@ struct AddEventView: View {
     @State private var selectedColor = Color.blue
     @State private var isPinned = false
     @State private var note = ""
+    @State private var recurrence: RecurrenceType = .once
+    
+    @State private var selectedItem: PhotosPickerItem?
+    @State private var selectedImageData: Data?
     
     // Mapping Colors to Hex for simplicity.
     private let availableColors: [Color] = [.blue, .red, .green, .orange, .purple, .pink, .yellow]
@@ -25,6 +30,39 @@ struct AddEventView: View {
                 Section("Event Details") {
                     TextField("Title", text: $title)
                     DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                    Picker("Repeats", selection: $recurrence) {
+                        ForEach(RecurrenceType.allCases, id: \.self) { type in
+                            Text(type.rawValue).tag(type)
+                        }
+                    }
+                }
+                
+                Section("Image") {
+                    if let selectedImageData, let uiImage = UIImage(data: selectedImageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(height: 200)
+                            .listRowInsets(EdgeInsets())
+                            .clipped()
+                    }
+                    
+                    PhotosPicker(selection: $selectedItem, matching: .images) {
+                        Label(selectedImageData == nil ? "Select Image" : "Change Image", systemImage: "photo")
+                    }
+                    .onChange(of: selectedItem) { newItem in
+                        Task {
+                            if let data = try? await newItem?.loadTransferable(type: Data.self) {
+                                if let originalImage = UIImage(data: data),
+                                   let resized = originalImage.resized(to: CGSize(width: 500, height: 500)),
+                                   let resizedData = resized.jpegData(compressionQuality: 0.8) {
+                                    selectedImageData = resizedData
+                                } else {
+                                    selectedImageData = data // fallback if resizing fails
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 Section("Category") {
@@ -69,6 +107,8 @@ struct AddEventView: View {
                     selectedColor = Color(hex: event.colorHex) ?? .blue
                     isPinned = event.isPinned
                     note = event.note ?? ""
+                    recurrence = event.recurrence
+                    selectedImageData = event.imageData
                 }
             }
         }
@@ -85,6 +125,8 @@ struct AddEventView: View {
             event.colorHex = hex
             event.isPinned = isPinned
             event.note = note.isEmpty ? nil : note
+            event.recurrence = recurrence
+            event.imageData = selectedImageData
             
             // Scheduling notification if needed is handled in EventDetailView via property observers or needs to be re-triggered here.
             // For now, assuming basic update.
@@ -98,7 +140,9 @@ struct AddEventView: View {
                 note: note.isEmpty ? nil : note,
                 category: category,
                 colorHex: hex,
-                isPinned: isPinned
+                isPinned: isPinned,
+                imageData: selectedImageData,
+                recurrence: recurrence
             )
             modelContext.insert(newEvent)
         }
@@ -120,5 +164,22 @@ extension Color {
         let b = components.count >= 3 ? components[2] : r
         
         return String(format: "#%02X%02X%02X", Int(r * 255), Int(g * 255), Int(b * 255))
+    }
+}
+
+extension UIImage {
+    func resized(to maxSize: CGSize) -> UIImage? {
+        let aspectRatio = size.width / size.height
+        var newSize = maxSize
+        if aspectRatio > 1 {
+            newSize.height = maxSize.width / aspectRatio
+        } else {
+            newSize.width = maxSize.height * aspectRatio
+        }
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+        draw(in: CGRect(origin: .zero, size: newSize))
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return newImage
     }
 }

@@ -12,7 +12,7 @@ struct EventWidgetEntryView : View {
                 case .systemSmall:
                     SmallEventView(event: event)
                 case .systemMedium:
-                    MediumEventView(event: event)
+                    MediumEventView(event: event, entryDate: entry.date)
                 default:
                     SmallEventView(event: event)
                 }
@@ -42,17 +42,24 @@ struct SmallEventView: View {
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
             // Icon
+            // Icon or Image
             ZStack {
-                Circle()
-                    .fill(Color(event.colorHex) ?? .blue)
-                    .opacity(0.2)
-                    .frame(width: 40, height: 40)
-                Image(systemName: event.categoryIcon)
-                    .foregroundStyle(Color(event.colorHex) ?? .blue)
-                    .font(.system(size: 18))
+//                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+//                    Image(uiImage: uiImage)
+//                        .resizable()
+//                        .scaledToFill()
+//                        .frame(width: 40, height: 40)
+//                        .clipShape(Circle())
+//                } else {
+                    Circle()
+                        .fill(Color(event.colorHex) ?? .blue)
+                        .opacity(0.2)
+                        .frame(width: 40, height: 40)
+                    Image(systemName: event.categoryIcon)
+                        .foregroundStyle(Color(event.colorHex) ?? .blue)
+                        .font(.system(size: 18))
+               // }
             }
-            
-          
             
             // Name
             Text(event.title)
@@ -62,14 +69,30 @@ struct SmallEventView: View {
             // Date (No Timer)
             Label {
                 Text(event.date.formatted(date: .abbreviated, time: .omitted))
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             } icon: {
                 Image(systemName: "calendar")
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             }
-            .padding(.leading , -10)
+            
+            let entryDate = Date() // Fallback for small view if not passed
+            let components = CountdownService.calculateComponents(from: entryDate, to: event.date)
+
+            if components.isPast {
+                Text("Event Passed")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if components.days > 0 {
+                WidgetTimeUnitView(value: components.days, unit: "Days")
+            } else {
+                Text(event.date, style: .timer)
+                    .font(.title3)
+                    .bold()
+                    .monospacedDigit()
+                    .multilineTextAlignment(.center)
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -78,25 +101,41 @@ struct SmallEventView: View {
 
 struct MediumEventView: View {
     let event: EventDTO
+    // Pass the entry date to ensure accurate snapshot calculation
+    var entryDate: Date = Date()
     
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 8) {
-                ZStack {
-                    Circle()
-                        .fill(Color(event.colorHex) ?? .blue)
-                        .opacity(0.2)
-                        .frame(width: 32, height: 32)
-                    Image(systemName: event.categoryIcon)
-                        .foregroundStyle(Color(event.colorHex) ?? .blue)
-                        .font(.system(size: 14))
-                }
+               // ZStack {
+//                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+//                        Image(uiImage: uiImage)
+//                            .resizable()
+//                            .scaledToFill()
+//                            .frame(width: 130, height: 130)
+//                            //.clipShape(Circle())
+//                            .padding(.top, 5)
+//                    }
+               // }
                 
                 Text(event.title)
                     .font(.system(size: 20))
                     .lineLimit(1)
                 
                 // Footer: Date
+               
+               // Spacer()
+                
+            }
+            .padding(.bottom, 20)
+            
+            Spacer()
+            
+            // Card: "Time Remaining"
+            // Use entryDate for widget snapshot consistency
+            let components = CountdownService.calculateComponents(from: entryDate, to: event.date)
+            
+            VStack(spacing: 8) {
                 Label {
                     Text(event.date.formatted(date: .abbreviated, time: .omitted))
                         .font(.caption)
@@ -106,26 +145,27 @@ struct MediumEventView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Spacer()
+                if components.isPast {
+                    Text("Event Passed")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Time Remaining")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .textCase(.uppercase)
+                }
                 
-            }
-            .padding(.bottom, 20)
-            
-            Spacer()
-            
-            // Card: "Time Remaining"
-            let components = CountdownService.calculateComponents(from: Date(), to: event.date)
-            
-            VStack(spacing: 8) {
-                Text(components.isPast ? "Event Passed" : "Time Remaining")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .textCase(.uppercase)
-                
-                HStack(spacing: 12) {
+                if components.isPast {
+                    // Show nothing more if past
+                    EmptyView()
+                } else if components.days > 0 {
                     WidgetTimeUnitView(value: components.days, unit: "Days")
-                    WidgetTimeUnitView(value: components.hours, unit: "Hrs")
-                    WidgetTimeUnitView(value: components.minutes, unit: "Mins")
+                } else {
+                    Text(event.date, style: .timer)
+                        .font(.title3)
+                        .bold()
+                        .monospacedDigit()
                 }
             }
             .frame(width: 150, height: 90)
@@ -158,12 +198,12 @@ struct WidgetTimeUnitView: View {
 #Preview(as: .systemMedium) {
     EventWidget()
 } timeline: {
-    SimpleEntry(date: .now, event: EventDTO.preview)
-    SimpleEntry(date: .now, event: nil)
+    SimpleEntry(date: .now, event: EventDTO.preview, futureEventCount: 6)
+    SimpleEntry(date: .now, event: nil, futureEventCount: 7)
 }
 
 #Preview(as: .systemSmall) {
     EventWidget()
 } timeline: {
-    SimpleEntry(date: .now, event: EventDTO.preview)
+    SimpleEntry(date: .now, event: EventDTO.preview, futureEventCount: 7)
 }

@@ -8,13 +8,21 @@ struct EventCardView: View {
     var body: some View {
         HStack {
             ZStack {
-                Circle()
-                    .fill(Color(hex: event.colorHex) ?? .blue)
-                    .frame(width: 50, height: 50)
-                    .opacity(0.2)
-                
-                Image(systemName: event.category.icon)
-                    .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 50, height: 50)
+                        .clipShape(Circle())
+                } else {
+                    Circle()
+                        .fill(Color(hex: event.colorHex) ?? .blue)
+                        .frame(width: 50, height: 50)
+                        .opacity(0.2)
+                    
+                    Image(systemName: event.category.icon)
+                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                }
             }
             
             VStack(alignment: .leading) {

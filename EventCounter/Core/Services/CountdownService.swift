@@ -6,6 +6,15 @@ struct CountdownComponents {
     let minutes: Int
     let seconds: Int
     let isPast: Bool
+    
+    var formattedTitle: String {
+        if isPast { return "Event Passed" }
+        if days > 0 {
+            return "\(days) \(days == 1 ? "Day" : "Days")"
+        } else {
+            return "\(hours)h \(minutes)m \(seconds)s"
+        }
+    }
 }
 
 struct CountdownService {

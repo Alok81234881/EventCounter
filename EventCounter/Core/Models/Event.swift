@@ -1,6 +1,14 @@
 import Foundation
 import SwiftData
 
+enum RecurrenceType: String, Codable, CaseIterable {
+    case once = "Once"
+    case daily = "Daily"
+    case weekly = "Weekly"
+    case monthly = "Monthly"
+    case yearly = "Yearly"
+}
+
 @Model
 final class Event {
     @Attribute(.unique) var id: UUID
@@ -13,7 +21,11 @@ final class Event {
     var isPinned: Bool
     var notifyBefore: Int? // minutes
     
-    init(id: UUID = UUID(), title: String, date: Date, note: String? = nil, category: EventCategory = .personal, colorHex: String = "#FF0000", isPinned: Bool = false, notifyBefore: Int? = nil) {
+    // New Properties
+    @Attribute(.externalStorage) var imageData: Data?
+    var recurrence: RecurrenceType = RecurrenceType.once
+    
+    init(id: UUID = UUID(), title: String, date: Date, note: String? = nil, category: EventCategory = .personal, colorHex: String = "#FF0000", isPinned: Bool = false, notifyBefore: Int? = nil, imageData: Data? = nil, recurrence: RecurrenceType = .once) {
         self.id = id
         self.title = title
         self.date = date
@@ -23,5 +35,7 @@ final class Event {
         self.createdAt = Date()
         self.isPinned = isPinned
         self.notifyBefore = notifyBefore
+        self.imageData = imageData
+        self.recurrence = recurrence
     }
 }

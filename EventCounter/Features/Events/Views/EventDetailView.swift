@@ -15,18 +15,27 @@ struct EventDetailView: View {
                 TimelineView(.periodic(from: .now, by: 1.0)) { context in
                     ScrollView {
                         VStack(spacing: 20) {
-                            // Header Icon
-                            ZStack {
-                                Circle()
-                                    .fill(Color(hex: event.colorHex) ?? .blue)
-                                    .frame(width: 100, height: 100)
-                                    .opacity(0.2)
-                                
-                                Image(systemName: event.category.icon)
-                                    .font(.system(size: 40))
-                                    .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                            // Header Image or Icon
+                            if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                                Image(uiImage: uiImage)
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(height: 250)
+                                    .clipped()
+                                    .cornerRadius(12)
+                            } else {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color(hex: event.colorHex) ?? .blue)
+                                        .frame(width: 100, height: 100)
+                                        .opacity(0.2)
+                                    
+                                    Image(systemName: event.category.icon)
+                                        .font(.system(size: 40))
+                                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                                }
+                                .padding(.top, 20)
                             }
-                            .padding(.top, 20)
                             
                             Text(event.title)
                                 .font(.largeTitle)
@@ -43,10 +52,13 @@ struct EventDetailView: View {
                                     .textCase(.uppercase)
                                 
                                 HStack(spacing: 20) {
-                                    TimeUnitView(value: components.days, unit: "Days")
-                                    TimeUnitView(value: components.hours, unit: "Hours")
-                                    TimeUnitView(value: components.minutes, unit: "Mins")
-                                    TimeUnitView(value: components.seconds, unit: "Secs")
+                                    if components.days > 0 {
+                                        TimeUnitView(value: components.days, unit: "Days")
+                                    } else {
+                                        TimeUnitView(value: components.hours, unit: "Hours")
+                                        TimeUnitView(value: components.minutes, unit: "Mins")
+                                        TimeUnitView(value: components.seconds, unit: "Secs")
+                                    }
                                 }
                             }
                             .padding()
@@ -61,6 +73,14 @@ struct EventDetailView: View {
                                     Image(systemName: "calendar")
                                 }
                                 
+                                if event.recurrence != .once {
+                                    Label {
+                                        Text("Repeats \(event.recurrence.rawValue)")
+                                    } icon: {
+                                        Image(systemName: "repeat")
+                                    }
+                                }
+                                
                                 if let note = event.note, !note.isEmpty {
                                     Label {
                                         Text(note)
@@ -71,7 +91,14 @@ struct EventDetailView: View {
                                 
                                 Divider()
                                 
-                                Toggle("Pin to Top", isOn: $event.isPinned)
+                                Toggle("Pin to Top", isOn: Binding(
+                                    get: { event.isPinned },
+                                    set: { isOn in
+                                        event.isPinned = isOn
+                                        try? modelContext.save()
+                                        WidgetCenter.shared.reloadAllTimelines()
+                                    }
+                                ))
                                 
                                 HStack {
                                     Text("Notify 15 mins before")
@@ -81,6 +108,8 @@ struct EventDetailView: View {
                                         set: { isOn in
                                             event.notifyBefore = isOn ? 15 : nil
                                             NotificationService.shared.scheduleNotification(for: event)
+                                            try? modelContext.save()
+                                            WidgetCenter.shared.reloadAllTimelines()
                                         }
                                     ))
                                 }

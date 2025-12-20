@@ -5,30 +5,31 @@ import SwiftData
 struct Provider: TimelineProvider {
     @MainActor
     func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), event: EventDTO.preview)
+        SimpleEntry(date: Date(), event: EventDTO.preview, futureEventCount: 1)
     }
 
     @MainActor
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), event: fetchNextEvent())
+        let (event, count) = fetchNextEventAndCount()
+        let entry = SimpleEntry(date: Date(), event: event, futureEventCount: count)
         completion(entry)
     }
 
     @MainActor
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> ()) {
-        let event = fetchNextEvent()
-        let entryDate = Date()
+        let (event, count) = fetchNextEventAndCount()
         
-        // Update every minute to keep countdown relatively fresh
-        let nextUpdateDate = Calendar.current.date(byAdding: .minute, value: 1, to: entryDate)!
-        let entry = SimpleEntry(date: entryDate, event: event)
+        // Pass the event date to the entry; the widget view will calculate the countdown itself.
+        let entryDate = Date()
+        let entry = SimpleEntry(date: entryDate, event: event, futureEventCount: count)
 
-        let timeline = Timeline(entries: [entry], policy: .after(nextUpdateDate))
+        // Only update timeline when explicitly requested (e.g., after event changes)
+        let timeline = Timeline(entries: [entry], policy: .never)
         completion(timeline)
     }
     
     @MainActor
-    private func fetchNextEvent() -> EventDTO? {
+    private func fetchNextEventAndCount() -> (EventDTO?, Int) {
         // Shared Model Container Logic
         let schema = Schema([Event.self])
         
@@ -47,36 +48,43 @@ struct Provider: TimelineProvider {
             )
             let events = try container.mainContext.fetch(descriptor)
             
-            // Force sort in memory to be safe against SwiftData fetch quirks
-            let sortedEvents = events.sorted { $0.date < $1.date }
-            
-            // Filter for future events
-            let futureEvents = sortedEvents.filter { $0.date > Date() }
-            
-            // Logic: Pick nearest future event. If none, pick the most recent past event (last of sorted, filtered < Date, or just fallback).
-            // Actually, if no future events, maybe show the one that JUST passed (sortedEvents.last)? 
-            // The user didn't specify, but "first added" was the bug.
-            // Let's stick to "Nearest Future" -> First of filtered.
-            // Fallback: If no future, show the *next* occurring event (which helps if list is empty?) or maybe just the first one?
-            // Original logic: futureEvents.first ?? events.first.
-            
-            if let event = futureEvents.first ?? sortedEvents.last { // Changed fallback to .last (most distant future? No, sortedEvents is ascending. .last is furthest future. events.first is oldest past. )
-                // Wait, if no future events, maybe we want to show the Last Added? Or the one that was most recently passed?
-                // Providing `sortedEvents.first` would be the OLDEST event.
-                // Providing `sortedEvents.last` would be the LATEST event (furthest in future or most recent).
-                // Let's stick to user request: "first upcoming". If none upcoming, maybe showed "No Upcoming" is better, but code handles nil elsewhere.
-                // For now, robustly return nearest future.
-                return EventDTO(
-                    title: event.title, 
-                    date: event.date, 
-                    categoryIcon: event.category.icon, 
-                    colorHex: event.colorHex
-                )
+            print("[Widget] All events in store:")
+            for event in events {
+                print("- \(event.title): \(event.date) (isPinned: \(event.isPinned))")
             }
-            return nil
+            
+            let now = Date()
+            
+            // Strictly filter for future events
+            let futureEvents = events.filter { $0.date > now }
+            
+            print("[Widget] Future events:")
+            for event in futureEvents {
+                print("- \(event.title): \(event.date) (isPinned: \(event.isPinned))")
+            }
+            
+            // Priority Logic:
+            // 1. First Pinned event in the future (nearest)
+            // 2. Otherwise, first Unpinned event in the future (nearest)
+            
+            let pinnedUpcoming = futureEvents.filter { $0.isPinned }.sorted { $0.date < $1.date }
+            let normalUpcoming = futureEvents.filter { !$0.isPinned }.sorted { $0.date < $1.date }
+            
+            if let event = pinnedUpcoming.first ?? normalUpcoming.first {
+                print("[Widget] Selected event: \(event.title)")
+                let dto = EventDTO(
+                    title: event.title,
+                    date: event.date,
+                    categoryIcon: event.category.icon,
+                    colorHex: event.colorHex
+                   // imageData: event.imageData
+                )
+                return (dto, futureEvents.count)
+            }
+            return (nil, futureEvents.count)
         } catch {
             print("Widget Fetch Failed: \(error)")
-            return nil
+            return (nil, 0)
         }
     }
 }
@@ -84,6 +92,7 @@ struct Provider: TimelineProvider {
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let event: EventDTO?
+    let futureEventCount: Int // This can be used in the view to show how many future events exist
 }
 
 // Mock extension for preview

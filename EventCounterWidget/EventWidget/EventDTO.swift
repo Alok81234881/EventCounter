@@ -5,4 +5,5 @@ struct EventDTO {
     let date: Date
     let categoryIcon: String
     let colorHex: String
+   // let imageData: Data?
 }
