@@ -5,5 +5,6 @@ import SwiftUI
 struct EventWidgetBundle: WidgetBundle {
     var body: some Widget {
         EventWidget()
+        EventLiveActivity()
     }
 }

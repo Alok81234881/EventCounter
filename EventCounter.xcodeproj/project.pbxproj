@@ -45,6 +45,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		196664EF2EF71C9D00CBF19F /* Exceptions for "EventCounterWidget" folder in "EventCounter" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				EventWidget/EventLiveActivity.swift,
+			);
+			target = 19C4CE042EEF0D0D000F3173 /* EventCounter */;
+		};
 		19C4CE122EEF0D0E000F3173 /* Exceptions for "EventCounter" folder in "EventCounter" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -65,6 +72,7 @@
 				Core/Models/Event.swift,
 				Core/Models/EventCategory.swift,
 				Core/Services/CountdownService.swift,
+				Core/Services/LiveActivityService.swift,
 			);
 			target = 19C4CE432EEF2350000F3173 /* EventCounterWidgetExtension */;
 		};
@@ -83,6 +91,7 @@
 		19C4CE4A2EEF2350000F3173 /* EventCounterWidget */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
+				196664EF2EF71C9D00CBF19F /* Exceptions for "EventCounterWidget" folder in "EventCounter" target */,
 				19C4CE5E2EEF2351000F3173 /* Exceptions for "EventCounterWidget" folder in "EventCounterWidgetExtension" target */,
 			);
 			path = EventCounterWidget;

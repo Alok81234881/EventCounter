@@ -10,6 +10,6 @@ struct EventWidget: Widget {
         }
         .configurationDisplayName("Next Event")
         .description("Shows your nearest upcoming event.")
-        .supportedFamilies([.systemSmall, .systemMedium])
+        .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }

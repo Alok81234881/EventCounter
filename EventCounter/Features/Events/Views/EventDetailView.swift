@@ -1,11 +1,14 @@
 import SwiftUI
 import SwiftData
 import WidgetKit
+import ActivityKit
 
 struct EventDetailView: View {
     @Bindable var event: Event
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @State private var showingEditSheet = false
+    @State private var showingLiveActivityAlert = false
 
     var body: some View {
         Group {
@@ -95,6 +98,14 @@ struct EventDetailView: View {
                                     get: { event.isPinned },
                                     set: { isOn in
                                         event.isPinned = isOn
+                                        if isOn {
+                                            if !LiveActivityService.shared.startLiveActivity(for: event) {
+                                                event.isPinned = false // Revert if couldn't start
+                                                showingLiveActivityAlert = true
+                                            }
+                                        } else {
+                                            LiveActivityService.shared.endLiveActivity(for: event.id)
+                                        }
                                         try? modelContext.save()
                                         WidgetCenter.shared.reloadAllTimelines()
                                     }
@@ -123,14 +134,63 @@ struct EventDetailView: View {
                             Spacer()
                             
                             Button(role: .destructive) {
+                                LiveActivityService.shared.endLiveActivity(for: event.id)
                                 deleteEvent()
                             } label: {
                                 Label("Delete Event", systemImage: "trash")
                             }
                             .padding(.bottom)
+                            
+                            if Activity<EventActivityAttributes>.activities.contains(where: { $0.attributes.eventID == event.id }) {
+                                Button(role: .destructive) {
+                                    LiveActivityService.shared.endLiveActivity(for: event.id)
+                                } label: {
+                                    Label("Stop Live Activity", systemImage: "stop.circle")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.bordered)
+                                .padding(.horizontal)
+                                .padding(.bottom)
+                            } else {
+                                Button {
+                                    if !LiveActivityService.shared.startLiveActivity(for: event) {
+                                        showingLiveActivityAlert = true
+                                    }
+                                } label: {
+                                    Label("Track Live Activity", systemImage: "timer")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .padding(.horizontal)
+                                .padding(.bottom)
+                            }
                         }
                     }
                 }
+            }
+        }
+        
+        .alert("Activity Already Running", isPresented: $showingLiveActivityAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Add") {
+                event.isPinned = true
+                LiveActivityService.shared.startSmartLiveActivity(for: event)
+                
+                try? modelContext.save()
+                WidgetCenter.shared.reloadAllTimelines()
+            }
+        } message: {
+            if let active = LiveActivityService.shared.activeActivity {
+                let activeTitle = active.content.state.eventTitle
+                let activeDate = active.content.state.eventDate
+                
+                if event.date < activeDate {
+                    Text("The event '\(event.title)' starts sooner than '\(activeTitle)'. If you add it, we'll switch to tracking this event immediately to keep your countdown most relevant.")
+                } else {
+                    Text("You're already tracking '\(activeTitle)', which happens earlier. If you add this, we'll continue showing the earliest event first. Once it's done, you can track this one!")
+                }
+            } else {
+                Text("One Live Activity is already started. If you add this, the upcoming event's activity will show first. When it's done, the next one can start.")
             }
         }
         .navigationTitle("")
@@ -147,7 +207,8 @@ struct EventDetailView: View {
         }
     }
     
-    @State private var showingEditSheet = false
+    
+   
     
     private func deleteEvent() {
         modelContext.delete(event)

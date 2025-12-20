@@ -13,6 +13,12 @@ struct EventWidgetEntryView : View {
                     SmallEventView(event: event)
                 case .systemMedium:
                     MediumEventView(event: event, entryDate: entry.date)
+                case .accessoryCircular:
+                    AccessoryCircularView(event: event)
+                case .accessoryRectangular:
+                    AccessoryRectangularView(event: event)
+                case .accessoryInline:
+                    AccessoryInlineView(event: event)
                 default:
                     SmallEventView(event: event)
                 }
@@ -171,6 +177,82 @@ struct MediumEventView: View {
             .frame(width: 150, height: 90)
             .background(Color(uiColor: .secondarySystemBackground))
             .cornerRadius(12)
+        }
+    }
+}
+
+    
+
+
+struct AccessoryCircularView: View {
+    let event: EventDTO
+    
+    var body: some View {
+        ZStack {
+            AccessoryWidgetBackground()
+            VStack(spacing: 0) {
+                Image(systemName: event.categoryIcon)
+                    .font(.system(size: 14))
+                
+                let components = CountdownService.calculateComponents(from: Date(), to: event.date)
+                if components.isPast {
+                    Text("Done")
+                        .font(.system(size: 10))
+                } else if components.days > 0 {
+                    Text("\(components.days)d")
+                        .font(.system(size: 10, weight: .bold))
+                } else {
+                    Text(event.date, style: .timer)
+                        .font(.system(size: 10))
+                        .minimumScaleFactor(0.5)
+                }
+            }
+        }
+    }
+}
+
+struct AccessoryRectangularView: View {
+    let event: EventDTO
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Label {
+                    Text(event.title)
+                        .font(.headline)
+                        .widgetAccentable()
+                } icon: {
+                    Image(systemName: event.categoryIcon)
+                }
+                
+                let components = CountdownService.calculateComponents(from: Date(), to: event.date)
+                if components.isPast {
+                    Text("Event Passed")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else if components.days > 0 {
+                    Text("\(components.days) Days Remaining")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(event.date, style: .timer)
+                        .font(.system(.body, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            Spacer()
+        }
+    }
+}
+
+struct AccessoryInlineView: View {
+    let event: EventDTO
+    
+    var body: some View {
+        let components = CountdownService.calculateComponents(from: Date(), to: event.date)
+        ViewThatFits {
+            Text("\(event.title): \(components.formattedTitle)")
+            Text("\(event.title): \(components.days)d")
         }
     }
 }
