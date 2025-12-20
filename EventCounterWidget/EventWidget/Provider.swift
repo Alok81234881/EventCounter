@@ -1,6 +1,7 @@
 import WidgetKit
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct Provider: TimelineProvider {
     @MainActor
@@ -72,12 +73,18 @@ struct Provider: TimelineProvider {
             
             if let event = pinnedUpcoming.first ?? normalUpcoming.first {
                 print("[Widget] Selected event: \(event.title)")
+                
+                var resizedImageData: Data? = nil
+                if let originalData = event.imageData {
+                    resizedImageData = resizeImage(data: originalData, targetSize: CGSize(width: 300, height: 300))
+                }
+                
                 let dto = EventDTO(
                     title: event.title,
                     date: event.date,
                     categoryIcon: event.category.icon,
-                    colorHex: event.colorHex
-                   // imageData: event.imageData
+                    colorHex: event.colorHex,
+                    imageData: resizedImageData
                 )
                 return (dto, futureEvents.count)
             }
@@ -86,6 +93,29 @@ struct Provider: TimelineProvider {
             print("Widget Fetch Failed: \(error)")
             return (nil, 0)
         }
+    }
+
+    private func resizeImage(data: Data, targetSize: CGSize) -> Data? {
+        guard let image = UIImage(data: data) else { return nil }
+        
+        let widthRatio  = targetSize.width  / image.size.width
+        let heightRatio = targetSize.height / image.size.height
+        
+        var newSize: CGSize
+        if(widthRatio > heightRatio) {
+            newSize = CGSize(width: image.size.width * heightRatio, height: image.size.height * heightRatio)
+        } else {
+            newSize = CGSize(width: image.size.width * widthRatio,  height: image.size.height * widthRatio)
+        }
+        
+        let rect = CGRect(x: 0, y: 0, width: newSize.width, height: newSize.height)
+        
+        UIGraphicsBeginImageContextWithOptions(newSize, false, 1.0)
+        image.draw(in: rect)
+        let newImage = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        
+        return newImage?.jpegData(compressionQuality: 0.7)
     }
 }
 
@@ -98,6 +128,6 @@ struct SimpleEntry: TimelineEntry {
 // Mock extension for preview
 extension EventDTO {
     static var preview: EventDTO {
-        EventDTO(title: "Mahima", date: Date().addingTimeInterval(4800), categoryIcon: "cake", colorHex: "#FF0000")
+        EventDTO(title: "Mahima", date: Date().addingTimeInterval(4800), categoryIcon: "cake", colorHex: "#FF0000", imageData: nil)
     }
 }

@@ -44,13 +44,13 @@ struct SmallEventView: View {
             // Icon
             // Icon or Image
             ZStack {
-//                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-//                    Image(uiImage: uiImage)
-//                        .resizable()
-//                        .scaledToFill()
-//                        .frame(width: 40, height: 40)
-//                        .clipShape(Circle())
-//                } else {
+                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 40, height: 40)
+                        .clipShape(Circle())
+                } else {
                     Circle()
                         .fill(Color(event.colorHex) ?? .blue)
                         .opacity(0.2)
@@ -58,7 +58,7 @@ struct SmallEventView: View {
                     Image(systemName: event.categoryIcon)
                         .foregroundStyle(Color(event.colorHex) ?? .blue)
                         .font(.system(size: 18))
-               // }
+                }
             }
             
             // Name
@@ -107,16 +107,16 @@ struct MediumEventView: View {
     var body: some View {
         HStack(alignment: .center) {
             VStack(alignment: .leading, spacing: 8) {
-               // ZStack {
-//                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-//                        Image(uiImage: uiImage)
-//                            .resizable()
-//                            .scaledToFill()
-//                            .frame(width: 130, height: 130)
-//                            //.clipShape(Circle())
-//                            .padding(.top, 5)
-//                    }
-               // }
+                ZStack {
+                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 130, height: 130)
+                            //.clipShape(Circle())
+                            .padding(.top, 5)
+                    }
+                }
                 
                 Text(event.title)
                     .font(.system(size: 20))
