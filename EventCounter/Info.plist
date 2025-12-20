@@ -6,5 +6,7 @@
 	<array/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>EventCounter needs calendar access to let you import your important dates and countdowns.</string>
 </dict>
 </plist>

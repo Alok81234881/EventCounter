@@ -3,6 +3,7 @@ import SwiftData
 import WidgetKit
 import UIKit
 import PhotosUI
+import EventKit
 
 struct AddEventView: View {
     @Environment(\.modelContext) private var modelContext
@@ -21,12 +22,35 @@ struct AddEventView: View {
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImageData: Data?
     
+    @State private var showingCalendarPicker = false
+    @State private var calendarEvents: [EKEvent] = []
+    @State private var isLoadingEvents = false
+    
     // Mapping Colors to Hex for simplicity.
     private let availableColors: [Color] = [.blue, .red, .green, .orange, .purple, .pink, .yellow]
     
     var body: some View {
         NavigationStack {
             Form {
+                Section {
+                    Button {
+                        Task {
+                            isLoadingEvents = true
+                            calendarEvents = await CalendarService.shared.fetchUpcomingEvents()
+                            isLoadingEvents = false
+                            showingCalendarPicker = true
+                        }
+                    } label: {
+                        HStack {
+                            Label("Import from Calendar", systemImage: "calendar.badge.plus")
+                            if isLoadingEvents {
+                                Spacer()
+                                ProgressView()
+                            }
+                        }
+                    }
+                }
+                
                 Section("Event Details") {
                     TextField("Title", text: $title)
                     DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
@@ -111,6 +135,14 @@ struct AddEventView: View {
                     selectedImageData = event.imageData
                 }
             }
+            .sheet(isPresented: $showingCalendarPicker) {
+                CalendarPickerView(events: calendarEvents) { ekEvent in
+                    title = ekEvent.title
+                    date = ekEvent.startDate
+                    note = ekEvent.notes ?? ""
+                    showingCalendarPicker = false
+                }
+            }
         }
     }
     
@@ -181,5 +213,42 @@ extension UIImage {
         let newImage = UIGraphicsGetImageFromCurrentImageContext()
         UIGraphicsEndImageContext()
         return newImage
+    }
+}
+
+struct CalendarPickerView: View {
+    let events: [EKEvent]
+    let onSelect: (EKEvent) -> Void
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            List(events, id: \.eventIdentifier) { event in
+                Button {
+                    onSelect(event)
+                } label: {
+                    VStack(alignment: .leading) {
+                        Text(event.title)
+                            .font(.headline)
+                            .foregroundStyle(.primary)
+                        Text(event.startDate.formatted(date: .abbreviated, time: .shortened))
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+            .navigationTitle("Select Event")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+            .overlay {
+                if events.isEmpty {
+                    ContentUnavailableView("No Calendar Events", systemImage: "calendar.badge.exclamationmark", description: Text("Make sure you have granted calendar access or have upcoming events."))
+                }
+            }
+        }
     }
 }
