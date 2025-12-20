@@ -197,14 +197,30 @@ struct EventDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("Edit") {
-                    showingEditSheet = true
+                HStack {
+                    if let shareImage = renderShareImage() {
+                        ShareLink(item: Image(uiImage: shareImage), preview: SharePreview(event.title, image: Image(uiImage: shareImage))) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                    }
+                    
+                    Button("Edit") {
+                        showingEditSheet = true
+                    }
                 }
             }
         }
         .sheet(isPresented: $showingEditSheet) {
             AddEventView(eventToEdit: event)
         }
+    }
+    
+    @MainActor
+    private func renderShareImage() -> UIImage? {
+        let components = CountdownService.calculateComponents(from: .now, to: event.date)
+        let renderer = ImageRenderer(content: SocialShareCardView(event: event, components: components))
+        renderer.scale = 3.0 // High quality
+        return renderer.uiImage
     }
     
     
