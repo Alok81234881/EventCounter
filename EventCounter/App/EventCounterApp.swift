@@ -40,7 +40,7 @@ struct EventCounterApp: App {
 
     var body: some Scene {
         WindowGroup {
-            EventListView()
+            MainTabView()
                 .preferredColorScheme(appTheme == .system ? nil : (appTheme == .dark ? .dark : .light))
         }
         .modelContainer(sharedModelContainer)
