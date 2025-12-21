@@ -7,39 +7,37 @@ struct PassedEventsView: View {
     @Environment(\.modelContext) private var modelContext
 
     var body: some View {
-        NavigationStack {
-            TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
-                let passed = events.filter { $0.date <= timeline.date }
-                
-                List {
-                    if passed.isEmpty {
-                        ContentUnavailableView(
-                            "No Passed Events",
-                            systemImage: "clock.arrow.circlepath",
-                            description: Text("Events will appear here after they happen.")
-                        )
-                    } else {
-                        ForEach(passed) { event in
-                            ZStack {
-                                NavigationLink(destination: EventDetailView(event: event)) {
-                                    EmptyView()
-                                }
-                                .opacity(0)
-                                
-                                EventCardView(event: event)
+        TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
+            let passed = events.filter { $0.date <= timeline.date }
+            
+            List {
+                if passed.isEmpty {
+                    ContentUnavailableView(
+                        "No Passed Events",
+                        systemImage: "clock.arrow.circlepath",
+                        description: Text("Events will appear here after they happen.")
+                    )
+                } else {
+                    ForEach(passed) { event in
+                        ZStack {
+                            NavigationLink(value: event.id) {
+                                EmptyView()
                             }
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                            .opacity(0)
+                            
+                            EventCardView(event: event)
                         }
-                        .onDelete { offsets in
-                            deleteItems(offsets: offsets, from: passed)
-                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    }
+                    .onDelete { offsets in
+                        deleteItems(offsets: offsets, from: passed)
                     }
                 }
             }
-            .navigationTitle("Passed")
         }
+        .navigationTitle("Passed")
     }
 
     private func deleteItems(offsets: IndexSet, from dataSource: [Event]) {

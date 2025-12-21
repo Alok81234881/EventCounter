@@ -10,4 +10,5 @@ struct EventDTO {
     let categoryRaw: String
     let widgetDisplayStyle: String
     let createdAt: Date
+    let id: String
 }

@@ -64,6 +64,7 @@ final class Event {
     }
 }
 
+
 enum WidgetDisplayStyle: String, Codable, CaseIterable {
     case timer = "Timer"
     case progress = "Progress"

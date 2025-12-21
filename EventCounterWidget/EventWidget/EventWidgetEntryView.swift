@@ -124,8 +124,10 @@ struct SmallEventView: View {
                 }
             }
         }
+        
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(12)
+        .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
 }
 
@@ -222,6 +224,7 @@ struct MediumEventView: View {
                 .padding(6)
 
         }
+        .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
 }
 
@@ -253,6 +256,7 @@ struct AccessoryCircularView: View {
                 }
             }
         }
+        .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
 }
 
@@ -289,6 +293,7 @@ struct AccessoryRectangularView: View {
             }
             Spacer()
         }
+        .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
 }
 
@@ -301,6 +306,7 @@ struct AccessoryInlineView: View {
             Text("\(event.title): \(components.formattedTitle)")
             Text("\(event.title): \(components.days)d")
         }
+        .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
 }
 

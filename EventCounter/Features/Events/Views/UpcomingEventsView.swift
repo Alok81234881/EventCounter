@@ -12,48 +12,46 @@ struct UpcomingEventsView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
-                let upcoming = events.filter { $0.date > timeline.date }
-                
-                List {
-                    if upcoming.isEmpty {
-                        ContentUnavailableView(
-                            "No Upcoming Events",
-                            systemImage: "calendar.badge.plus",
-                            description: Text("Add your first countdown to get started!")
-                        )
-                    } else {
-                        ForEach(upcoming) { event in
-                            ZStack {
-                                NavigationLink(destination: EventDetailView(event: event)) {
-                                    EmptyView()
-                                }
-                                .opacity(0)
-                                
-                                EventCardView(event: event)
+        TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
+            let upcoming = events.filter { $0.date > timeline.date }
+            
+            List {
+                if upcoming.isEmpty {
+                    ContentUnavailableView(
+                        "No Upcoming Events",
+                        systemImage: "calendar.badge.plus",
+                        description: Text("Add your first countdown to get started!")
+                    )
+                } else {
+                    ForEach(upcoming) { event in
+                        ZStack {
+                            NavigationLink(value: event.id) {
+                                EmptyView()
                             }
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                            .opacity(0)
+                            
+                            EventCardView(event: event)
                         }
-                        .onDelete { offsets in
-                            deleteItems(offsets: offsets, from: upcoming)
-                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    }
+                    .onDelete { offsets in
+                        deleteItems(offsets: offsets, from: upcoming)
                     }
                 }
             }
-            .navigationTitle("Upcoming")
-            .toolbar {
-                ToolbarItem {
-                    Button(action: { showingAddEvent = true }) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+        }
+        .navigationTitle("Upcoming")
+        .toolbar {
+            ToolbarItem {
+                Button(action: { showingAddEvent = true }) {
+                    Label("Add Item", systemImage: "plus")
                 }
             }
-            .sheet(isPresented: $showingAddEvent) {
-                AddEventView()
-            }
+        }
+        .sheet(isPresented: $showingAddEvent) {
+            AddEventView()
         }
     }
 

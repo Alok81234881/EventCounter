@@ -1,4 +1,5 @@
 import UserNotifications
+import UIKit
 import Foundation
 import Combine
 
@@ -11,6 +12,7 @@ class NotificationService: NSObject, ObservableObject {
     
     override private init() {
         super.init()
+        UNUserNotificationCenter.current().delegate = self
         checkPermissionStatus()
     }
     
@@ -76,6 +78,8 @@ class NotificationService: NSObject, ObservableObject {
         let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         
+        content.userInfo = ["eventID": event.id.uuidString]
+        
         let identifier = event.id.uuidString
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
@@ -90,5 +94,26 @@ class NotificationService: NSObject, ObservableObject {
             let relatedIDs = requests.filter { $0.identifier.hasPrefix(baseID) }.map { $0.identifier }
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: relatedIDs)
         }
+    }
+}
+
+extension NotificationService: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse, withCompletionHandler completionHandler: @escaping () -> Void) {
+        let userInfo = response.notification.request.content.userInfo
+        
+        if let eventID = userInfo["eventID"] as? String,
+           let url = URL(string: "eventcounter://event/\(eventID)") {
+            // Open the URL using UIApplication
+            DispatchQueue.main.async {
+                UIApplication.shared.open(url)
+            }
+        }
+        
+        completionHandler()
+    }
+    
+    // Allow notifications to show even when app is in foreground
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        completionHandler([.banner, .sound])
     }
 }
