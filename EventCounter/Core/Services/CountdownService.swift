@@ -1,20 +1,30 @@
 import Foundation
 
-struct CountdownComponents {
-    let days: Int
-    let hours: Int
-    let minutes: Int
-    let seconds: Int
-    let isPast: Bool
-    let isCountUp: Bool
+public struct CountdownComponents {
+    public let days: Int
+    public let hours: Int
+    public let minutes: Int
+    public let seconds: Int
+    public let isPast: Bool
+    public let isCountUp: Bool
     
-    var formattedTitle: String {
+    public var formattedTitle: String {
         if isPast && !isCountUp { return "Event Passed" }
         
         if days > 0 {
             return "\(days)d \(hours)h \(minutes)m"
         } else {
             return "\(hours)h \(minutes)m \(seconds)s"
+        }
+    }
+    
+    public var formattedTitleShort: String {
+        if isPast && !isCountUp { return "Event Passed" }
+        
+        if days > 0 {
+            return "\(days)d \(hours)h"
+        } else {
+            return "\(hours)h \(minutes)m"
         }
     }
     
@@ -29,8 +39,8 @@ struct CountdownComponents {
     }
 }
 
-struct CountdownService {
-    static func calculateComponents(from now: Date, to target: Date, isCountUp: Bool = false) -> CountdownComponents {
+public struct CountdownService {
+    public static func calculateComponents(from now: Date, to target: Date, isCountUp: Bool = false) -> CountdownComponents {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.day, .hour, .minute, .second], from: now, to: target)
         

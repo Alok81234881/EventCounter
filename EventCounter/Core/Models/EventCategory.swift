@@ -14,10 +14,10 @@ enum EventCategory: String, Codable, CaseIterable {
     
     var icon: String {
         switch self {
-        case .birthday: return "cake"
+        case .birthday: return "birthday.cake"
         case .travel: return "airplane"
         case .exam: return "book.closed"
-        case .launch: return "rocket"
+        case .launch: return "rocket.fill"
         case .personal: return "person"
         case .wedding: return "heart.fill"
         case .work: return "briefcase"

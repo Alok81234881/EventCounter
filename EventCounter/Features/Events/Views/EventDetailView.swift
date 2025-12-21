@@ -100,6 +100,12 @@ struct EventDetailView: View {
                                     Image(systemName: "calendar")
                                 }
                                 
+                                Label {
+                                    Text(event.category.displayName)
+                                } icon: {
+                                    Image(systemName: event.category.icon)
+                                }
+                                
                                 if event.recurrence != .once {
                                     Label {
                                         Text("Repeats \(event.recurrence.rawValue)")
