@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 import UserNotifications
 
 // Theme Enum

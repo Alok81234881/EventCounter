@@ -46,24 +46,28 @@ struct EventDetailView: View {
                                 .multilineTextAlignment(.center)
                             
                             // Countdown Logic
-                            let components = CountdownService.calculateComponents(from: context.date, to: event.date)
+                            let components = CountdownService.calculateComponents(from: context.date, to: event.date, isCountUp: event.isCountUp)
                             
-                            VStack(spacing: 10) {
-                                Text(components.isPast ? "Event Passed" : "Time Remaining")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .textCase(.uppercase)
+                            VStack(spacing: 12) {
+                                Text(components.naturalDescription(category: event.category, title: event.title))
+                                    .font(.title2)
+                                    .bold()
+                                    .multilineTextAlignment(.center)
+                                    .foregroundStyle(components.isPast && event.isCountUp ? Color(hex: event.colorHex) ?? .blue : .primary)
                                 
-                                HStack(spacing: 20) {
-                                    if components.days > 0 {
-                                        TimeUnitView(value: components.days, unit: "Days")
-                                    } else {
-                                        TimeUnitView(value: components.hours, unit: "Hours")
-                                        TimeUnitView(value: components.minutes, unit: "Mins")
-                                        TimeUnitView(value: components.seconds, unit: "Secs")
+                                if !components.isPast || !event.isCountUp {
+                                    HStack(spacing: 20) {
+                                        if components.days > 0 {
+                                            TimeUnitView(value: components.days, unit: "Days")
+                                        } else {
+                                            TimeUnitView(value: components.hours, unit: "Hours")
+                                            TimeUnitView(value: components.minutes, unit: "Mins")
+                                            TimeUnitView(value: components.seconds, unit: "Secs")
+                                        }
                                     }
                                 }
                             }
+                            .frame(maxWidth: .infinity)
                             .padding()
                             .background(Color(uiColor: .secondarySystemBackground))
                             .cornerRadius(16)
@@ -132,6 +136,15 @@ struct EventDetailView: View {
                                 Text("1 day before").tag(1440 as Int?)
                                 Text("1 week before").tag(10080 as Int?)
                             }
+                            
+                            Toggle("Count up since this date", isOn: Binding(
+                                get: { event.isCountUp },
+                                set: { newValue in
+                                    event.isCountUp = newValue
+                                    try? modelContext.save()
+                                    WidgetCenter.shared.reloadAllTimelines()
+                                }
+                            ))
                         }
                         .padding()
                         .background(Color(uiColor: .systemBackground))

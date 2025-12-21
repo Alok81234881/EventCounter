@@ -11,26 +11,27 @@ struct Provider: TimelineProvider {
 
     @MainActor
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let (event, count) = fetchNextEventAndCount()
+        let (event, count) = fetchNextEventAndCount(for: context.family)
         let entry = SimpleEntry(date: Date(), event: event, futureEventCount: count)
         completion(entry)
     }
 
     @MainActor
     func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> ()) {
-        let (event, count) = fetchNextEventAndCount()
+        let (event, count) = fetchNextEventAndCount(for: context.family)
         
-        // Pass the event date to the entry; the widget view will calculate the countdown itself.
         let entryDate = Date()
         let entry = SimpleEntry(date: entryDate, event: event, futureEventCount: count)
 
-        // Only update timeline when explicitly requested (e.g., after event changes)
-        let timeline = Timeline(entries: [entry], policy: .never)
+        // Refresh the timeline as soon as the current event passes (if it's a countdown)
+        // Milestones (count-ups) don't need a specific refresh unless we want to be precise.
+        let reloadDate = event?.date ?? Calendar.current.date(byAdding: .hour, value: 1, to: entryDate)!
+        let timeline = Timeline(entries: [entry], policy: .after(reloadDate))
         completion(timeline)
     }
     
     @MainActor
-    private func fetchNextEventAndCount() -> (EventDTO?, Int) {
+    private func fetchNextEventAndCount(for family: WidgetFamily) -> (EventDTO?, Int) {
         // Shared Model Container Logic
         let schema = Schema([Event.self])
         
@@ -47,33 +48,28 @@ struct Provider: TimelineProvider {
             let descriptor = FetchDescriptor<Event>(
                 sortBy: [SortDescriptor(\.date, order: .forward)]
             )
-            let events = try container.mainContext.fetch(descriptor)
-            
-            print("[Widget] All events in store:")
-            for event in events {
-                print("- \(event.title): \(event.date) (isPinned: \(event.isPinned))")
-            }
-            
+            let allEvents = try container.mainContext.fetch(descriptor)
             let now = Date()
             
-            // Strictly filter for future events
-            let futureEvents = events.filter { $0.date > now }
+            let futureEvents = allEvents.filter { $0.date > now }
+            let pastEvents = allEvents.filter { $0.date <= now }
             
-            print("[Widget] Future events:")
-            for event in futureEvents {
-                print("- \(event.title): \(event.date) (isPinned: \(event.isPinned))")
+            var selectedEvent: Event?
+            
+            switch family {
+            case .systemSmall:
+                // Small Widget: Show most recent PAST event
+                selectedEvent = pastEvents.sorted(by: { $0.date > $1.date }).first
+            case .systemMedium:
+                // Medium Widget: Show next UPCOMING event
+                selectedEvent = futureEvents.sorted(by: { $0.date < $1.date }).first
+            default:
+                // Lock Screen: Prioritize pinned, then upcoming
+                selectedEvent = allEvents.filter { $0.isPinned }.sorted(by: { abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now)) }).first 
+                    ?? futureEvents.first
             }
             
-            // Priority Logic:
-            // 1. First Pinned event in the future (nearest)
-            // 2. Otherwise, first Unpinned event in the future (nearest)
-            
-            let pinnedUpcoming = futureEvents.filter { $0.isPinned }.sorted { $0.date < $1.date }
-            let normalUpcoming = futureEvents.filter { !$0.isPinned }.sorted { $0.date < $1.date }
-            
-            if let event = pinnedUpcoming.first ?? normalUpcoming.first {
-                print("[Widget] Selected event: \(event.title)")
-                
+            if let event = selectedEvent {
                 var resizedImageData: Data? = nil
                 if let originalData = event.imageData {
                     resizedImageData = resizeImage(data: originalData, targetSize: CGSize(width: 300, height: 300))
@@ -84,11 +80,16 @@ struct Provider: TimelineProvider {
                     date: event.date,
                     categoryIcon: event.category.icon,
                     colorHex: event.colorHex,
-                    imageData: resizedImageData
+                    imageData: resizedImageData,
+                    isCountUp: event.isCountUp,
+                    categoryRaw: event.category.rawValue
                 )
-                return (dto, futureEvents.count)
+                
+                // Count relevant events based on logic
+                let relevantCount = (family == .systemSmall) ? pastEvents.count : futureEvents.count
+                return (dto, relevantCount)
             }
-            return (nil, futureEvents.count)
+            return (nil, 0)
         } catch {
             print("Widget Fetch Failed: \(error)")
             return (nil, 0)
@@ -128,6 +129,6 @@ struct SimpleEntry: TimelineEntry {
 // Mock extension for preview
 extension EventDTO {
     static var preview: EventDTO {
-        EventDTO(title: "Mahima", date: Date().addingTimeInterval(4800), categoryIcon: "cake", colorHex: "#FF0000", imageData: nil)
+        EventDTO(title: "Mahima", date: Date().addingTimeInterval(4800), categoryIcon: "cake", colorHex: "#FF0000", imageData: nil, categoryRaw: "anniversary")
     }
 }

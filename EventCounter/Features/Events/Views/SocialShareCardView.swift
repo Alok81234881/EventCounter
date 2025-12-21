@@ -92,6 +92,6 @@ private struct SocialTimeUnitView: View {
 #Preview {
     SocialShareCardView(
         event: Event(title: "New Year", date: Date().addingTimeInterval(3600*24*10)),
-        components: CountdownComponents(days: 10, hours: 5, minutes: 30, seconds: 0, isPast: false)
+        components: CountdownComponents(days: 10, hours: 5, minutes: 30, seconds: 0, isPast: false, isCountUp: false)
     )
 }

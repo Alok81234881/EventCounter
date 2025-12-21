@@ -19,6 +19,7 @@ struct AddEventView: View {
     @State private var note = ""
     @State private var recurrence: RecurrenceType = .once
     @State private var notifyBefore: Int? = 15
+    @State private var isCountUp = false
     
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImageData: Data?
@@ -113,6 +114,8 @@ struct AddEventView: View {
                         Text("1 day before").tag(1440 as Int?)
                         Text("1 week before").tag(10080 as Int?)
                     }
+                    
+                    Toggle("Count up since this date", isOn: $isCountUp)
                 }
                 
                 Section("Notes") {
@@ -145,6 +148,7 @@ struct AddEventView: View {
                     note = event.note ?? ""
                     recurrence = event.recurrence
                     notifyBefore = event.notifyBefore
+                    isCountUp = event.isCountUp
                     selectedImageData = event.imageData
                 }
             }
@@ -172,6 +176,7 @@ struct AddEventView: View {
             event.note = note.isEmpty ? nil : note
             event.recurrence = recurrence
             event.notifyBefore = notifyBefore
+            event.isCountUp = isCountUp
             event.imageData = selectedImageData
             
             // Scheduling notification
@@ -186,7 +191,8 @@ struct AddEventView: View {
                 isPinned: isPinned,
                 notifyBefore: notifyBefore,
                 imageData: selectedImageData,
-                recurrence: recurrence
+                recurrence: recurrence,
+                isCountUp: isCountUp
             )
             modelContext.insert(newEvent)
             NotificationService.shared.scheduleNotification(for: newEvent)

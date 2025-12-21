@@ -29,9 +29,17 @@ struct EventCardView: View {
                 Text(event.title)
                     .font(.headline)
                 
-                Text(event.date, style: .date)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                if event.isCountUp && event.date <= .now {
+                    let components = CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: true)
+                    Text(components.naturalDescription(category: event.category, title: event.title))
+                        .font(.caption)
+                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                        .bold()
+                } else {
+                    Text(event.date, style: .date)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
             }
             
             Spacer()

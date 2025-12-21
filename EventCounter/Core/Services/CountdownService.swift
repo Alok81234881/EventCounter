@@ -6,19 +6,34 @@ struct CountdownComponents {
     let minutes: Int
     let seconds: Int
     let isPast: Bool
+    let isCountUp: Bool
     
     var formattedTitle: String {
-        if isPast { return "Event Passed" }
+        if isPast && !isCountUp { return "Event Passed" }
+        
+        let timeString: String
         if days > 0 {
-            return "\(days) \(days == 1 ? "Day" : "Days")"
+            timeString = "\(days) \(days == 1 ? "Day" : "Days")"
         } else {
-            return "\(hours)h \(minutes)m \(seconds)s"
+            timeString = "\(hours)h \(minutes)m \(seconds)s"
+        }
+        
+        return timeString
+    }
+    
+    func naturalDescription(category: EventCategory, title: String) -> String {
+        if isPast && isCountUp {
+            return category.milestoneDescription(for: title, time: formattedTitle)
+        } else if isPast {
+            return "Event Passed"
+        } else {
+            return "Time Remaining"
         }
     }
 }
 
 struct CountdownService {
-    static func calculateComponents(from now: Date, to target: Date) -> CountdownComponents {
+    static func calculateComponents(from now: Date, to target: Date, isCountUp: Bool = false) -> CountdownComponents {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.day, .hour, .minute, .second], from: now, to: target)
         
@@ -29,7 +44,8 @@ struct CountdownService {
             hours: abs(components.hour ?? 0),
             minutes: abs(components.minute ?? 0),
             seconds: abs(components.second ?? 0),
-            isPast: isPast
+            isPast: isPast,
+            isCountUp: isCountUp
         )
     }
 }

@@ -44,7 +44,7 @@ struct EventWidgetEntryView : View {
 
 struct SmallEventView: View {
     let event: EventDTO
-    
+    var entryDate: Date = Date()
     var body: some View {
         VStack(alignment: .center, spacing: 8) {
             // Icon
@@ -83,21 +83,27 @@ struct SmallEventView: View {
                     .foregroundStyle(.secondary)
             }
             
-            let entryDate = Date() // Fallback for small view if not passed
-            let components = CountdownService.calculateComponents(from: entryDate, to: event.date)
+            let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
+            let category = EventCategory(rawValue: event.categoryRaw) ?? .personal
 
-            if components.isPast {
+            if components.isPast && !event.isCountUp {
                 Text("Event Passed")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } else if components.days > 0 {
-                WidgetTimeUnitView(value: components.days, unit: "Days")
+                WidgetTimeUnitView(value: components.days, unit: components.isPast ? (category == .sobriety ? "Days Sober" : "Days Since") : "Days")
             } else {
                 Text(event.date, style: .timer)
                     .font(.title3)
                     .bold()
                     .monospacedDigit()
                     .multilineTextAlignment(.center)
+                
+                if components.isPast {
+                    Text(category == .sobriety ? "Sober" : "Since")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
             }
             Spacer()
         }
@@ -139,7 +145,7 @@ struct MediumEventView: View {
             
             // Card: "Time Remaining"
             // Use entryDate for widget snapshot consistency
-            let components = CountdownService.calculateComponents(from: entryDate, to: event.date)
+            let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
             
             VStack(spacing: 8) {
                 Label {
@@ -151,20 +157,19 @@ struct MediumEventView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                if components.isPast {
+                
+                let category = EventCategory(rawValue: event.categoryRaw) ?? .personal
+                Text(components.naturalDescription(category: category, title: event.title))
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .textCase(.uppercase)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                
+                if components.isPast && !event.isCountUp {
                     Text("Event Passed")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else {
-                    Text("Time Remaining")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .textCase(.uppercase)
-                }
-                
-                if components.isPast {
-                    // Show nothing more if past
-                    EmptyView()
                 } else if components.days > 0 {
                     WidgetTimeUnitView(value: components.days, unit: "Days")
                 } else {
@@ -194,8 +199,9 @@ struct AccessoryCircularView: View {
                 Image(systemName: event.categoryIcon)
                     .font(.system(size: 14))
                 
-                let components = CountdownService.calculateComponents(from: Date(), to: event.date)
-                if components.isPast {
+                let components = CountdownService.calculateComponents(from: Date(), to: event.date, isCountUp: event.isCountUp)
+                let category = EventCategory(rawValue: event.categoryRaw) ?? .personal
+                if components.isPast && !event.isCountUp {
                     Text("Done")
                         .font(.system(size: 10))
                 } else if components.days > 0 {
@@ -225,13 +231,14 @@ struct AccessoryRectangularView: View {
                     Image(systemName: event.categoryIcon)
                 }
                 
-                let components = CountdownService.calculateComponents(from: Date(), to: event.date)
-                if components.isPast {
+                let components = CountdownService.calculateComponents(from: Date(), to: event.date, isCountUp: event.isCountUp)
+                let category = EventCategory(rawValue: event.categoryRaw) ?? .personal
+                if components.isPast && !event.isCountUp {
                     Text("Event Passed")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else if components.days > 0 {
-                    Text("\(components.days) Days Remaining")
+                    Text(components.naturalDescription(category: category, title: event.title))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 } else {
