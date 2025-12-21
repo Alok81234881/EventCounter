@@ -5,51 +5,70 @@ import Foundation
 struct EventCardView: View {
     let event: Event
     
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
-        HStack {
-            ZStack {
-                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                } else {
-                    Circle()
-                        .fill(Color(hex: event.colorHex) ?? .blue)
-                        .frame(width: 50, height: 50)
-                        .opacity(0.2)
-                    
-                    Image(systemName: event.category.icon)
-                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
-                }
-            }
+        let accentColor = Color(hex: event.colorHex) ?? Color.accentColor
+        
+        HStack(spacing: 0) {
+            // Vertical Accent Bar
+            Rectangle()
+                .fill(accentColor)
+                .frame(width: 4)
             
-            VStack(alignment: .leading) {
-                Text(event.title)
-                    .font(.headline)
+            HStack(spacing: 16) {
+                // Icon/Image Section
+                ZStack {
+                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 48, height: 48)
+                            .clipShape(Circle())
+                    } else {
+                        Circle()
+                            .fill(accentColor.opacity(0.1))
+                            .frame(width: 48, height: 48)
+                        
+                        Image(systemName: event.category.icon)
+                            .font(.system(size: 20))
+                            .foregroundStyle(accentColor)
+                    }
+                }
                 
-                if event.isCountUp && event.date <= .now {
-                    let components = CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: true)
-                    Text(components.naturalDescription(category: event.category, title: event.title))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(event.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                    
+                    if event.isCountUp && event.date <= .now {
+                        let components = CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: true)
+                        Text(components.naturalDescription(category: event.category, title: event.title))
+                            .font(.caption)
+                            .foregroundStyle(accentColor)
+                            .bold()
+                    } else {
+                        Text(event.date, style: .date)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                
+                Spacer()
+                
+                if event.isPinned {
+                    Image(systemName: "pin.fill")
                         .font(.caption)
-                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
-                        .bold()
-                } else {
-                    Text(event.date, style: .date)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.orange)
+                        .padding(6)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Circle())
                 }
             }
-            
-            Spacer()
-            
-            if event.isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.caption)
-                    .foregroundStyle(.orange)
-            }
+            .padding(16)
         }
+        .background(Color(uiColor: .secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding(.vertical, 4)
     }
 }

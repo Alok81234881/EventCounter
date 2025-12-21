@@ -25,11 +25,17 @@ struct UpcomingEventsView: View {
                         )
                     } else {
                         ForEach(upcoming) { event in
-                            NavigationLink {
-                                EventDetailView(event: event)
-                            } label: {
+                            ZStack {
+                                NavigationLink(destination: EventDetailView(event: event)) {
+                                    EmptyView()
+                                }
+                                .opacity(0)
+                                
                                 EventCardView(event: event)
                             }
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                         }
                         .onDelete { offsets in
                             deleteItems(offsets: offsets, from: upcoming)

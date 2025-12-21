@@ -28,6 +28,9 @@ struct AddEventView: View {
     @State private var calendarEvents: [EKEvent] = []
     @State private var isLoadingEvents = false
     
+    @State private var showingImageCropper = false
+    @State private var tempImage: UIImage?
+    
     // Mapping Colors to Hex for simplicity.
     private let availableColors: [Color] = [.blue, .red, .green, .orange, .purple, .pink, .yellow]
     
@@ -78,14 +81,11 @@ struct AddEventView: View {
                     }
                     .onChange(of: selectedItem) { newItem in
                         Task {
-                            if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                if let originalImage = UIImage(data: data),
-                                   let resized = originalImage.resized(to: CGSize(width: 500, height: 500)),
-                                   let resizedData = resized.jpegData(compressionQuality: 0.8) {
-                                    selectedImageData = resizedData
-                                } else {
-                                    selectedImageData = data // fallback if resizing fails
-                                }
+                            if let data = try? await newItem?.loadTransferable(type: Data.self),
+                               let uiImage = UIImage(data: data) {
+                                tempImage = uiImage
+                                showingImageCropper = true
+                                selectedItem = nil // Reset picker
                             }
                         }
                     }
@@ -158,6 +158,15 @@ struct AddEventView: View {
                     date = ekEvent.startDate
                     note = ekEvent.notes ?? ""
                     showingCalendarPicker = false
+                }
+            }
+            .fullScreenCover(isPresented: $showingImageCropper) {
+                if let image = tempImage {
+                    ImageCropperView(image: image) { cropped in
+                        if let data = cropped.jpegData(compressionQuality: 0.8) {
+                            selectedImageData = data
+                        }
+                    }
                 }
             }
         }
