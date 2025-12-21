@@ -11,14 +11,11 @@ struct CountdownComponents {
     var formattedTitle: String {
         if isPast && !isCountUp { return "Event Passed" }
         
-        let timeString: String
         if days > 0 {
-            timeString = "\(days) \(days == 1 ? "Day" : "Days")"
+            return "\(days)d \(hours)h \(minutes)m"
         } else {
-            timeString = "\(hours)h \(minutes)m \(seconds)s"
+            return "\(hours)h \(minutes)m \(seconds)s"
         }
-        
-        return timeString
     }
     
     func naturalDescription(category: EventCategory, title: String) -> String {

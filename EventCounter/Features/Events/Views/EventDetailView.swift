@@ -56,13 +56,33 @@ struct EventDetailView: View {
                                     .foregroundStyle(components.isPast && event.isCountUp ? Color(hex: event.colorHex) ?? .blue : .primary)
                                 
                                 if !components.isPast || !event.isCountUp {
-                                    HStack(spacing: 20) {
-                                        if components.days > 0 {
-                                            TimeUnitView(value: components.days, unit: "Days")
-                                        } else {
-                                            TimeUnitView(value: components.hours, unit: "Hours")
-                                            TimeUnitView(value: components.minutes, unit: "Mins")
-                                            TimeUnitView(value: components.seconds, unit: "Secs")
+                                    HStack(spacing: 30) {
+                                        // Timer Section
+                                        HStack(spacing: 20) {
+                                            if components.days > 0 {
+                                                TimeUnitView(value: components.days, unit: "Days")
+                                                TimeUnitView(value: components.hours, unit: "Hours")
+                                                TimeUnitView(value: components.minutes, unit: "Mins")
+                                            } else {
+                                                TimeUnitView(value: components.hours, unit: "Hours")
+                                                TimeUnitView(value: components.minutes, unit: "Mins")
+                                                TimeUnitView(value: components.seconds, unit: "Secs")
+                                            }
+                                        }
+                                        
+                                        // Circular Progress Section
+                                        CircularProgressView(
+                                            progress: event.progress,
+                                            color: Color(hex: event.colorHex) ?? .blue,
+                                            lineWidth: 20
+                                        )
+                                        .frame(width: 80, height: 80)
+                                        .overlay {
+                                            if components.days > 0 {
+                                                Text("\(Int(event.progress * 100))%")
+                                                    .font(.caption)
+                                                    .bold()
+                                            }
                                         }
                                     }
                                 }
@@ -145,6 +165,30 @@ struct EventDetailView: View {
                                     WidgetCenter.shared.reloadAllTimelines()
                                 }
                             ))
+                            
+                            Divider()
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Widget Display Style")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fontWeight(.bold)
+                                
+                                Picker("Widget Style", selection: Binding(
+                                    get: { event.widgetDisplayStyle },
+                                    set: { newValue in
+                                        event.widgetDisplayStyle = newValue
+                                        try? modelContext.save()
+                                        WidgetCenter.shared.reloadAllTimelines()
+                                    }
+                                )) {
+                                    ForEach(WidgetDisplayStyle.allCases, id: \.self) { style in
+                                        Text(style.rawValue).tag(style)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                            }
+                            .padding(.top, 4)
                         }
                         .padding()
                         .background(Color(uiColor: .systemBackground))

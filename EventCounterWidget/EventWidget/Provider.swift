@@ -82,7 +82,9 @@ struct Provider: TimelineProvider {
                     colorHex: event.colorHex,
                     imageData: resizedImageData,
                     isCountUp: event.isCountUp,
-                    categoryRaw: event.category.rawValue
+                    categoryRaw: event.category.rawValue,
+                    widgetDisplayStyle: event.widgetDisplayStyle.rawValue,
+                    createdAt: event.createdAt
                 )
                 
                 // Count relevant events based on logic
@@ -129,6 +131,6 @@ struct SimpleEntry: TimelineEntry {
 // Mock extension for preview
 extension EventDTO {
     static var preview: EventDTO {
-        EventDTO(title: "Mahima", date: Date().addingTimeInterval(4800), categoryIcon: "cake", colorHex: "#FF0000", imageData: nil, categoryRaw: "anniversary")
+        EventDTO(title: "Mahima", date: Date().addingTimeInterval(4800), categoryIcon: "cake", colorHex: "#FF0000", imageData: nil, isCountUp: false, categoryRaw: "anniversary", widgetDisplayStyle: "Timer", createdAt: Date().addingTimeInterval(-3600))
     }
 }

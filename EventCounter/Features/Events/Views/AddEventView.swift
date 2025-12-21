@@ -20,6 +20,7 @@ struct AddEventView: View {
     @State private var recurrence: RecurrenceType = .once
     @State private var notifyBefore: Int? = 15
     @State private var isCountUp = false
+    @State private var widgetDisplayStyle: WidgetDisplayStyle = .timer
     
     @State private var selectedItem: PhotosPickerItem?
     @State private var selectedImageData: Data?
@@ -118,6 +119,19 @@ struct AddEventView: View {
                     Toggle("Count up since this date", isOn: $isCountUp)
                 }
                 
+                Section("Widget Display Style") {
+                    Picker("Widget Style", selection: $widgetDisplayStyle) {
+                        ForEach(WidgetDisplayStyle.allCases, id: \.self) { style in
+                            Text(style.rawValue).tag(style)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    
+                    Text("Choose how the countdown appears in your widget.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                
                 Section("Notes") {
                     TextField("Optional notes", text: $note, axis: .vertical)
                         .lineLimit(3...5)
@@ -149,6 +163,7 @@ struct AddEventView: View {
                     recurrence = event.recurrence
                     notifyBefore = event.notifyBefore
                     isCountUp = event.isCountUp
+                    widgetDisplayStyle = event.widgetDisplayStyle
                     selectedImageData = event.imageData
                 }
             }
@@ -186,6 +201,7 @@ struct AddEventView: View {
             event.recurrence = recurrence
             event.notifyBefore = notifyBefore
             event.isCountUp = isCountUp
+            event.widgetDisplayStyle = widgetDisplayStyle
             event.imageData = selectedImageData
             
             // Scheduling notification
@@ -201,7 +217,8 @@ struct AddEventView: View {
                 notifyBefore: notifyBefore,
                 imageData: selectedImageData,
                 recurrence: recurrence,
-                isCountUp: isCountUp
+                isCountUp: isCountUp,
+                widgetDisplayStyle: widgetDisplayStyle
             )
             modelContext.insert(newEvent)
             NotificationService.shared.scheduleNotification(for: newEvent)

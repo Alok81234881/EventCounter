@@ -6,6 +6,8 @@ struct EventDTO {
     let categoryIcon: String
     let colorHex: String
     let imageData: Data?
-    var isCountUp: Bool = false
+    let isCountUp: Bool
     let categoryRaw: String
+    let widgetDisplayStyle: String
+    let createdAt: Date
 }

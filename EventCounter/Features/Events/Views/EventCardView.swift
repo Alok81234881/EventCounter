@@ -64,6 +64,17 @@ struct EventCardView: View {
                         .background(.ultraThinMaterial)
                         .clipShape(Circle())
                 }
+                
+                // Progress Ring
+                if event.date > .now {
+                    CircularProgressView(
+                        progress: event.progress,
+                        color: accentColor,
+                        lineWidth: 8,
+                        showBackground: true
+                    )
+                    .frame(width: 30, height: 30)
+                }
             }
             .padding(16)
         }

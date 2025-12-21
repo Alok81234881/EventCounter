@@ -25,6 +25,14 @@ final class Event {
     @Attribute(.externalStorage) var imageData: Data?
     var recurrence: RecurrenceType = RecurrenceType.once
     var isCountUp: Bool = false
+    var widgetDisplayStyle: WidgetDisplayStyle = WidgetDisplayStyle.timer
+    
+    var progress: Double {
+        let total = date.timeIntervalSince(createdAt)
+        guard total > 0 else { return 1.0 }
+        let elapsed = Date().timeIntervalSince(createdAt)
+        return min(elapsed / total, 1.0)
+    }
     
     init(
         id: UUID = UUID(),
@@ -37,7 +45,8 @@ final class Event {
         notifyBefore: Int? = nil,
         imageData: Data? = nil,
         recurrence: RecurrenceType = .once,
-        isCountUp: Bool = false
+        isCountUp: Bool = false,
+        widgetDisplayStyle: WidgetDisplayStyle = .timer
     ) {
         self.id = id
         self.title = title
@@ -51,5 +60,11 @@ final class Event {
         self.imageData = imageData
         self.recurrence = recurrence
         self.isCountUp = isCountUp
+        self.widgetDisplayStyle = widgetDisplayStyle
     }
+}
+
+enum WidgetDisplayStyle: String, Codable, CaseIterable {
+    case timer = "Timer"
+    case progress = "Progress"
 }
