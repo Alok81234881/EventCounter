@@ -60,13 +60,11 @@ struct Provider: TimelineProvider {
             case .systemSmall:
                 // Small Widget: Show most recent PAST event
                 selectedEvent = pastEvents.sorted(by: { $0.date > $1.date }).first
-            case .systemMedium:
-                // Medium Widget: Show next UPCOMING event
+            case .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline:
+                // Medium Widget & Lock Screen: Show next UPCOMING event
                 selectedEvent = futureEvents.sorted(by: { $0.date < $1.date }).first
             default:
-                // Lock Screen: Prioritize pinned, then upcoming
-                selectedEvent = allEvents.filter { $0.isPinned }.sorted(by: { abs($0.date.timeIntervalSince(now)) < abs($1.date.timeIntervalSince(now)) }).first 
-                    ?? futureEvents.first
+                selectedEvent = futureEvents.sorted(by: { $0.date < $1.date }).first
             }
             
             if let event = selectedEvent {
