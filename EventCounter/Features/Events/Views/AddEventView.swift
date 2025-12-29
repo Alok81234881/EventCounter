@@ -4,6 +4,7 @@ import WidgetKit
 import UIKit
 import PhotosUI
 import EventKit
+import MapKit
 
 struct AddEventView: View {
     @Environment(\.modelContext) private var modelContext
@@ -32,6 +33,11 @@ struct AddEventView: View {
     @State private var showingDatePicker = false
     @State private var calendarEvents: [EKEvent] = []
     @State private var isLoadingEvents = false
+    
+    // Location Suggestions
+    @StateObject private var locationSearchService = LocationSearchService()
+    @State private var showLocationSuggestions = false
+    @FocusState private var isLocationFocused: Bool
     
     // Mockup Colors
     private let availableColors: [Color] = [
@@ -114,16 +120,70 @@ struct AddEventView: View {
                         // 4. Location
                         VStack(alignment: .leading, spacing: 8) {
                             labelView("LOCATION")
-                            HStack(spacing: 12) {
-                                Image(systemName: "mappin.and.ellipse")
-                                    .foregroundStyle(.gray)
-                                TextField("", text: $location, prompt: Text("e.g. Central Park, NY").foregroundColor(.gray))
-                                    .foregroundStyle(.black)
-                                    .submitLabel(.done)
+                            VStack(spacing: 0) {
+                                HStack(spacing: 12) {
+                                    Image(systemName: "mappin.and.ellipse")
+                                        .foregroundStyle(.gray)
+                                    TextField("", text: $location, prompt: Text("e.g. Central Park, NY").foregroundColor(.gray))
+                                        .foregroundStyle(.black)
+                                        .submitLabel(.done)
+                                        .focused($isLocationFocused)
+                                        .onChange(of: location) { newValue in
+                                            locationSearchService.searchQuery = newValue
+                                            withAnimation {
+                                                showLocationSuggestions = !newValue.isEmpty && isLocationFocused
+                                            }
+                                        }
+                                }
+                                .padding()
+                                
+                                if showLocationSuggestions && !locationSearchService.completions.isEmpty {
+                                    Divider()
+                                        .padding(.horizontal)
+                                    
+                                    VStack(alignment: .leading, spacing: 0) {
+                                        ForEach(locationSearchService.completions, id: \.self) { completion in
+                                            Button {
+                                                location = "\(completion.title), \(completion.subtitle)"
+                                                withAnimation {
+                                                    showLocationSuggestions = false
+                                                    isLocationFocused = false
+                                                }
+                                            } label: {
+                                                HStack(spacing: 12) {
+                                                    Image(systemName: "mappin.circle.fill")
+                                                        .foregroundStyle(.gray.opacity(0.5))
+                                                    
+                                                    VStack(alignment: .leading, spacing: 2) {
+                                                        Text(completion.title)
+                                                            .font(.system(size: 15, weight: .medium))
+                                                            .foregroundStyle(.black)
+                                                        Text(completion.subtitle)
+                                                            .font(.system(size: 12))
+                                                            .foregroundStyle(.gray)
+                                                    }
+                                                    Spacer()
+                                                }
+                                                .padding(.vertical, 12)
+                                                .padding(.horizontal)
+                                            }
+                                            
+                                            if completion != locationSearchService.completions.last {
+                                                Divider()
+                                                    .padding(.leading, 44)
+                                            }
+                                        }
+                                    }
+                                    .frame(maxHeight: 250)
+                                }
                             }
-                            .padding()
                             .background(Color.white)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        .onChange(of: isLocationFocused) { focused in
+                            withAnimation {
+                                showLocationSuggestions = focused && !location.isEmpty
+                            }
                         }
                         
                         // 5. Notes
