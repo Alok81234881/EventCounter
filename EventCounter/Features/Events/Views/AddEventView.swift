@@ -589,32 +589,125 @@ struct CalendarPickerView: View {
     let onSelect: (EKEvent) -> Void
     @Environment(\.dismiss) private var dismiss
     
+    @State private var selectedEvent: EKEvent?
+    
     var body: some View {
-        NavigationStack {
-            List(events, id: \.eventIdentifier) { event in
-                Button {
-                    onSelect(event)
-                } label: {
-                    VStack(alignment: .leading) {
-                        Text(event.title)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                        Text(event.startDate.formatted(date: .abbreviated, time: .shortened))
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+        VStack(spacing: 0) {
+            // Header
+            HStack {
+                Button("Cancel") {
+                    dismiss()
+                }
+                .foregroundStyle(.gray)
+                
+                Spacer()
+                
+                Text("Choose Event")
+                    .font(.headline)
+                    .foregroundStyle(.black)
+                
+                Spacer()
+                
+                // Balance
+                Text("Cancel")
+                    .foregroundStyle(.clear)
+            }
+            .padding()
+            .background(Color(white: 0.98))
+            
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    Text("UPCOMING EVENTS")
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.gray)
+                        .padding(.horizontal)
+                        .padding(.top, 10)
+                    
+                    if events.isEmpty {
+                        ContentUnavailableView(
+                            "No Calendar Events",
+                            systemImage: "calendar.badge.exclamationmark",
+                            description: Text("No upcoming events found.")
+                        )
+                        .padding(.top, 40)
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(events, id: \.eventIdentifier) { event in
+                                let isSelected = selectedEvent?.eventIdentifier == event.eventIdentifier
+                                
+                                Button {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        selectedEvent = event
+                                    }
+                                } label: {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "calendar")
+                                            .font(.system(size: 20))
+                                            .foregroundStyle(isSelected ? .orange : .gray)
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(event.title)
+                                                .font(.system(size: 17, weight: .bold))
+                                                .foregroundStyle(.black)
+                                            
+                                            Text(event.startDate.formatted(date: .abbreviated, time: .shortened))
+                                                .font(.system(size: 14))
+                                                .foregroundStyle(.gray)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                                            .font(.system(size: 20))
+                                            .foregroundStyle(isSelected ? .blue : .gray.opacity(0.5))
+                                    }
+                                    .padding()
+                                    .background(Color.white)
+                                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 24)
+                                            .stroke(isSelected ? Color.orange : Color.clear, lineWidth: 2)
+                                    )
+                                    .shadow(color: .black.opacity(0.03), radius: 8, y: 4)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(.horizontal)
                     }
                 }
+                .padding(.bottom, 100)
             }
-            .navigationTitle("Select Event")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-            }
-            .overlay {
-                if events.isEmpty {
-                    ContentUnavailableView("No Calendar Events", systemImage: "calendar.badge.exclamationmark", description: Text("Make sure you have granted calendar access or have upcoming events."))
+            .background(Color(white: 0.96))
+            .overlay(alignment: .bottom) {
+                // Import Button
+                if !events.isEmpty {
+                    Button {
+                        if let selected = selectedEvent {
+                            onSelect(selected)
+                        }
+                    } label: {
+                        HStack {
+                            Text("Import Event")
+                                .fontWeight(.bold)
+                            Image(systemName: "arrow.right")
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(selectedEvent == nil ? Color.gray.opacity(0.5) : Color.orange)
+                        .clipShape(Capsule())
+                    }
+                    .disabled(selectedEvent == nil)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [Color(white: 0.96).opacity(0), Color(white: 0.96)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                 }
             }
         }
