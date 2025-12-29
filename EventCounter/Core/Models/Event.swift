@@ -26,6 +26,7 @@ final class Event {
     var recurrence: RecurrenceType = RecurrenceType.once
     var isCountUp: Bool = false
     var widgetDisplayStyle: WidgetDisplayStyle = WidgetDisplayStyle.timer
+    var location: String? // New location field
     
     var progress: Double {
         let total = date.timeIntervalSince(createdAt)
@@ -46,7 +47,8 @@ final class Event {
         imageData: Data? = nil,
         recurrence: RecurrenceType = .once,
         isCountUp: Bool = false,
-        widgetDisplayStyle: WidgetDisplayStyle = .timer
+        widgetDisplayStyle: WidgetDisplayStyle = .timer,
+        location: String? = nil
     ) {
         self.id = id
         self.title = title
@@ -61,6 +63,7 @@ final class Event {
         self.recurrence = recurrence
         self.isCountUp = isCountUp
         self.widgetDisplayStyle = widgetDisplayStyle
+        self.location = location
     }
 }
 

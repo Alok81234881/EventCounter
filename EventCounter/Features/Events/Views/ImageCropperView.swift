@@ -6,159 +6,213 @@ struct ImageCropperView: View {
     var onCrop: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss
     
+    // Gestures State for the IMAGE (Standard Interaction)
     @State private var scale: CGFloat = 1.0
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
     
-    private let cropSize: CGFloat = 300
+    // Constants
+    private let cropSize: CGFloat = 300 // The fixed crop box size
+    private let cornerLength: CGFloat = 20
+    private let cornerThickness: CGFloat = 4
+    private let cropColor = Color.orange
     
     var body: some View {
-        NavigationStack {
-            VStack {
+        VStack(spacing: 0) {
+            // MARK: - Header
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(.black)
+                        .padding()
+                }
+                
                 Spacer()
                 
+                Text("Adjust Image")
+                    .font(.headline)
+                    .foregroundStyle(.black)
+                
+                Spacer()
+                
+                Button {
+                    cropAndSave()
+                } label: {
+                    Text("Use Image")
+                        .font(.subheadline)
+                        .fontWeight(.bold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(cropColor)
+                        .clipShape(Capsule())
+                }
+                .padding(.trailing, 16)
+            }
+            .padding(.top, 50) // Explicit Notch Padding
+            .padding(.bottom, 10)
+            .background(Color.white)
+            .zIndex(100)
+            
+            // MARK: - Main Editor
+            ZStack {
+                // 1. Dark Background
+                Color(white: 0.15).ignoresSafeArea()
+                
+                // 2. Movable Image
+                // We clamp gestures so the image stays somewhat within bounds? 
+                // Flexible crop usually allows free movement.
+                GeometryReader { geometry in
+                    ZStack {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFill()
+                            .scaleEffect(scale)
+                            .offset(offset)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged { value in
+                                        offset = CGSize(
+                                            width: lastOffset.width + value.translation.width,
+                                            height: lastOffset.height + value.translation.height
+                                        )
+                                    }
+                                    .onEnded { _ in
+                                        lastOffset = offset
+                                    }
+                            )
+                            .gesture(
+                                MagnificationGesture()
+                                    .onChanged { value in
+                                        scale = lastScale * value
+                                    }
+                                    .onEnded { _ in
+                                        lastScale = scale
+                                    }
+                            )
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                }
+                
+                // 3. Dimmed Mask (Overlay with Hole)
+                maskOverlay()
+                    .allowsHitTesting(false) // Let gestures pass through to image
+                
+                // 4. Crop Box Visuals (Grid + Corners)
                 ZStack {
-                    // Gray background for the non-cropped area
-                    Color.black.opacity(0.8)
-                        .ignoresSafeArea()
-                    
-                    // The image to be cropped
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                        .scaleEffect(scale)
-                        .offset(offset)
-                        .gesture(
-                            DragGesture()
-                                .onChanged { value in
-                                    offset = CGSize(
-                                        width: lastOffset.width + value.translation.width,
-                                        height: lastOffset.height + value.translation.height
-                                    )
-                                }
-                                .onEnded { _ in
-                                    lastOffset = offset
-                                }
-                        )
-                        .gesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    scale = lastScale * value
-                                }
-                                .onEnded { _ in
-                                    lastScale = scale
-                                }
-                        )
-                    
-                    // The crop area overlay
-                    Rectangle()
-                        .stroke(Color.white, lineWidth: 2)
-                        .frame(width: cropSize, height: cropSize)
-                        .background(Color.black.opacity(0.001)) // Allows background tap
-                        .allowsHitTesting(false)
-                    
-                    // Blurred out area outside the crop circle
-                    maskOverlay()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                
-                Spacer()
-                
-                Text("Pinch to zoom • Drag to move")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .padding(.bottom)
-            }
-            .background(Color.black)
-            .navigationTitle("Crop Photo")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
+                    // Grid Lines (3x3)
+                    VStack(spacing: 0) {
+                        Spacer()
+                        Divider().background(Color.white.opacity(0.3))
+                        Spacer()
+                        Divider().background(Color.white.opacity(0.3))
+                        Spacer()
                     }
-                    .foregroundStyle(.white)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        cropAndSave()
+                    HStack(spacing: 0) {
+                        Spacer()
+                        Rectangle().fill(Color.white.opacity(0.3)).frame(width: 1)
+                        Spacer()
+                        Rectangle().fill(Color.white.opacity(0.3)).frame(width: 1)
+                        Spacer()
                     }
-                    .fontWeight(.bold)
-                    .foregroundStyle(.blue)
+                    
+                    // Orange Corners
+                    cornersView()
                 }
+                .frame(width: cropSize, height: cropSize)
+                .allowsHitTesting(false)
             }
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
+            .clipShape(Rectangle())
         }
+        .edgesIgnoringSafeArea(.top)
+        .background(Color(white: 0.15))
     }
     
-    @ViewBuilder
+    // MARK: - Visual Components
+    
     private func maskOverlay() -> some View {
         Canvas { context, size in
-            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black.opacity(0.5)))
+            // Fill entire screen with dark dim
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black.opacity(0.7)))
             
-            let rect = CGRect(
-                x: (size.width - cropSize) / 2,
-                y: (size.height - cropSize) / 2,
-                width: cropSize,
-                height: cropSize
-            )
+            // Create the hole for crop box
+            let x = (size.width - cropSize) / 2
+            let y = (size.height - cropSize) / 2
+            let cropRect = CGRect(x: x, y: y, width: cropSize, height: cropSize)
             
+            // Cut it out
             context.blendMode = .destinationOut
-            context.fill(Path(rect), with: .color(.white))
+            context.fill(Path(cropRect), with: .color(.white))
         }
-        .allowsHitTesting(false)
     }
     
+    private func cornersView() -> some View {
+        ZStack {
+            // Top Left
+            Path { path in
+                path.move(to: CGPoint(x: 0, y: cornerLength))
+                path.addLine(to: CGPoint(x: 0, y: 0))
+                path.addLine(to: CGPoint(x: cornerLength, y: 0))
+            }
+            .stroke(cropColor, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
+            .frame(width: cropSize, height: cropSize) // Centers path in the cropSize frame if strictly defined path?
+            // Wait, path coordinates are absolute. We need to align them.
+            // Using standard alignment on the ZStack
+            
+            // Let's use specific aligned Corner Views
+            cornerPath(rotation: 0)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            
+            cornerPath(rotation: 90)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+            
+            cornerPath(rotation: 180)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+            
+            cornerPath(rotation: 270)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+        }
+    }
+    
+    private func cornerPath(rotation: Double) -> some View {
+        Path { path in
+            path.move(to: CGPoint(x: 0, y: cornerLength))
+            path.addLine(to: CGPoint(x: 0, y: 0))
+            path.addLine(to: CGPoint(x: cornerLength, y: 0))
+        }
+        .stroke(cropColor, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
+        .frame(width: cornerLength, height: cornerLength)
+        .rotationEffect(.degrees(rotation))
+    }
+    
+    // MARK: - Logic
+    
     private func cropAndSave() {
-        let imageSize = image.size
-        let viewPortSize = CGSize(width: cropSize, height: cropSize)
+        // Render the image based on specific scale/offset transformations to a new context.
+        // Or simpler: Render the View Content within the Crop Rect frame.
         
-        // Calculate the scale of the image as displayed in the UI (scaledToFill)
-        let imageAspectRatio = imageSize.width / imageSize.height
-        let screenWidth = UIScreen.main.bounds.width
+        let renderer = ImageRenderer(content:
+            ZStack {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .scaleEffect(scale)
+                    .offset(offset)
+            }
+            .frame(width: cropSize, height: cropSize)
+            .clipped()
+        )
+        // Ensure scale matches screen scale for quality
+        renderer.scale = UIScreen.main.scale
         
-        var displaySize: CGSize
-        if imageAspectRatio > 1 {
-            // Landscape
-            displaySize = CGSize(width: screenWidth * imageAspectRatio, height: screenWidth)
-        } else {
-            // Portrait or Square
-            displaySize = CGSize(width: screenWidth, height: screenWidth / imageAspectRatio)
+        if let uiImage = renderer.uiImage {
+             onCrop(uiImage)
         }
         
-        // Final scale including user pinch zoom
-        let totalScale = scale * (displaySize.width / imageSize.width)
-        
-        // Rendering
-        let renderer = UIGraphicsImageRenderer(size: viewPortSize)
-        let cropped = renderer.image { context in
-            context.cgContext.translateBy(x: viewPortSize.width / 2, y: viewPortSize.height / 2)
-            
-            // Apply scale
-            context.cgContext.scaleBy(x: scale, y: scale)
-            
-            // Apply translation offset
-            context.cgContext.translateBy(x: offset.width / scale, y: offset.height / scale)
-            
-            // The image should be drawn centered in the coordinate system we just established
-            let drawRect = CGRect(
-                x: -displaySize.width / 2,
-                y: -displaySize.height / 2,
-                width: displaySize.width,
-                height: displaySize.height
-            )
-            
-            image.draw(in: drawRect)
-        }
-        
-        onCrop(cropped)
         dismiss()
     }
-}
-
-#Preview {
-    ImageCropperView(image: UIImage(systemName: "photo")!) { _ in }
 }
