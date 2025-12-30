@@ -182,6 +182,24 @@ struct HomeView: View {
                 AddEventView()
             }
         }
+        .onOpenURL { url in
+            handleDeepLink(url)
+        }
+    }
+    
+    private func handleDeepLink(_ url: URL) {
+        // Deep link format: eventcounter://event/{id}
+        guard url.scheme == "eventcounter" else { return }
+        
+        let pathComponents = url.pathComponents
+        if url.host == "event" || pathComponents.contains("event") {
+            let idString = url.lastPathComponent
+            if let id = UUID(uuidString: idString) {
+                // Navigate to the event
+                homePath = NavigationPath() // Clear path to ensure we start from Home
+                homePath.append(id)
+            }
+        }
     }
     
     // MARK: - Subviews

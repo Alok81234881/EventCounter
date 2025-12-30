@@ -21,12 +21,47 @@ struct Provider: TimelineProvider {
         let (event, count) = fetchNextEventAndCount(for: context.family)
         
         let entryDate = Date()
-        let entry = SimpleEntry(date: entryDate, event: event, futureEventCount: count)
+        var entries: [SimpleEntry] = []
+        
+        if let targetDate = event?.date {
+            let timeUntil = targetDate.timeIntervalSince(entryDate)
+            let thirtyDays: TimeInterval = 30 * 24 * 3600
+            let oneDay: TimeInterval = 24 * 3600
+            
+            if timeUntil > thirtyDays {
+                // Mode 1: > 30 Days. Refresh every 1 hour is enough (showing months, days, hours)
+                for i in 0..<12 { // 12 hours of entries
+                    let date = Calendar.current.date(byAdding: .hour, value: i, to: entryDate)!
+                    entries.append(SimpleEntry(date: date, event: event, futureEventCount: count))
+                }
+            } else if timeUntil > oneDay {
+                // Mode 2: < 30 Days. Refresh every minute for the next hour to show minutes correctly
+                for i in 0..<60 {
+                    let date = entryDate.addingTimeInterval(Double(i) * 60)
+                    entries.append(SimpleEntry(date: date, event: event, futureEventCount: count))
+                }
+            } else {
+                // Mode 3: < 1 Day. Use style: .timer in the view for second-by-second updates.
+                entries.append(SimpleEntry(date: entryDate, event: event, futureEventCount: count))
+            }
+            
+            // Add critical threshold points just in case
+            [thirtyDays, oneDay, 0].forEach { threshold in
+                let reloadPoint = targetDate.addingTimeInterval(-threshold)
+                if reloadPoint > entryDate && reloadPoint < entryDate.addingTimeInterval(3600 * 24) {
+                    entries.append(SimpleEntry(date: reloadPoint, event: event, futureEventCount: count))
+                }
+            }
+        } else {
+            entries.append(SimpleEntry(date: entryDate, event: event, futureEventCount: count))
+        }
 
-        // Refresh the timeline as soon as the current event passes (if it's a countdown)
-        // Milestones (count-ups) don't need a specific refresh unless we want to be precise.
-        let reloadDate = event?.date ?? Calendar.current.date(byAdding: .hour, value: 1, to: entryDate)!
-        let timeline = Timeline(entries: [entry], policy: .after(reloadDate))
+        // Clean up and ensure chronological order
+        let uniqueEntries = Dictionary(grouping: entries, by: { Int($0.date.timeIntervalSince1970) })
+            .compactMap { $0.value.first }
+            .sorted(by: { $0.date < $1.date })
+        
+        let timeline = Timeline(entries: uniqueEntries, policy: .atEnd)
         completion(timeline)
     }
     

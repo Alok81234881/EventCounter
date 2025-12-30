@@ -104,9 +104,21 @@ struct SmallEventView: View {
                             .fontWeight(.bold)
                             .foregroundStyle(.white.opacity(0.9))
                     }
-                } else {
-                    if components.days > 0 || !components.isPast {
-                        Text(components.formattedTitleShort)
+                    let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
+                    let timeUntil = event.date.timeIntervalSince(entryDate)
+                    let thirtyDays: TimeInterval = 30 * 24 * 3600
+                    let oneDay: TimeInterval = 24 * 3600
+                    
+                    if timeUntil > oneDay {
+                        // > 1 Day: Show precise 3-component string (updates via Provider timeline)
+                        Text(components.formattedThreeComponents)
+                            .font(.system(size: 10, weight: .bold, design: .rounded))
+                            .foregroundStyle(.white.opacity(0.9))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    } else if timeUntil > 0 {
+                        // < 1 day: Show Hours, Minutes, Seconds (Live)
+                        Text(event.date, style: .timer)
                             .font(.system(.caption, design: .monospaced))
                             .fontWeight(.bold)
                             .foregroundStyle(.white.opacity(0.9))
@@ -136,93 +148,128 @@ struct MediumEventView: View {
     var entryDate: Date
     
     var body: some View {
-        ZStack(alignment: .topTrailing) {
-            HStack(spacing: 20) {
-                // Left: Large Circle Image
-                ZStack {
-                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: 100, height: 100)
-                            .clipShape(Circle())
-                            .shadow(radius: 4)
-                    } else {
-                        Circle()
-                            .fill(.white.opacity(0.2))
-                            .frame(width: 100, height: 100)
+        ZStack {
+            // Background with slight blur effect (standard for widgets)
+            Color.white.opacity(0.4)
+            
+            VStack(alignment: .leading, spacing: 0) {
+                // Top Row: Icon, Title, Date and Status
+                HStack(alignment: .top, spacing: 12) {
+                    // Category Icon
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color(hex: event.colorHex) ?? .blue, (Color(hex: event.colorHex) ?? .blue).opacity(0.8)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .frame(width: 48, height: 48)
+                            .shadow(color: (Color(hex: event.colorHex) ?? .blue).opacity(0.3), radius: 4, y: 2)
+                        
                         Image(systemName: event.categoryIcon)
                             .foregroundStyle(.white)
-                            .font(.system(size: 40))
-                    }
-                }
-                
-                // Right: Content Section
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(event.title)
-                        .font(.system(.title3, design: .rounded))
-                        .fontWeight(.bold)
-                        .foregroundStyle(.white)
-                        .lineLimit(2)
-                        .minimumScaleFactor(0.7)
-                    
-                    let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
-                    
-                    if event.widgetDisplayStyle == "Progress" && !components.isPast {
-                        HStack(spacing: 12) {
-                            CircularProgressView(
-                                progress: calculateProgress(from: event.createdAt, to: event.date),
-                                color: .white,
-                                lineWidth: 8,
-                                showBackground: true
-                            )
-                            .frame(width: 40, height: 40)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(components.formattedTitle)
-                                    .font(.system(.headline, design: .rounded))
-                                    .fontWeight(.bold)
-                                    .foregroundStyle(.white)
-                                
-                                Text("\(Int(calculateProgress(from: event.createdAt, to: event.date) * 100))% Complete")
-                                    .font(.system(.caption2, design: .rounded))
-                                    .foregroundStyle(.white.opacity(0.6))
-                            }
-                        }
-                    } else {
-                        if components.days > 0 {
-                            Text(components.formattedTitle)
-                                .font(.system(size: 24, weight: .black, design: .rounded))
-                                .foregroundStyle(.white)
-                                .minimumScaleFactor(0.8)
-                        } else if !components.isPast || event.isCountUp {
-                            Text(event.date, style: .timer)
-                                .font(.system(.title2, design: .monospaced))
-                                .fontWeight(.bold)
-                                .foregroundStyle(.white)
-                        } else {
-                            Text("Event Completed")
-                                .font(.system(.headline, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
+                            .font(.system(size: 22, weight: .semibold))
                     }
                     
-                    Text(event.date.formatted(date: .abbreviated, time: .omitted))
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.7))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(event.title)
+                            .font(.system(size: 18, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color(red: 0.1, green: 0.15, blue: 0.2))
+                        
+                        Text(event.date.formatted(date: .long, time: .omitted))
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundStyle(Color.gray)
+                    }
+                    
+                    Spacer()
+                    
+                    // Status dot
+                    ZStack {
+                        Circle()
+                            .fill(Color(hex: event.colorHex).opacity(0.1) ?? .blue.opacity(0.1))
+                            .frame(width: 24, height: 24)
+                        Circle()
+                            .fill(Color(hex: event.colorHex) ?? .blue)
+                            .frame(width: 8, height: 8)
+                    }
                 }
+                .padding(.horizontal, 16)
+                .padding(.top, 16)
                 
                 Spacer()
+                
+                // Bottom Row: Countdown and Progress
+                HStack(alignment: .bottom) {
+                    let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
+                    
+                    let timeUntil = event.date.timeIntervalSince(entryDate)
+                    let thirtyDays: TimeInterval = 30 * 24 * 3600
+                    let oneDay: TimeInterval = 24 * 3600
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        if timeUntil > oneDay {
+                            // > 1 Day: Precise 3-component display
+                            Text(components.formattedThreeComponents)
+                                .font(.system(size: 20, weight: .black, design: .rounded))
+                                .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                                .minimumScaleFactor(0.6)
+                                .lineLimit(2)
+                                .fixedSize(horizontal: false, vertical: true)
+                        } else if timeUntil > 0 {
+                            // < 1 day: Style for live seconds
+                            Text(event.date, style: .timer)
+                                .font(.system(size: 32, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                                .minimumScaleFactor(0.5)
+                        } else if event.isCountUp {
+                            Text(event.date, style: .timer)
+                                .font(.system(size: 32, weight: .black, design: .monospaced))
+                                .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                        } else {
+                            Text("Event Completed")
+                                .font(.system(size: 18, weight: .black, design: .rounded))
+                                .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                        }
+                        
+                        Text(timeUntil > 0 ? "remaining" : "elapsed")
+                            .font(.system(size: 14, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color(hex: event.colorHex) ?? .cyan)
+                    }
+                    
+                    Spacer()
+                    
+                    // Circular Progress
+                    ZStack {
+                        let progress = calculateProgress(from: event.createdAt, to: event.date)
+                        CircularProgressView(
+                            progress: progress,
+                            color: Color(hex: event.colorHex) ?? .cyan,
+                            lineWidth: 8,
+                            showBackground: true
+                        )
+                        .frame(width: 54, height: 54)
+                        
+                        Text("\(Int(progress * 100))%")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color(red: 0.1, green: 0.15, blue: 0.2))
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 16)
             }
-            .padding(16)
-            
-            // Top Right Corner Icon
-            Image(systemName: event.categoryIcon)
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 40, height: 40)
-                .foregroundStyle(.white)
-                .padding(6)
-
+        }
+        .containerBackground(for: .widget) {
+            ZStack {
+                Color.white
+                // Subtle gradient to simulate glass reflection
+                LinearGradient(
+                    colors: [Color.white, Color.white.opacity(0.8)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
         }
         .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
