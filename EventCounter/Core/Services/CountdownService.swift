@@ -28,7 +28,7 @@ public struct CountdownComponents {
         }
     }
     
-    func naturalDescription(category: EventCategory, title: String) -> String {
+    public func naturalDescription(category: EventCategory, title: String) -> String {
         if isPast && isCountUp {
             return category.milestoneDescription(for: title, time: formattedTitle)
         } else if isPast {

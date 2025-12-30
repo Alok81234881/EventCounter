@@ -1,6 +1,6 @@
 import Foundation
 
-enum EventCategory: String, Codable, CaseIterable {
+public enum EventCategory: String, Codable, CaseIterable {
     case birthday
     case travel
     case exam
@@ -12,7 +12,7 @@ enum EventCategory: String, Codable, CaseIterable {
     case quitting
     case anniversary
     
-    var icon: String {
+    public var icon: String {
         switch self {
         case .birthday: return "birthday.cake"
         case .travel: return "airplane"
@@ -27,11 +27,11 @@ enum EventCategory: String, Codable, CaseIterable {
         }
     }
     
-    var displayName: String {
+    public var displayName: String {
         rawValue.capitalized
     }
     
-    func milestoneDescription(for title: String, time: String) -> String {
+    public func milestoneDescription(for title: String, time: String) -> String {
         switch self {
         case .wedding: return "\(time) since Wedding"
         case .work: return "\(time) since I joined"

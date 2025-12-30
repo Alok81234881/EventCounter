@@ -9,238 +9,341 @@ struct EventDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingEditSheet = false
     @State private var showingLiveActivityAlert = false
+    @State private var showingDeleteAlert = false
+    @State private var showingSharePreview = false
 
     var body: some View {
-        Group {
+        ZStack {
             if event.isDeleted {
                 ContentUnavailableView("Event Deleted", systemImage: "trash")
             } else {
                 TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                    let components = CountdownService.calculateComponents(from: context.date, to: event.date, isCountUp: event.isCountUp)
+                    
                     ScrollView {
-                        VStack(spacing: 20) {
-                            // Header Image or Icon
-                            if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-                                Image(uiImage: uiImage)
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(height: 250)
-                                    .clipped()
-                                    .cornerRadius(12)
-                            } else {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color(hex: event.colorHex) ?? .blue)
-                                        .frame(width: 100, height: 100)
-                                        .opacity(0.2)
-                                    
-                                    Image(systemName: event.category.icon)
-                                        .font(.system(size: 40))
-                                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                        VStack(spacing: 0) {
+                            // Hero Image Section
+                            ZStack(alignment: .topLeading) {
+                                // Background Image
+                                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(height: 300)
+                                        .clipped()
+                                } else {
+                                    Rectangle()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [Color(hex: event.colorHex) ?? .blue, Color(hex: event.colorHex)?.opacity(0.6) ?? .blue.opacity(0.6)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                        .frame(height: 300)
                                 }
-                                .padding(.top, 20)
-                            }
-                            
-                            Text(event.title)
-                                .font(.largeTitle)
-                                .bold()
-                                .multilineTextAlignment(.center)
-                            
-                            // Countdown Logic
-                            let components = CountdownService.calculateComponents(from: context.date, to: event.date, isCountUp: event.isCountUp)
-                            
-                            VStack(spacing: 12) {
-                                Text(components.naturalDescription(category: event.category, title: event.title))
-                                    .font(.title2)
-                                    .bold()
-                                    .multilineTextAlignment(.center)
-                                    .foregroundStyle(components.isPast && event.isCountUp ? Color(hex: event.colorHex) ?? .blue : .primary)
                                 
-                                if !components.isPast || !event.isCountUp {
-                                    HStack(spacing: 30) {
-                                        // Timer Section
-                                        HStack(spacing: 20) {
-                                            if components.days > 0 {
-                                                TimeUnitView(value: components.days, unit: "Days")
-                                                TimeUnitView(value: components.hours, unit: "Hours")
-                                                TimeUnitView(value: components.minutes, unit: "Mins")
-                                            } else {
-                                                TimeUnitView(value: components.hours, unit: "Hours")
-                                                TimeUnitView(value: components.minutes, unit: "Mins")
-                                                TimeUnitView(value: components.seconds, unit: "Secs")
-                                            }
+                                // Gradient Overlay
+                                LinearGradient(
+                                    colors: [.black.opacity(0.3), .clear, .black.opacity(0.2)],
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                                .frame(height: 300)
+                                
+                                // Top Navigation Buttons
+                                HStack {
+                                    Button {
+                                        dismiss()
+                                    } label: {
+                                        Image(systemName: "chevron.left")
+                                            .font(.system(size: 18, weight: .semibold))
+                                            .foregroundStyle(.white)
+                                            .frame(width: 40, height: 40)
+                                            .background(.white.opacity(0.3))
+                                            .clipShape(Circle())
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    HStack(spacing: 12) {
+                                        Button {
+                                            showingSharePreview = true
+                                        } label: {
+                                            Image(systemName: "square.and.arrow.up")
+                                                .font(.system(size: 18, weight: .semibold))
+                                                .foregroundStyle(.white)
+                                                .frame(width: 40, height: 40)
+                                                .background(.white.opacity(0.3))
+                                                .clipShape(Circle())
                                         }
                                         
-                                        // Circular Progress Section
-                                        CircularProgressView(
-                                            progress: event.progress,
-                                            color: Color(hex: event.colorHex) ?? .blue,
-                                            lineWidth: 20
-                                        )
-                                        .frame(width: 80, height: 80)
-                                        .overlay {
-                                            if components.days > 0 {
-                                                Text("\(Int(event.progress * 100))%")
-                                                    .font(.caption)
-                                                    .bold()
-                                            }
+                                        Button {
+                                            showingEditSheet = true
+                                        } label: {
+                                            Text("Edit")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundStyle(.white)
+                                                .padding(.horizontal, 16)
+                                                .padding(.vertical, 10)
+                                                .background(.white.opacity(0.3))
+                                                .clipShape(Capsule())
                                         }
                                     }
                                 }
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color(uiColor: .secondarySystemBackground))
-                            .cornerRadius(16)
-                            
-                            // Metadata
-                            VStack(alignment: .leading, spacing: 16) {
-                                Label {
-                                    Text(event.date.formatted(date: .long, time: .shortened))
-                                } icon: {
-                                    Image(systemName: "calendar")
-                                }
+                                .padding()
+                                .padding(.top, 40)
                                 
-                                Label {
+                                // Title Overlay
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(event.title)
+                                        .font(.system(size: 32, weight: .bold))
+                                        .foregroundStyle(.white)
+                                    
                                     Text(event.category.displayName)
-                                } icon: {
-                                    Image(systemName: event.category.icon)
+                                        .font(.system(size: 16))
+                                        .foregroundStyle(.white.opacity(0.8))
+                                }
+                                .padding(.horizontal, 24)
+                                .padding(.bottom, 100)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                            }
+                            .frame(height: 300)
+                            
+                            // Countdown Card (Overlapping)
+                            VStack(spacing: 16) {
+                                // Countdown Timer
+                                HStack(spacing: 0) {
+                                    Text("\(components.days)")
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+                                    Text("d")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(Color.orange)
+                                    Text(" : ")
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+                                    Text(String(format: "%02d", components.hours))
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+                                    Text("h")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(Color.orange)
+                                    Text(" : ")
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+                                    Text(String(format: "%02d", components.minutes))
+                                        .font(.system(size: 36, weight: .bold))
+                                        .foregroundStyle(Color.orange)
+                                    Text("m")
+                                        .font(.system(size: 20, weight: .semibold))
+                                        .foregroundStyle(Color.orange)
                                 }
                                 
-                                if event.recurrence != .once {
-                                    Label {
-                                        Text("Repeats \(event.recurrence.rawValue)")
-                                    } icon: {
-                                        Image(systemName: "repeat")
+                                // Progress Bar Section
+                                HStack {
+                                    Text("NOW")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(.gray)
+                                    
+                                    Spacer()
+                                    
+                                    Text(event.date.formatted(.dateTime.month(.abbreviated).day()))
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundStyle(.gray)
+                                }
+                                
+                                // Gradient Progress Bar
+                                ZStack(alignment: .leading) {
+                                    Capsule()
+                                        .fill(Color.gray.opacity(0.2))
+                                        .frame(height: 8)
+                                    
+                                    Capsule()
+                                        .fill(
+                                            LinearGradient(
+                                                colors: [Color.orange, Color.pink],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .frame(width: max(8, UIScreen.main.bounds.width * 0.85 * event.progress), height: 8)
+                                }
+                                
+                                Text("\(Int(event.progress * 100))% of the wait is over!")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(.gray)
+                            }
+                            .padding(24)
+                            .background(Color.white)
+                            .cornerRadius(24)
+                            .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
+                            .padding(.horizontal, 20)
+                            .offset(y: -50)
+                            
+                            // Details Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Details")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundStyle(.black)
+                                
+                                VStack(spacing: 20) {
+                                    // Date Row
+                                    DetailRow(
+                                        icon: "calendar",
+                                        iconColor: Color.orange,
+                                        title: "DATE",
+                                        value: event.date.formatted(date: .long, time: .omitted),
+                                        subtitle: event.date.formatted(.dateTime.weekday(.wide))
+                                    )
+                                    
+                                    // Time Row
+                                    DetailRow(
+                                        icon: "clock.fill",
+                                        iconColor: Color.purple,
+                                        title: "TIME",
+                                        value: event.date.formatted(date: .omitted, time: .shortened),
+                                        subtitle: nil
+                                    )
+                                    
+                                    // Location Row
+                                    if let location = event.location, !location.isEmpty {
+                                        DetailRow(
+                                            icon: "mappin",
+                                            iconColor: Color.red,
+                                            title: "LOCATION",
+                                            value: location,
+                                            subtitle: nil
+                                        )
+                                    }
+                                    
+                                    // Notes Row
+                                    if let note = event.note, !note.isEmpty {
+                                        DetailRow(
+                                            icon: "doc.text.fill",
+                                            iconColor: Color.gray,
+                                            title: "NOTES",
+                                            value: note,
+                                            subtitle: nil
+                                        )
                                     }
                                 }
+                                .padding(20)
+                                .background(Color.white)
+                                .cornerRadius(20)
+                                .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.top, -20)
+                            
+                            // Settings Section
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Settings")
+                                    .font(.system(size: 22, weight: .bold))
+                                    .foregroundStyle(.black)
                                 
-                                if let note = event.note, !note.isEmpty {
-                                    Label {
-                                        Text(note)
-                                    } icon: {
-                                        Image(systemName: "note.text")
-                                    }
-                                }
-                                
-                                Divider()
-                                
-                                Toggle("Pin to Top", isOn: Binding(
-                                    get: { event.isPinned },
-                                    set: { isOn in
-                                        event.isPinned = isOn
-                                        if isOn {
-                                            if !LiveActivityService.shared.startLiveActivity(for: event) {
-                                                event.isPinned = false // Revert if couldn't start
-                                                showingLiveActivityAlert = true
+                                VStack(spacing: 16) {
+                                    // Notify Before
+                                    Button {
+                                        // Show picker sheet
+                                    } label: {
+                                        HStack(spacing: 16) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(Color.cyan.opacity(0.15))
+                                                    .frame(width: 40, height: 40)
+                                                Image(systemName: "bell.fill")
+                                                    .font(.system(size: 18))
+                                                    .foregroundStyle(Color.cyan)
                                             }
-                                        } else {
-                                            LiveActivityService.shared.endLiveActivity(for: event.id)
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Notify Before")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundStyle(.black)
+                                                Text(reminderText(event.notifyBefore))
+                                                    .font(.system(size: 13))
+                                                    .foregroundStyle(.gray)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: "chevron.right")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundStyle(.gray.opacity(0.5))
                                         }
-                                        try? modelContext.save()
-                                        WidgetCenter.shared.reloadAllTimelines()
                                     }
-                                ))
-                                
-                                // ))
-                            }
-                            
-                            Picker("Reminder", selection: Binding(
-                                get: { event.notifyBefore },
-                                set: { newValue in
-                                    event.notifyBefore = newValue
-                                    NotificationService.shared.scheduleNotification(for: event)
-                                    try? modelContext.save()
-                                    WidgetCenter.shared.reloadAllTimelines()
-                                }
-                            )) {
-                                Text("None").tag(nil as Int?)
-                                Text("At time of event").tag(0 as Int?)
-                                Text("5 minutes before").tag(5 as Int?)
-                                Text("15 minutes before").tag(15 as Int?)
-                                Text("30 minutes before").tag(30 as Int?)
-                                Text("1 hour before").tag(60 as Int?)
-                                Text("1 day before").tag(1440 as Int?)
-                                Text("1 week before").tag(10080 as Int?)
-                            }
-                            
-                            Toggle("Count up since this date", isOn: Binding(
-                                get: { event.isCountUp },
-                                set: { newValue in
-                                    event.isCountUp = newValue
-                                    try? modelContext.save()
-                                    WidgetCenter.shared.reloadAllTimelines()
-                                }
-                            ))
-                            
-                            Divider()
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Widget Display Style")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                                    .fontWeight(.bold)
-                                
-                                Picker("Widget Style", selection: Binding(
-                                    get: { event.widgetDisplayStyle },
-                                    set: { newValue in
-                                        event.widgetDisplayStyle = newValue
-                                        try? modelContext.save()
-                                        WidgetCenter.shared.reloadAllTimelines()
-                                    }
-                                )) {
-                                    ForEach(WidgetDisplayStyle.allCases, id: \.self) { style in
-                                        Text(style.rawValue).tag(style)
+                                    
+                                    // Live Activity Toggle
+                                    HStack(spacing: 16) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.purple.opacity(0.15))
+                                                .frame(width: 40, height: 40)
+                                            Image(systemName: "chart.bar.fill")
+                                                .font(.system(size: 18))
+                                                .foregroundStyle(Color.purple)
+                                        }
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Live Activity")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundStyle(.black)
+                                            Text("Show on Lock Screen")
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(.gray)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        Toggle("", isOn: Binding(
+                                            get: { event.isPinned },
+                                            set: { isOn in
+                                                event.isPinned = isOn
+                                                if isOn {
+                                                    if !LiveActivityService.shared.startLiveActivity(for: event) {
+                                                        event.isPinned = false
+                                                        showingLiveActivityAlert = true
+                                                    }
+                                                } else {
+                                                    LiveActivityService.shared.endLiveActivity(for: event.id)
+                                                }
+                                                try? modelContext.save()
+                                                WidgetCenter.shared.reloadAllTimelines()
+                                            }
+                                        ))
+                                        .tint(.orange)
                                     }
                                 }
-                                .pickerStyle(.segmented)
+                                .padding(20)
+                                .background(Color.white)
+                                .cornerRadius(20)
+                                .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
                             }
-                            .padding(.top, 4)
-                        }
-                        .padding()
-                        .background(Color(uiColor: .systemBackground))
-                        .cornerRadius(12)
-                        .shadow(radius: 2)
-                        .padding(.horizontal)
-                        
-                        Spacer()
-                        
-                        Button(role: .destructive) {
-                            LiveActivityService.shared.endLiveActivity(for: event.id)
-                            deleteEvent()
-                        } label: {
-                            Label("Delete Event", systemImage: "trash")
-                        }
-                        .padding(.bottom)
-                        
-                        if Activity<EventActivityAttributes>.activities.contains(where: { $0.attributes.eventID == event.id }) {
+                            .padding(.horizontal, 24)
+                            .padding(.top, 32)
+                            
+                            // Delete Button
                             Button(role: .destructive) {
-                                LiveActivityService.shared.endLiveActivity(for: event.id)
+                                showingDeleteAlert = true
                             } label: {
-                                Label("Stop Live Activity", systemImage: "stop.circle")
+                                Text("Delete Event")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundStyle(.white)
                                     .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(Color.red)
+                                    .cornerRadius(12)
                             }
-                            .buttonStyle(.bordered)
-                            .padding(.horizontal)
-                            .padding(.bottom)
-                        } else {
-                            Button {
-                                if !LiveActivityService.shared.startLiveActivity(for: event) {
-                                    showingLiveActivityAlert = true
-                                }
-                            } label: {
-                                Label("Track Live Activity", systemImage: "timer")
-                                    .frame(maxWidth: .infinity)
-                            }
-                            .buttonStyle(.borderedProminent)
-                            .padding(.horizontal)
-                            .padding(.bottom)
+                            .padding(.horizontal, 24)
+                            .padding(.top, 40)
+                            .padding(.bottom, 40)
                         }
                     }
+                    .ignoresSafeArea(edges: .top)
                 }
             }
         }
-        
-        
         .alert("Activity Already Running", isPresented: $showingLiveActivityAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Add") {
@@ -264,25 +367,22 @@ struct EventDetailView: View {
                 Text("One Live Activity is already started. If you add this, the upcoming event's activity will show first. When it's done, the next one can start.")
             }
         }
-        .navigationTitle("")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                HStack {
-                    if let shareImage = renderShareImage() {
-                        ShareLink(item: Image(uiImage: shareImage), preview: SharePreview(event.title, image: Image(uiImage: shareImage))) {
-                            Image(systemName: "square.and.arrow.up")
-                        }
-                    }
-                    
-                    Button("Edit") {
-                        showingEditSheet = true
-                    }
-                }
+        .alert("Delete Event?", isPresented: $showingDeleteAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                deleteEvent()
             }
+        } message: {
+            Text("Are you sure you want to delete this event?\nThis action cannot be undone.")
         }
+        .navigationBarHidden(true)
         .sheet(isPresented: $showingEditSheet) {
             AddEventView(eventToEdit: event)
+        }
+        .fullScreenCover(isPresented: $showingSharePreview) {
+            if let components = try? CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: event.isCountUp) {
+                SharePreviewView(event: event, components: components)
+            }
         }
     }
     
@@ -304,7 +404,22 @@ struct EventDetailView: View {
         WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
+    
+    private func reminderText(_ minutes: Int?) -> String {
+        guard let mins = minutes else { return "No reminder" }
+        switch mins {
+        case 0: return "At time of event"
+        case 5: return "5 minutes before"
+        case 15: return "15 minutes before"
+        case 30: return "30 minutes before"
+        case 60: return "1 hour before"
+        case 1440: return "1 day before"
+        case 10080: return "1 week before"
+        default: return "\(mins) mins before"
+        }
+    }
 }
+
 
 struct TimeUnitView: View {
     let value: Int
@@ -321,5 +436,44 @@ struct TimeUnitView: View {
                 .foregroundStyle(.secondary)
         }
         .frame(minWidth: 50)
+    }
+}
+
+struct DetailRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    let value: String
+    let subtitle: String?
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.15))
+                    .frame(width: 40, height: 40)
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundStyle(iconColor)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.gray)
+                
+                Text(value)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.black)
+                
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 13))
+                        .foregroundStyle(.gray)
+                }
+            }
+            
+            Spacer()
+        }
     }
 }
