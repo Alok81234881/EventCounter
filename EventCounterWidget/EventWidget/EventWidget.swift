@@ -5,11 +5,11 @@ struct EventWidget: Widget {
     let kind: String = "EventWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
+        AppIntentConfiguration(kind: kind, intent: SelectEventIntent.self, provider: Provider()) { entry in
             EventWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("Next Event")
-        .description("Shows your nearest upcoming event.")
+        .configurationDisplayName("Track Event")
+        .description("Choose a specific event to track on your home screen.")
         .supportedFamilies([.systemSmall, .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline])
     }
 }

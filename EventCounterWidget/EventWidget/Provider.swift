@@ -3,22 +3,21 @@ import SwiftUI
 import SwiftData
 import UIKit
 
-struct Provider: TimelineProvider {
+struct Provider: AppIntentTimelineProvider {
     @MainActor
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), event: EventDTO.preview, futureEventCount: 1)
     }
 
     @MainActor
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let (event, count) = fetchNextEventAndCount(for: context.family)
-        let entry = SimpleEntry(date: Date(), event: event, futureEventCount: count)
-        completion(entry)
+    func snapshot(for configuration: SelectEventIntent, in context: Context) async -> SimpleEntry {
+        let (event, count) = fetchNextEventAndCount(for: context.family, selectedID: configuration.event?.id)
+        return SimpleEntry(date: Date(), event: event, futureEventCount: count)
     }
 
     @MainActor
-    func getTimeline(in context: Context, completion: @escaping (Timeline<SimpleEntry>) -> ()) {
-        let (event, count) = fetchNextEventAndCount(for: context.family)
+    func timeline(for configuration: SelectEventIntent, in context: Context) async -> Timeline<SimpleEntry> {
+        let (event, count) = fetchNextEventAndCount(for: context.family, selectedID: configuration.event?.id)
         
         let entryDate = Date()
         var entries: [SimpleEntry] = []
@@ -29,8 +28,8 @@ struct Provider: TimelineProvider {
             let oneDay: TimeInterval = 24 * 3600
             
             if timeUntil > thirtyDays {
-                // Mode 1: > 30 Days. Refresh every 1 hour is enough (showing months, days, hours)
-                for i in 0..<12 { // 12 hours of entries
+                // Mode 1: > 30 Days. Refresh every 1 hour is enough
+                for i in 0..<12 {
                     let date = Calendar.current.date(byAdding: .hour, value: i, to: entryDate)!
                     entries.append(SimpleEntry(date: date, event: event, futureEventCount: count))
                 }
@@ -45,7 +44,6 @@ struct Provider: TimelineProvider {
                 entries.append(SimpleEntry(date: entryDate, event: event, futureEventCount: count))
             }
             
-            // Add critical threshold points just in case
             [thirtyDays, oneDay, 0].forEach { threshold in
                 let reloadPoint = targetDate.addingTimeInterval(-threshold)
                 if reloadPoint > entryDate && reloadPoint < entryDate.addingTimeInterval(3600 * 24) {
@@ -56,17 +54,15 @@ struct Provider: TimelineProvider {
             entries.append(SimpleEntry(date: entryDate, event: event, futureEventCount: count))
         }
 
-        // Clean up and ensure chronological order
         let uniqueEntries = Dictionary(grouping: entries, by: { Int($0.date.timeIntervalSince1970) })
             .compactMap { $0.value.first }
             .sorted(by: { $0.date < $1.date })
         
-        let timeline = Timeline(entries: uniqueEntries, policy: .atEnd)
-        completion(timeline)
+        return Timeline(entries: uniqueEntries, policy: .atEnd)
     }
     
     @MainActor
-    private func fetchNextEventAndCount(for family: WidgetFamily) -> (EventDTO?, Int) {
+    private func fetchNextEventAndCount(for family: WidgetFamily, selectedID: UUID? = nil) -> (EventDTO?, Int) {
         // Shared Model Container Logic
         let schema = Schema([Event.self])
         
@@ -80,10 +76,11 @@ struct Provider: TimelineProvider {
 
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let context = container.mainContext
             let descriptor = FetchDescriptor<Event>(
                 sortBy: [SortDescriptor(\.date, order: .forward)]
             )
-            let allEvents = try container.mainContext.fetch(descriptor)
+            let allEvents = try context.fetch(descriptor)
             let now = Date()
             
             let futureEvents = allEvents.filter { $0.date > now }
@@ -91,15 +88,19 @@ struct Provider: TimelineProvider {
             
             var selectedEvent: Event?
             
-            switch family {
-            case .systemSmall:
-                // Small Widget: Show most recent PAST event
-                selectedEvent = pastEvents.sorted(by: { $0.date > $1.date }).first
-            case .systemMedium, .accessoryCircular, .accessoryRectangular, .accessoryInline:
-                // Medium Widget & Lock Screen: Show next UPCOMING event
-                selectedEvent = futureEvents.sorted(by: { $0.date < $1.date }).first
-            default:
-                selectedEvent = futureEvents.sorted(by: { $0.date < $1.date }).first
+            // Priority 1: User selected event via Widget Configuration
+            if let selectedID = selectedID {
+                selectedEvent = allEvents.first(where: { $0.id == selectedID })
+            }
+            
+            // Priority 2: Fallback logic if no event selected or selected event not found
+            if selectedEvent == nil {
+                switch family {
+                case .systemSmall:
+                    selectedEvent = pastEvents.sorted(by: { $0.date > $1.date }).first
+                default:
+                    selectedEvent = futureEvents.sorted(by: { $0.date < $1.date }).first
+                }
             }
             
             if let event = selectedEvent {
@@ -121,7 +122,6 @@ struct Provider: TimelineProvider {
                     id: event.id.uuidString
                 )
                 
-                // Count relevant events based on logic
                 let relevantCount = (family == .systemSmall) ? pastEvents.count : futureEvents.count
                 return (dto, relevantCount)
             }
