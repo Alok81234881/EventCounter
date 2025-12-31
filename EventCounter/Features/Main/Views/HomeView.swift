@@ -3,7 +3,7 @@ import SwiftData
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \Event.date) private var events: [Event]
+    @Query(sort: \Event.createdAt, order: .reverse) private var events: [Event]
     
     @State private var selectedCategory: EventCategory? // nil = All
     @State private var searchText = ""

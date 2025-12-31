@@ -3,7 +3,7 @@ import SwiftData
 import WidgetKit
 
 struct UpcomingEventsView: View {
-    @Query(sort: \Event.date) private var events: [Event]
+    @Query(sort: \Event.createdAt, order: .reverse) private var events: [Event]
     @Environment(\.modelContext) private var modelContext
     @State private var showingAddEvent = false
 

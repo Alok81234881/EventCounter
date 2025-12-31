@@ -11,6 +11,7 @@ struct EventDetailView: View {
     @State private var showingLiveActivityAlert = false
     @State private var showingDeleteAlert = false
     @State private var showingSharePreview = false
+    @State private var showingReminderPicker = false
 
     var body: some View {
         ZStack {
@@ -112,32 +113,59 @@ struct EventDetailView: View {
                             
                             // Countdown Card (Overlapping)
                             VStack(spacing: 16) {
-                                // Countdown Timer
+                                let timeUntil = event.date.timeIntervalSince(context.date)
+                                let thirtyDays: TimeInterval = 30 * 24 * 3600
+                                let oneDay: TimeInterval = 24 * 3600
+                                
                                 HStack(spacing: 0) {
-                                    Text("\(components.days)")
-                                        .font(.system(size: 36, weight: .bold))
-                                        .foregroundStyle(Color.orange)
-                                    Text("d")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(Color.orange)
-                                    Text(" : ")
-                                        .font(.system(size: 36, weight: .bold))
-                                        .foregroundStyle(Color.orange)
-                                    Text(String(format: "%02d", components.hours))
-                                        .font(.system(size: 36, weight: .bold))
-                                        .foregroundStyle(Color.orange)
-                                    Text("h")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(Color.orange)
-                                    Text(" : ")
-                                        .font(.system(size: 36, weight: .bold))
-                                        .foregroundStyle(Color.orange)
-                                    Text(String(format: "%02d", components.minutes))
-                                        .font(.system(size: 36, weight: .bold))
-                                        .foregroundStyle(Color.orange)
-                                    Text("m")
-                                        .font(.system(size: 20, weight: .semibold))
-                                        .foregroundStyle(Color.orange)
+                                    if event.isCountUp {
+                                        // Count-up: always show Mo, d, h (or whatever makes sense)
+                                        // But following the "3 components" rule:
+                                        if components.months > 0 {
+                                            CountdownUnitView(value: components.months, unit: "mo", showPadding: false)
+                                            SeparatorView()
+                                            CountdownUnitView(value: components.days, unit: "d")
+                                            SeparatorView()
+                                            CountdownUnitView(value: components.hours, unit: "h")
+                                        } else if components.days > 0 {
+                                            CountdownUnitView(value: components.days, unit: "d", showPadding: false)
+                                            SeparatorView()
+                                            CountdownUnitView(value: components.hours, unit: "h")
+                                            SeparatorView()
+                                            CountdownUnitView(value: components.minutes, unit: "m")
+                                        } else {
+                                            CountdownUnitView(value: components.hours, unit: "h", showPadding: false)
+                                            SeparatorView()
+                                            CountdownUnitView(value: components.minutes, unit: "m")
+                                            SeparatorView()
+                                            CountdownUnitView(value: components.seconds, unit: "s")
+                                        }
+                                    } else if timeUntil > thirtyDays {
+                                        // Mode 1: Months, Days, Hours
+                                        CountdownUnitView(value: components.months, unit: "mo", showPadding: false)
+                                        SeparatorView()
+                                        CountdownUnitView(value: components.days, unit: "d")
+                                        SeparatorView()
+                                        CountdownUnitView(value: components.hours, unit: "h")
+                                    } else if timeUntil > oneDay {
+                                        // Mode 2: Days, Hours, Minutes
+                                        CountdownUnitView(value: components.days, unit: "d", showPadding: false)
+                                        SeparatorView()
+                                        CountdownUnitView(value: components.hours, unit: "h")
+                                        SeparatorView()
+                                        CountdownUnitView(value: components.minutes, unit: "m")
+                                    } else if timeUntil > 0 {
+                                        // Mode 3: Hours, Minutes, Seconds
+                                        CountdownUnitView(value: components.hours, unit: "h", showPadding: false)
+                                        SeparatorView()
+                                        CountdownUnitView(value: components.minutes, unit: "m")
+                                        SeparatorView()
+                                        CountdownUnitView(value: components.seconds, unit: "s")
+                                    } else {
+                                        Text("Event Completed")
+                                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                                            .foregroundStyle(Color.orange)
+                                    }
                                 }
                                 
                                 // Progress Bar Section
@@ -194,7 +222,7 @@ struct EventDetailView: View {
                                         iconColor: Color.orange,
                                         title: "DATE",
                                         value: event.date.formatted(date: .long, time: .omitted),
-                                        subtitle: event.date.formatted(.dateTime.weekday(.wide))
+                                        trailingSubtitle: event.date.formatted(.dateTime.weekday(.wide))
                                     )
                                     
                                     // Time Row
@@ -224,7 +252,7 @@ struct EventDetailView: View {
                                             iconColor: Color.gray,
                                             title: "NOTES",
                                             value: note,
-                                            subtitle: nil
+                                            isBoldValue: false
                                         )
                                     }
                                 }
@@ -245,7 +273,7 @@ struct EventDetailView: View {
                                 VStack(spacing: 16) {
                                     // Notify Before
                                     Button {
-                                        // Show picker sheet
+                                        showingReminderPicker = true
                                     } label: {
                                         HStack(spacing: 16) {
                                             ZStack {
@@ -375,9 +403,19 @@ struct EventDetailView: View {
         } message: {
             Text("Are you sure you want to delete this event?\nThis action cannot be undone.")
         }
-        .navigationBarHidden(true)
         .sheet(isPresented: $showingEditSheet) {
             AddEventView(eventToEdit: event)
+        }
+        .confirmationDialog("Change Reminder", isPresented: $showingReminderPicker, titleVisibility: .visible) {
+            Button("None") { updateReminder(nil) }
+            Button("At time of event") { updateReminder(0) }
+            Button("5 minutes before") { updateReminder(5) }
+            Button("15 minutes before") { updateReminder(15) }
+            Button("30 minutes before") { updateReminder(30) }
+            Button("1 hour before") { updateReminder(60) }
+            Button("1 day before") { updateReminder(1440) }
+            Button("1 week before") { updateReminder(10080) }
+            Button("Cancel", role: .cancel) { }
         }
         .fullScreenCover(isPresented: $showingSharePreview) {
             if let components = try? CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: event.isCountUp) {
@@ -403,6 +441,14 @@ struct EventDetailView: View {
         try? modelContext.save() // Force write to disk before widget reloads
         WidgetCenter.shared.reloadAllTimelines()
         dismiss()
+    }
+    
+    private func updateReminder(_ minutes: Int?) {
+        event.notifyBefore = minutes
+        try? modelContext.save()
+        
+        // Reschedule notification
+        NotificationService.shared.scheduleNotification(for: event)
     }
     
     private func reminderText(_ minutes: Int?) -> String {
@@ -444,7 +490,9 @@ struct DetailRow: View {
     let iconColor: Color
     let title: String
     let value: String
-    let subtitle: String?
+    var subtitle: String? = nil
+    var trailingSubtitle: String? = nil
+    var isBoldValue: Bool = true
     
     var body: some View {
         HStack(spacing: 16) {
@@ -463,7 +511,7 @@ struct DetailRow: View {
                     .foregroundStyle(.gray)
                 
                 Text(value)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 16, weight: isBoldValue ? .semibold : .regular))
                     .foregroundStyle(.black)
                 
                 if let subtitle = subtitle {
@@ -474,6 +522,36 @@ struct DetailRow: View {
             }
             
             Spacer()
+            
+            if let trailingSubtitle = trailingSubtitle {
+                Text(trailingSubtitle)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(.gray)
+            }
         }
+    }
+}
+
+struct CountdownUnitView: View {
+    let value: Int
+    let unit: String
+    var showPadding: Bool = true
+    
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 0) {
+            Text(showPadding ? String(format: "%02d", value) : "\(value)")
+                .font(.system(size: 36, weight: .bold))
+            Text(unit)
+                .font(.system(size: 20, weight: .semibold))
+        }
+        .foregroundStyle(Color.orange)
+    }
+}
+
+struct SeparatorView: View {
+    var body: some View {
+        Text(" : ")
+            .font(.system(size: 36, weight: .bold))
+            .foregroundStyle(Color.orange)
     }
 }
