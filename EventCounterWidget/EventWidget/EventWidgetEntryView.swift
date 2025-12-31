@@ -60,98 +60,84 @@ struct SmallEventView: View {
     var entryDate: Date
     
     var body: some View {
-        VStack(spacing: 8) {
-            // Top: Circle Image with Icon Overlay (Centered)
-            ZStack(alignment: .bottomTrailing) {
-                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
-                        .shadow(radius: 2)
+        VStack(alignment: .leading, spacing: 0) {
+            // Top Row: Category Icon & Countdown
+            HStack(alignment: .top) {
+                // Category Icon (Rounded Rectangle with Gradient)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color(hex: event.colorHex), Color(hex: event.colorHex).opacity(0.8)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 50, height: 50)
+                        .shadow(color: Color(hex: event.colorHex).opacity(0.3), radius: 6, y: 3)
                     
-                    // Category Icon Overlay
                     Image(systemName: event.categoryIcon)
-                        .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.white)
-                        .padding(4)
-                        .background(Color(hex: event.colorHex).opacity(0.8))
-                        .clipShape(Circle())
-                        .offset(x: 4, y: 4)
-                        .shadow(radius: 2)
-                } else {
-                    Circle()
-                        .fill(Color(hex: event.colorHex).opacity(0.1))
-                        .frame(width: 60, height: 60)
-                    Image(systemName: event.categoryIcon)
-                        .foregroundStyle(Color(hex: event.colorHex))
-                        .font(.system(size: 24))
+                        .font(.system(size: 24, weight: .semibold))
+                }
+                
+                Spacer()
+                
+                // Countdown Value & Label (Unit-Based)
+                let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
+                let info = getUnitInfo(for: components, entryDate: entryDate, targetDate: event.date)
+                
+                VStack(alignment: .trailing, spacing: -2) {
+                    Text(info.value)
+                        .font(.system(size: 32, weight: .black, design: .rounded))
+                        .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                    
+                    Text(info.label)
+                        .font(.system(size: 10, weight: .bold, design: .rounded))
+                        .foregroundStyle(Color(red: 0.45, green: 0.5, blue: 0.6))
+                        .tracking(1)
                 }
             }
             
-            // Bottom: Text & Countdown (Centered)
-            VStack(spacing: 2) {
+            Spacer()
+            
+            // Bottom Row: Title and Date
+            VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
-                    .font(.system(.subheadline, design: .rounded))
-                    .fontWeight(.bold)
+                    .font(.system(size: 18, weight: .bold, design: .rounded))
                     .foregroundStyle(Color(red: 0.1, green: 0.15, blue: 0.2))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.8)
                 
-                let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
-                
-                if event.widgetDisplayStyle == "Progress" && !components.isPast {
-                    HStack(spacing: 4) {
-                        CircularProgressView(
-                            progress: calculateProgress(from: event.createdAt, to: event.date),
-                            color: Color(hex: event.colorHex),
-                            lineWidth: 3,
-                            showBackground: true
-                        )
-                        .frame(width: 16, height: 16)
-                        
-                        Text(components.formattedTitleShort)
-                            .font(.system(.caption, design: .rounded))
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
-                    }
-                } else {
-                    let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
-                    let timeUntil = event.date.timeIntervalSince(entryDate)
-                    let thirtyDays: TimeInterval = 30 * 24 * 3600
-                    let oneDay: TimeInterval = 24 * 3600
-                    
-                    if timeUntil > oneDay {
-                        // > 1 Day: Show precise 3-component string
-                        Text(components.formattedThreeComponents)
-                            .font(.system(size: 10, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15).opacity(0.8))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
-                    } else if timeUntil > 0 {
-                        // < 1 day: Show Hours, Minutes, Seconds (Live)
-                        Text(event.date, style: .timer)
-                            .font(.system(.caption, design: .monospaced))
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
-                    } else if event.isCountUp {
-                        Text(event.date, style: .timer)
-                            .font(.system(.caption, design: .monospaced))
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
-                    } else {
-                        Text("Done")
-                            .font(.system(.caption, design: .rounded))
-                            .fontWeight(.bold)
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
-                    }
-                }
+                Text(event.date.formatted(.dateTime.month().day()))
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundStyle(Color.gray)
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding(12)
+        .padding(10)
         .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
+    }
+    
+    private func getUnitInfo(for components: CountdownComponents, entryDate: Date, targetDate: Date) -> (value: String, label: String) {
+        let timeInterval = targetDate.timeIntervalSince(entryDate)
+        
+        if timeInterval <= 0 && !event.isCountUp {
+            return ("0", "SEC")
+        }
+        
+        // Use abs for count-up support
+        let absInterval = abs(timeInterval)
+        
+        if absInterval >= 24 * 3600 {
+            let totalDays = (components.months * 30) + components.days
+            return ("\(totalDays)", totalDays == 1 ? "DAY" : "DAYS")
+        } else if absInterval >= 3600 {
+            return ("\(components.hours)", components.hours == 1 ? "HR" : "HRS")
+        } else if absInterval >= 60 {
+            return ("\(components.minutes)", "MIN")
+        } else {
+            return ("\(components.seconds)", "SEC")
+        }
     }
 }
 
