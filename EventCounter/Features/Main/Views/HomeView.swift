@@ -1,4 +1,6 @@
 import SwiftUI
+import WidgetKit
+import EventKit
 import SwiftData
 
 struct HomeView: View {
@@ -8,6 +10,7 @@ struct HomeView: View {
     @State private var selectedCategory: EventCategory? // nil = All
     @State private var searchText = ""
     @State private var showingAddEvent = false
+    @State private var showingCalendarImport = false
     @State private var homePath = NavigationPath()
     
     // Sorting States
@@ -71,8 +74,8 @@ struct HomeView: View {
                         VStack(spacing: 20) {
                             // Row 1: Top Bar (Notification & Settings)
                             HStack {
-                                Button(action: {}) {
-                                    Image(systemName: "bell.fill")
+                                Button(action: { showingCalendarImport = true }) {
+                                    Image(systemName: "calendar.badge.plus")
                                         .font(.system(size: 20))
                                         .foregroundStyle(.black)
                                         .frame(width: 44, height: 44)
@@ -208,6 +211,11 @@ struct HomeView: View {
             .sheet(isPresented: $showingAddEvent) {
                 AddEventView()
             }
+            .sheet(isPresented: $showingCalendarImport) {
+                BatchCalendarImportView { selectedEvents in
+                    batchImportEvents(selectedEvents)
+                }
+            }
         }
         .onOpenURL { url in
             handleDeepLink(url)
@@ -227,6 +235,25 @@ struct HomeView: View {
                 homePath.append(id)
             }
         }
+    }
+    
+    private func batchImportEvents(_ ekEvents: [EKEvent]) {
+        for ekEvent in ekEvents {
+            let newEvent = Event(
+                title: ekEvent.title,
+                date: ekEvent.startDate,
+                note: ekEvent.notes,
+                category: .personal,
+                colorHex: "#F5A623", // Default orange
+                notifyBefore: 15,    // Default 15 min
+                location: ekEvent.location
+            )
+            modelContext.insert(newEvent)
+            NotificationService.shared.scheduleNotification(for: newEvent)
+        }
+        
+        try? modelContext.save()
+        WidgetCenter.shared.reloadAllTimelines()
     }
     
     // MARK: - Subviews

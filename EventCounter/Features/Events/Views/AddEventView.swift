@@ -31,7 +31,6 @@ struct AddEventView: View {
     @State private var showingCalendarPicker = false
     @State private var showingTimePicker = false
     @State private var showingDatePicker = false
-    @State private var calendarEvents: [EKEvent] = []
     @State private var isLoadingEvents = false
     
     // Location Suggestions
@@ -205,7 +204,7 @@ struct AddEventView: View {
                         
                         // 6. Import Button
                         Button {
-                            importFromCalendar()
+                            showingCalendarPicker = true
                         } label: {
                             HStack {
                                 Image(systemName: "calendar.badge.plus")
@@ -387,13 +386,14 @@ struct AddEventView: View {
             .preferredColorScheme(.light)
             .onAppear(perform: loadEventData)
             .sheet(isPresented: $showingCalendarPicker) {
-                CalendarPickerView(events: calendarEvents) { ekEvent in
-                    title = ekEvent.title
-                    date = ekEvent.startDate
-                    note = ekEvent.notes ?? ""
-                    location = ekEvent.location ?? ""
-                    showingCalendarPicker = false
-                }
+                BatchCalendarImportView(onImport: { selectedEvents in
+                    if let ekEvent = selectedEvents.first {
+                        title = ekEvent.title
+                        date = ekEvent.startDate
+                        note = ekEvent.notes ?? ""
+                        location = ekEvent.location ?? ""
+                    }
+                }, singleSelect: true)
             }
             .fullScreenCover(isPresented: $showingImageCropper) {
                 if let image = tempImage {
@@ -592,14 +592,6 @@ struct AddEventView: View {
         dismiss()
     }
     
-    private func importFromCalendar() {
-        Task {
-            isLoadingEvents = true
-            calendarEvents = await CalendarService.shared.fetchUpcomingEvents()
-            isLoadingEvents = false
-            showingCalendarPicker = true
-        }
-    }
 }
 
 // MARK: - Helpers & Extensions
@@ -644,135 +636,6 @@ extension UIImage {
     }
 }
 
-struct CalendarPickerView: View {
-    let events: [EKEvent]
-    let onSelect: (EKEvent) -> Void
-    @Environment(\.dismiss) private var dismiss
-    
-    @State private var selectedEvent: EKEvent?
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button("Cancel") {
-                    dismiss()
-                }
-                .foregroundStyle(.gray)
-                
-                Spacer()
-                
-                Text("Choose Event")
-                    .font(.headline)
-                    .foregroundStyle(.black)
-                
-                Spacer()
-                
-                // Balance
-                Text("Cancel")
-                    .foregroundStyle(.clear)
-            }
-            .padding()
-            .background(Color(white: 0.98))
-            
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    Text("UPCOMING EVENTS")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.gray)
-                        .padding(.horizontal)
-                        .padding(.top, 10)
-                    
-                    if events.isEmpty {
-                        ContentUnavailableView(
-                            "No Calendar Events",
-                            systemImage: "calendar.badge.exclamationmark",
-                            description: Text("No upcoming events found.")
-                        )
-                        .padding(.top, 40)
-                    } else {
-                        VStack(spacing: 12) {
-                            ForEach(events, id: \.eventIdentifier) { event in
-                                let isSelected = selectedEvent?.eventIdentifier == event.eventIdentifier
-                                
-                                Button {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        selectedEvent = event
-                                    }
-                                } label: {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "calendar")
-                                            .font(.system(size: 20))
-                                            .foregroundStyle(isSelected ? .orange : .gray)
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(event.title)
-                                                .font(.system(size: 17, weight: .bold))
-                                                .foregroundStyle(.black)
-                                            
-                                            Text(event.startDate.formatted(date: .abbreviated, time: .shortened))
-                                                .font(.system(size: 14))
-                                                .foregroundStyle(.gray)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
-                                            .font(.system(size: 20))
-                                            .foregroundStyle(isSelected ? .blue : .gray.opacity(0.5))
-                                    }
-                                    .padding()
-                                    .background(Color.white)
-                                    .clipShape(RoundedRectangle(cornerRadius: 24))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 24)
-                                            .stroke(isSelected ? Color.orange : Color.clear, lineWidth: 2)
-                                    )
-                                    .shadow(color: .black.opacity(0.03), radius: 8, y: 4)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.bottom, 100)
-            }
-            .background(Color(white: 0.96))
-            .overlay(alignment: .bottom) {
-                // Import Button
-                if !events.isEmpty {
-                    Button {
-                        if let selected = selectedEvent {
-                            onSelect(selected)
-                        }
-                    } label: {
-                        HStack {
-                            Text("Import Event")
-                                .fontWeight(.bold)
-                            Image(systemName: "arrow.right")
-                        }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(selectedEvent == nil ? Color.gray.opacity(0.5) : Color.orange)
-                        .clipShape(Capsule())
-                    }
-                    .disabled(selectedEvent == nil)
-                    .padding()
-                    .background(
-                        LinearGradient(
-                            colors: [Color(white: 0.96).opacity(0), Color(white: 0.96)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                }
-            }
-        }
-    }
-}
 
 // MARK: - Keyboard Helper
 //extension View {
