@@ -2,19 +2,10 @@ import SwiftUI
 import WidgetKit
 import UserNotifications
 
-// Theme Enum
-enum AppTheme: String, CaseIterable, Identifiable {
-    case system = "System"
-    case light = "Light"
-    case dark = "Dark"
-    
-    var id: String { self.rawValue }
-}
-
 struct SettingsView: View {
     @ObservedObject var authService = AuthenticationService.shared
     @ObservedObject var notificationService = NotificationService.shared
-    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @EnvironmentObject var themeManager: ThemeManager
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
     @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = true
     
@@ -22,10 +13,14 @@ struct SettingsView: View {
     @State private var showingLogin = false
     @State private var showPermissionAlert = false
     
+    private var appTheme: AppTheme {
+        themeManager.currentTheme
+    }
+    
     var body: some View {
         ZStack {
-            Color(hex: "#F9F9F9") ?? Color(white: 0.98)
-                .ignoresSafeArea() as! Color
+            Color.adaptiveGroupedBackground
+                .ignoresSafeArea()
             
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
@@ -36,9 +31,9 @@ struct SettingsView: View {
                         } label: {
                             Image(systemName: "arrow.left")
                                 .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(Color.adaptivePrimaryText)
                                 .frame(width: 50, height: 50)
-                                .background(Color.white)
+                                .background(Color.adaptiveSecondaryBackground)
                                 .clipShape(Circle())
                                 .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
                         }
@@ -48,7 +43,7 @@ struct SettingsView: View {
                     
                     Text("Settings")
                         .font(.system(size: 42, weight: .bold))
-                        .foregroundStyle(Color(hex: "#1A1A1A") ?? .black)
+                        .foregroundStyle(Color.adaptivePrimaryText)
                     
                     // ACCOUNT Section
                     VStack(alignment: .leading, spacing: 16) {
@@ -66,16 +61,16 @@ struct SettingsView: View {
                                                 .frame(width: 50, height: 50)
                                             Image(systemName: "person.fill")
                                                 .font(.system(size: 24))
-                                                .foregroundStyle(.black.opacity(0.6))
+                                                .foregroundStyle(Color.adaptivePrimaryText.opacity(0.6))
                                         }
                                         
                                         VStack(alignment: .leading, spacing: 4) {
                                             Text(authService.userId ?? "Alex Doe")
                                                 .font(.system(size: 18, weight: .bold))
-                                                .foregroundStyle(.black)
+                                                .foregroundStyle(Color.adaptivePrimaryText)
                                             Text("alex.doe@example.com")
                                                 .font(.system(size: 14))
-                                                .foregroundStyle(.gray)
+                                                .foregroundStyle(Color.adaptiveSecondaryText)
                                         }
                                         
                                         Spacer()
@@ -96,7 +91,7 @@ struct SettingsView: View {
                                             .foregroundStyle(.blue)
                                         Text("Sign In with Apple")
                                             .font(.system(size: 18, weight: .bold))
-                                            .foregroundStyle(.black)
+                                            .foregroundStyle(Color.adaptivePrimaryText)
                                         Spacer()
                                     }
                                     .padding(20)
@@ -118,7 +113,7 @@ struct SettingsView: View {
                                 
                                 Text("iCloud Sync")
                                     .font(.system(size: 18, weight: .bold))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                 
                                 Spacer()
                                 
@@ -127,13 +122,13 @@ struct SettingsView: View {
                             }
                             .padding(20)
                         }
-                        .background(Color.white)
+                        .background(Color.adaptiveSecondaryBackground)
                         .cornerRadius(24)
                         .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
                         
                         Text("Last synced: Just now")
                             .font(.system(size: 12))
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(Color.adaptiveSecondaryText)
                             .padding(.leading, 8)
                     }
                     
@@ -141,37 +136,48 @@ struct SettingsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         SectionHeader(title: "APPEARANCE", icon: "🎨", color: Color(hex: "#F5EBFF") ?? .purple.opacity(0.1), textColor: Color(hex: "#A855F7") ?? .purple)
                         
-                        HStack(spacing: 16) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.purple.opacity(0.1))
-                                    .frame(width: 40, height: 40)
-                                Image(systemName: "moon.fill")
-                                    .font(.system(size: 18))
-                                    .foregroundStyle(.purple)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Dark Mode")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundStyle(.black)
-                                Text("Easier on the eyes")
-                                    .font(.system(size: 13))
-                                    .foregroundStyle(.gray)
-                            }
-                            
-                            Spacer()
-                            
-                            Toggle("", isOn: Binding(
-                                get: { appTheme == .dark },
-                                set: { newValue in
-                                    appTheme = newValue ? .dark : .light
+                        VStack(spacing: 0) {
+                            ForEach(AppTheme.allCases) { theme in
+                                Button {
+                                    themeManager.currentTheme = theme
+                                } label: {
+                                    HStack(spacing: 16) {
+                                        ZStack {
+                                            Circle()
+                                                .fill(Color.purple.opacity(0.1))
+                                                .frame(width: 40, height: 40)
+                                            Image(systemName: theme == .system ? "circle.lefthalf.filled" : (theme == .dark ? "moon.fill" : "sun.max.fill"))
+                                                .font(.system(size: 18))
+                                                .foregroundStyle(.purple)
+                                        }
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(theme.rawValue)
+                                                .font(.system(size: 18, weight: .bold))
+                                                .foregroundStyle(Color.adaptivePrimaryText)
+                                            Text(theme == .system ? "Follow system setting" : (theme == .dark ? "Easier on the eyes" : "Always light"))
+                                                .font(.system(size: 13))
+                                                .foregroundStyle(Color.adaptiveSecondaryText)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        if appTheme == theme {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .font(.system(size: 20))
+                                                .foregroundStyle(.purple)
+                                        }
+                                    }
+                                    .padding(20)
                                 }
-                            ))
-                            .tint(.purple)
+                                
+                                if theme != AppTheme.allCases.last {
+                                    Divider()
+                                        .padding(.horizontal, 20)
+                                }
+                            }
                         }
-                        .padding(20)
-                        .background(Color.white)
+                        .background(Color.adaptiveSecondaryBackground)
                         .cornerRadius(24)
                         .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
                     }
@@ -193,7 +199,7 @@ struct SettingsView: View {
                                 
                                 Text("Allow Notifications")
                                     .font(.system(size: 18, weight: .bold))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                 
                                 Spacer()
                                 
@@ -229,7 +235,7 @@ struct SettingsView: View {
                                     
                                     Text("Default Reminder")
                                         .font(.system(size: 18, weight: .bold))
-                                        .foregroundStyle(.black)
+                                        .foregroundStyle(Color.adaptivePrimaryText)
                                     
                                     Spacer()
                                     
@@ -244,7 +250,7 @@ struct SettingsView: View {
                                 .padding(20)
                             }
                         }
-                        .background(Color.white)
+                        .background(Color.adaptiveSecondaryBackground)
                         .cornerRadius(24)
                         .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
                     }
@@ -339,4 +345,5 @@ struct SectionHeader: View {
 
 #Preview {
     SettingsView()
+        .environmentObject(ThemeManager.shared)
 }

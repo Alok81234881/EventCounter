@@ -77,9 +77,9 @@ struct HomeView: View {
                                 Button(action: { showingCalendarImport = true }) {
                                     Image(systemName: "calendar.badge.plus")
                                         .font(.system(size: 20))
-                                        .foregroundStyle(.black)
+                                        .foregroundStyle(Color.adaptivePrimaryText)
                                         .frame(width: 44, height: 44)
-                                        .background(Color.white)
+                                        .background(Color.adaptiveSecondaryBackground)
                                         .clipShape(Circle())
                                         .shadow(color: .black.opacity(0.05), radius: 5)
                                 }
@@ -89,9 +89,9 @@ struct HomeView: View {
                                 NavigationLink(destination: SettingsView()) {
                                     Image(systemName: "gearshape.fill")
                                         .font(.system(size: 20))
-                                        .foregroundStyle(.black)
+                                        .foregroundStyle(Color.adaptivePrimaryText)
                                         .frame(width: 44, height: 44)
-                                        .background(Color.white)
+                                        .background(Color.adaptiveSecondaryBackground)
                                         .clipShape(Circle())
                                         .shadow(color: .black.opacity(0.05), radius: 5)
                                 }
@@ -102,7 +102,7 @@ struct HomeView: View {
                             HStack {
                                 Text("My Events")
                                     .font(.system(size: 34, weight: .bold))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                 Spacer()
                             }
                             .padding(.horizontal)
@@ -113,8 +113,8 @@ struct HomeView: View {
                                     .foregroundStyle(.gray)
                                     .font(.system(size: 18))
                                 
-                                TextField("", text: $searchText, prompt: Text("Search events...").foregroundColor(.gray))
-                                    .foregroundStyle(.black)
+                                TextField("", text: $searchText, prompt: Text("Search events...").foregroundColor(.adaptiveSecondaryText))
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                     .tint(.orange)
                                     .submitLabel(.done)
                                     .onSubmit {
@@ -126,14 +126,14 @@ struct HomeView: View {
                                         searchText = ""
                                     }) {
                                         Image(systemName: "xmark.circle.fill")
-                                            .foregroundStyle(.gray)
+                                            .foregroundStyle(Color.adaptiveSecondaryText)
                                             .font(.system(size: 18))
                                     }
                                     .padding(.trailing, 4)
                                 }
                             }
                             .padding()
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 24))
                             .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 4)
                             .padding(.horizontal)
@@ -161,9 +161,9 @@ struct HomeView: View {
                                 "No Events",
                                 systemImage: "calendar.badge.plus",
                                 description: Text("Tap + to create your first event!")
-                                    .foregroundStyle(.black.opacity(0.6))
+                                    .foregroundStyle(Color.adaptiveSecondaryText)
                             )
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Color.adaptivePrimaryText)
                             .padding(.top, 40)
                         }
                         
@@ -188,7 +188,7 @@ struct HomeView: View {
                 .navigationDestination(for: UUID.self) { eventID in
                     EventResolverView(eventID: eventID)
                 }
-                .background(Color(white: 0.97)) // Light gray background for the whole page (per mockup)
+                .background(Color.adaptiveGroupedBackground)
                 
                 // FAB
                 Button(action: { showingAddEvent = true }) {
@@ -270,9 +270,9 @@ struct HomeView: View {
             Button(action: {}) {
                 Image(systemName: "magnifyingglass")
                     .font(.system(size: 20))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.adaptivePrimaryText)
                     .frame(width: 44, height: 44)
-                    .background(Color.white)
+                    .background(Color.adaptiveSecondaryBackground)
                     .clipShape(Circle())
                     .shadow(color: .black.opacity(0.05), radius: 5)
             }
@@ -281,9 +281,9 @@ struct HomeView: View {
             NavigationLink(destination: SettingsView()) {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 20))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.adaptivePrimaryText)
                     .frame(width: 44, height: 44)
-                    .background(Color.white)
+                    .background(Color.adaptiveSecondaryBackground)
                     .clipShape(Circle())
                     .shadow(color: .black.opacity(0.05), radius: 5)
             }
@@ -360,8 +360,8 @@ struct HomeView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(Color.white)
-                .foregroundStyle(.gray)
+                .background(Color.adaptiveSecondaryBackground)
+                .foregroundStyle(Color.adaptiveSecondaryText)
                 .clipShape(Capsule())
                 .shadow(color: .black.opacity(0.05), radius: 5)
             }
@@ -385,13 +385,12 @@ struct CategoryPill: View {
                 Text(title)
                     .font(.system(size: 14, weight: .medium))
             }
-            // Explicitly use black for unselected text to ensure visibility against white background
-            .foregroundStyle(isSelected ? .white : .black.opacity(0.8))
+            .foregroundStyle(isSelected ? .white : .adaptivePrimaryText.opacity(0.8))
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(isSelected ? color : Color.white)
+                    .fill(isSelected ? color : Color.adaptiveSecondaryBackground)
                     .shadow(color: .black.opacity(0.05), radius: 5)
             )
         }

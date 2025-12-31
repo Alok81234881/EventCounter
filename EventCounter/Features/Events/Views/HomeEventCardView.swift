@@ -28,12 +28,12 @@ struct HomeEventCardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(event.title)
                     .font(.system(size: 17, weight: .bold))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.adaptivePrimaryText)
                 
                 HStack(spacing: 8) {
                     Text(event.date.formatted(.dateTime.month().day()))
                         .font(.system(size: 13))
-                        .foregroundStyle(.black.opacity(0.6))
+                        .foregroundStyle(Color.adaptiveSecondaryText)
                     
                     // Category Tag
                     Text(event.category.rawValue.uppercased())
@@ -63,26 +63,26 @@ struct HomeEventCardView: View {
                         
                         Text(info.label)
                             .font(.system(size: 9, weight: .bold))
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(Color.adaptiveSecondaryText)
                     }
                     .frame(width: 50, height: 50)
-                    .background(Color(white: 0.97))
+                    .background(Color.adaptiveSecondaryBackground)
                     .clipShape(Circle())
                 }
             } else {
                 // Past: "1 year ago" text
                 Text(event.date, style: .relative)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.gray) +
+                    .foregroundStyle(Color.adaptiveSecondaryText) +
                 Text(" ago")
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.adaptiveSecondaryText)
             }
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(.white)
+                .fill(Color.adaptiveSecondaryBackground)
                 .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 4)
         )
     }

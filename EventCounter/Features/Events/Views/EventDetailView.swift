@@ -15,11 +15,11 @@ struct EventDetailView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            // Root Background: Theme color for top (to prevent flicker), light gray for bottom
+            // Root Background: Theme color for top (to prevent flicker), adaptive background for bottom
             VStack(spacing: 0) {
                 (Color(hex: event.colorHex) ?? .blue)
                     .frame(height: 300)
-                Color(white: 0.97)
+                Color.adaptiveGroupedBackground
             }
             .ignoresSafeArea()
             
@@ -168,19 +168,19 @@ struct EventDetailView: View {
                                 HStack {
                                     Text("NOW")
                                         .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(.gray)
+                                        .foregroundStyle(Color.adaptiveSecondaryText)
                                     
                                     Spacer()
                                     
                                     Text(event.date.formatted(.dateTime.month(.abbreviated).day()))
                                         .font(.system(size: 11, weight: .semibold))
-                                        .foregroundStyle(.gray)
+                                        .foregroundStyle(Color.adaptiveSecondaryText)
                                 }
                                 
                                 // Gradient Progress Bar
                                 ZStack(alignment: .leading) {
                                     Capsule()
-                                        .fill(Color.gray.opacity(0.2))
+                                        .fill(Color.adaptiveSecondaryText.opacity(0.2))
                                         .frame(height: 8)
                                     
                                     Capsule()
@@ -196,10 +196,10 @@ struct EventDetailView: View {
                                 
                                 Text("\(Int(event.progress * 100))% of the wait is over!")
                                     .font(.system(size: 12))
-                                    .foregroundStyle(.gray)
+                                    .foregroundStyle(Color.adaptiveSecondaryText)
                             }
                             .padding(24)
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .cornerRadius(24)
                             .shadow(color: .black.opacity(0.1), radius: 20, y: 10)
                             .padding(.horizontal, 20)
@@ -209,7 +209,7 @@ struct EventDetailView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Details")
                                     .font(.system(size: 22, weight: .bold))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                 
                                 VStack(spacing: 20) {
                                     // Date Row
@@ -253,7 +253,7 @@ struct EventDetailView: View {
                                     }
                                 }
                                 .padding(20)
-                                .background(Color.white)
+                                .background(Color.adaptiveSecondaryBackground)
                                 .cornerRadius(20)
                                 .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
                             }
@@ -264,7 +264,7 @@ struct EventDetailView: View {
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Settings")
                                     .font(.system(size: 22, weight: .bold))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                 
                                 VStack(spacing: 16) {
                                     // Notify Before
@@ -284,10 +284,10 @@ struct EventDetailView: View {
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text("Notify Before")
                                                     .font(.system(size: 16, weight: .semibold))
-                                                    .foregroundStyle(.black)
+                                                    .foregroundStyle(Color.adaptivePrimaryText)
                                                 Text(reminderText(event.notifyBefore))
                                                     .font(.system(size: 13))
-                                                    .foregroundStyle(.gray)
+                                                    .foregroundStyle(Color.adaptiveSecondaryText)
                                             }
                                             
                                             Spacer()
@@ -312,10 +312,10 @@ struct EventDetailView: View {
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text("Live Activity")
                                                 .font(.system(size: 16, weight: .semibold))
-                                                .foregroundStyle(.black)
+                                                .foregroundStyle(Color.adaptivePrimaryText)
                                             Text("Show on Lock Screen")
                                                 .font(.system(size: 13))
-                                                .foregroundStyle(.gray)
+                                                .foregroundStyle(Color.adaptiveSecondaryText)
                                         }
                                         
                                         Spacer()
@@ -340,7 +340,7 @@ struct EventDetailView: View {
                                     }
                                 }
                                 .padding(20)
-                                .background(Color.white)
+                                .background(Color.adaptiveSecondaryBackground)
                                 .cornerRadius(20)
                                 .shadow(color: .black.opacity(0.05), radius: 10, y: 5)
                             }
@@ -510,12 +510,12 @@ struct DetailRow: View {
                 
                 Text(value)
                     .font(.system(size: 16, weight: isBoldValue ? .semibold : .regular))
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.adaptivePrimaryText)
                 
                 if let subtitle = subtitle {
                     Text(subtitle)
                         .font(.system(size: 13))
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.adaptiveSecondaryText)
                 }
             }
             
@@ -524,7 +524,7 @@ struct DetailRow: View {
             if let trailingSubtitle = trailingSubtitle {
                 Text(trailingSubtitle)
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(Color.adaptiveSecondaryText)
             }
         }
     }

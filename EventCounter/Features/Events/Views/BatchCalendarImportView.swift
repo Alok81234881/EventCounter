@@ -17,13 +17,13 @@ struct BatchCalendarImportView: View {
                 Button("Cancel") {
                     dismiss()
                 }
-                .foregroundStyle(.gray)
+                .foregroundStyle(Color.adaptiveSecondaryText)
                 
                 Spacer()
                 
                 Text(singleSelect ? "Choose Event" : "Import Events")
                     .font(.headline)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.adaptivePrimaryText)
                 
                 Spacer()
                 
@@ -44,14 +44,14 @@ struct BatchCalendarImportView: View {
                 }
             }
             .padding()
-            .background(Color(white: 0.98))
+            .background(Color.adaptiveSecondaryBackground)
             
             ZStack {
-                Color(white: 0.96).ignoresSafeArea()
+                Color.adaptiveGroupedBackground.ignoresSafeArea()
                 
                 if isLoading {
                     ProgressView("Fetching Calendar...")
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.adaptiveSecondaryText)
                 } else if events.isEmpty {
                     ContentUnavailableView(
                         "No Calendar Events",
@@ -64,7 +64,7 @@ struct BatchCalendarImportView: View {
                             Text("UPCOMING EVENTS")
                                 .font(.caption)
                                 .fontWeight(.bold)
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(Color.adaptiveSecondaryText)
                                 .padding(.horizontal)
                                 .padding(.top, 10)
                             
@@ -88,26 +88,26 @@ struct BatchCalendarImportView: View {
                                         HStack(spacing: 12) {
                                             Image(systemName: "calendar")
                                                 .font(.system(size: 20))
-                                                .foregroundStyle(isSelected ? .orange : .gray)
+                                                .foregroundStyle(isSelected ? .orange : Color.adaptiveSecondaryText)
                                             
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text(event.title)
                                                     .font(.system(size: 17, weight: .bold))
-                                                    .foregroundStyle(.black)
+                                                    .foregroundStyle(Color.adaptivePrimaryText)
                                                 
                                                 Text(event.startDate.formatted(date: .abbreviated, time: .shortened))
                                                     .font(.system(size: 14))
-                                                    .foregroundStyle(.gray)
+                                                    .foregroundStyle(Color.adaptiveSecondaryText)
                                             }
                                             
                                             Spacer()
                                             
                                             Image(systemName: isSelected ? (singleSelect ? "largecircle.fill.circle" : "checkmark.circle.fill") : "circle")
                                                 .font(.system(size: 20))
-                                                .foregroundStyle(isSelected ? (singleSelect ? .orange : .green) : .gray.opacity(0.3))
+                                                .foregroundStyle(isSelected ? (singleSelect ? .orange : .green) : Color.adaptiveSecondaryText.opacity(0.3))
                                         }
                                         .padding()
-                                        .background(Color.white)
+                                        .background(Color.adaptiveSecondaryBackground)
                                         .clipShape(RoundedRectangle(cornerRadius: 24))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 24)
@@ -147,7 +147,7 @@ struct BatchCalendarImportView: View {
                     .padding()
                     .background(
                         LinearGradient(
-                            colors: [Color(white: 0.96).opacity(0), Color(white: 0.96)],
+                            colors: [Color.adaptiveGroupedBackground.opacity(0), Color.adaptiveGroupedBackground],
                             startPoint: .top,
                             endPoint: .bottom
                         )

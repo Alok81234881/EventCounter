@@ -12,6 +12,8 @@ import SwiftData
 struct EventCounterApp: App {
     init() {
         NotificationService.shared.requestPermissions()
+        // Initialize LiveActivityService to start periodic cleanup
+        _ = LiveActivityService.shared
     }
     
     var sharedModelContainer: ModelContainer = {
@@ -36,12 +38,19 @@ struct EventCounterApp: App {
         }
     }()
 
-    @AppStorage("appTheme") private var appTheme: AppTheme = .system
+    @StateObject private var themeManager = ThemeManager.shared
 
     var body: some Scene {
         WindowGroup {
             HomeView()
-                .preferredColorScheme(appTheme == .system ? nil : (appTheme == .dark ? .dark : .light))
+                .preferredColorScheme(themeManager.colorScheme)
+                .environmentObject(themeManager)
+                .onAppear {
+                    // Trigger cleanup when app appears
+                    Task { @MainActor in
+                        await LiveActivityService.shared.triggerCleanup()
+                    }
+                }
         }
         .modelContainer(sharedModelContainer)
     }

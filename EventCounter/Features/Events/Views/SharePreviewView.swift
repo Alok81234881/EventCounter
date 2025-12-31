@@ -22,10 +22,10 @@ struct SharePreviewView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Share Event")
                                 .font(.system(size: 24, weight: .bold))
-                                .foregroundStyle(.black)
+                                .foregroundStyle(Color.adaptivePrimaryText)
                             Text("Preview your card")
                                 .font(.system(size: 15))
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(Color.adaptiveSecondaryText)
                         }
                         
                         Spacer()
@@ -35,9 +35,9 @@ struct SharePreviewView: View {
                         } label: {
                             Image(systemName: "xmark")
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(.gray)
+                                .foregroundStyle(Color.adaptiveSecondaryText)
                                 .frame(width: 32, height: 32)
-                                .background(Color.gray.opacity(0.1))
+                                .background(Color.adaptiveSecondaryText.opacity(0.1))
                                 .clipShape(Circle())
                         }
                     }
@@ -86,14 +86,14 @@ struct SharePreviewView: View {
                 } label: {
                     Text("Cancel")
                         .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(.gray)
+                        .foregroundStyle(Color.adaptiveSecondaryText)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 16)
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, 24)
             }
-            .background(Color.white)
+            .background(Color.adaptiveSecondaryBackground)
             .cornerRadius(24)
             .padding(.horizontal, 16)
             .padding(.vertical, 60)

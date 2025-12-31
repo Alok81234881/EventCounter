@@ -63,13 +63,13 @@ struct AddEventView: View {
                             labelView("EVENT NAME")
                             HStack(spacing: 12) {
                                 Image(systemName: "pencil")
-                                    .foregroundStyle(.gray)
-                                TextField("", text: $title, prompt: Text("e.g. Cabo Trip, Mom's Bday").foregroundColor(.gray))
-                                    .foregroundStyle(.black)
+                                    .foregroundStyle(Color.adaptiveSecondaryText)
+                                TextField("", text: $title, prompt: Text("e.g. Cabo Trip, Mom's Bday").foregroundColor(.adaptiveSecondaryText))
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                     .submitLabel(.done)
                             }
                             .padding()
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
@@ -83,13 +83,13 @@ struct AddEventView: View {
                                 } label: {
                                     HStack {
                                         Text(date.formatted(.dateTime.month().day().year()))
-                                            .foregroundStyle(.black)
+                                            .foregroundStyle(Color.adaptivePrimaryText)
                                         Spacer()
                                         Image(systemName: "calendar")
-                                            .foregroundStyle(.gray)
+                                            .foregroundStyle(Color.adaptiveSecondaryText)
                                     }
                                     .padding()
-                                    .background(Color.white)
+                                    .background(Color.adaptiveSecondaryBackground)
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                                     .frame(height: 56)
                                 }
@@ -103,13 +103,13 @@ struct AddEventView: View {
                                 } label: {
                                     HStack {
                                         Text(date.formatted(.dateTime.hour().minute()))
-                                            .foregroundStyle(.black)
+                                            .foregroundStyle(Color.adaptivePrimaryText)
                                         Spacer()
                                         Image(systemName: "clock")
-                                            .foregroundStyle(.gray)
+                                            .foregroundStyle(Color.adaptiveSecondaryText)
                                     }
                                     .padding()
-                                    .background(Color.white)
+                                    .background(Color.adaptiveSecondaryBackground)
                                     .clipShape(RoundedRectangle(cornerRadius: 16))
                                     .frame(height: 56)
                                 }
@@ -122,9 +122,9 @@ struct AddEventView: View {
                             VStack(spacing: 0) {
                                 HStack(spacing: 12) {
                                     Image(systemName: "mappin.and.ellipse")
-                                        .foregroundStyle(.gray)
-                                    TextField("", text: $location, prompt: Text("e.g. Central Park, NY").foregroundColor(.gray))
-                                        .foregroundStyle(.black)
+                                        .foregroundStyle(Color.adaptiveSecondaryText)
+                                    TextField("", text: $location, prompt: Text("e.g. Central Park, NY").foregroundColor(.adaptiveSecondaryText))
+                                        .foregroundStyle(Color.adaptivePrimaryText)
                                         .submitLabel(.done)
                                         .focused($isLocationFocused)
                                         .onChange(of: location) { newValue in
@@ -156,10 +156,10 @@ struct AddEventView: View {
                                                     VStack(alignment: .leading, spacing: 2) {
                                                         Text(completion.title)
                                                             .font(.system(size: 15, weight: .medium))
-                                                            .foregroundStyle(.black)
+                                                            .foregroundStyle(Color.adaptivePrimaryText)
                                                         Text(completion.subtitle)
                                                             .font(.system(size: 12))
-                                                            .foregroundStyle(.gray)
+                                                            .foregroundStyle(Color.adaptiveSecondaryText)
                                                     }
                                                     Spacer()
                                                 }
@@ -176,7 +176,7 @@ struct AddEventView: View {
                                     .frame(maxHeight: 250)
                                 }
                             }
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         .onChange(of: isLocationFocused) { focused in
@@ -190,15 +190,15 @@ struct AddEventView: View {
                             labelView("NOTES")
                             HStack(alignment: .top, spacing: 12) {
                                 Image(systemName: "text.alignleft")
-                                    .foregroundStyle(.gray)
+                                    .foregroundStyle(Color.adaptiveSecondaryText)
                                     .padding(.top, 4)
-                                TextField("", text: $note, prompt: Text("Add details, #hashtags, links...").foregroundColor(.gray), axis: .vertical)
-                                    .foregroundStyle(.black)
+                                TextField("", text: $note, prompt: Text("Add details, #hashtags, links...").foregroundColor(.adaptiveSecondaryText), axis: .vertical)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
                                     .submitLabel(.done)
                                     .lineLimit(3...6)
                             }
                             .padding()
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
@@ -234,8 +234,8 @@ struct AddEventView: View {
                                             }
                                             .padding(.horizontal, 16)
                                             .padding(.vertical, 12)
-                                            .background(category == cat ? Color.white : Color.white)
-                                            .foregroundStyle(category == cat ? selectedColor : .gray)
+                                            .background(category == cat ? Color.adaptiveSecondaryBackground : Color.adaptiveSecondaryBackground)
+                                            .foregroundStyle(category == cat ? selectedColor : Color.adaptiveSecondaryText)
                                             .clipShape(RoundedRectangle(cornerRadius: 20))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 20)
@@ -265,7 +265,7 @@ struct AddEventView: View {
                                             
                                             if selectedColor == color {
                                                 Circle()
-                                                    .stroke(Color.white, lineWidth: 3)
+                                                    .stroke(Color.adaptiveSecondaryBackground, lineWidth: 3)
                                                     .frame(width: 40, height: 40)
                                             }
                                         }
@@ -294,10 +294,10 @@ struct AddEventView: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Notify me")
                                         .font(.system(size: 16, weight: .medium))
-                                        .foregroundStyle(.black)
+                                        .foregroundStyle(Color.adaptivePrimaryText)
                                     Text("Before event starts")
                                         .font(.caption)
-                                        .foregroundStyle(.gray)
+                                        .foregroundStyle(Color.adaptiveSecondaryText)
                                 }
                                 
                                 Spacer()
@@ -314,19 +314,19 @@ struct AddEventView: View {
                                 } label: {
                                     HStack {
                                         Text(reminderText)
-                                            .foregroundStyle(.black)
+                                            .foregroundStyle(Color.adaptivePrimaryText)
                                         Image(systemName: "chevron.down")
                                             .font(.caption)
-                                            .foregroundStyle(.gray)
+                                            .foregroundStyle(Color.adaptiveSecondaryText)
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 8)
-                                    .background(Color.gray.opacity(0.1))
+                                    .background(Color.adaptiveSecondaryText.opacity(0.1))
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
                                 }
                             }
                             .padding()
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
@@ -335,7 +335,7 @@ struct AddEventView: View {
                     }
                     .padding(20)
                 }
-                .background(Color(white: 0.98)) // Main Background
+                .background(Color.adaptiveGroupedBackground) // Main Background
                 .scrollDismissesKeyboard(.interactively)
                 
                 // Save Button
@@ -356,7 +356,7 @@ struct AddEventView: View {
                 .padding(.bottom, 10) // Extra safety padding
                 .background(
                     LinearGradient(
-                        colors: [Color(white: 0.98).opacity(0), Color(white: 0.98)],
+                        colors: [Color.adaptiveGroupedBackground.opacity(0), Color.adaptiveGroupedBackground],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -375,15 +375,14 @@ struct AddEventView: View {
                         dismiss()
                     } label: {
                         Image(systemName: "xmark")
-                            .foregroundStyle(.black)
+                            .foregroundStyle(Color.adaptivePrimaryText)
                             .font(.system(size: 16, weight: .bold))
                             .padding(8)
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(Circle())
                     }
                 }
             }
-            .preferredColorScheme(.light)
             .onAppear(perform: loadEventData)
             .sheet(isPresented: $showingCalendarPicker) {
                 BatchCalendarImportView(onImport: { selectedEvents in
@@ -483,27 +482,27 @@ struct AddEventView: View {
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                         .overlay(
                             RoundedRectangle(cornerRadius: 24)
-                                .stroke(Color.white, lineWidth: 4)
+                                .stroke(Color.adaptiveSecondaryBackground, lineWidth: 4)
                         )
                 } else {
                     RoundedRectangle(cornerRadius: 24)
                         .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
-                        .fill(Color.gray.opacity(0.3))
+                        .fill(Color.adaptiveSecondaryText.opacity(0.3))
                         .frame(height: 200)
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color.adaptiveSecondaryText.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                     
                     VStack(spacing: 12) {
                         Image(systemName: "camera.fill")
                             .font(.system(size: 30))
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(Color.adaptiveSecondaryText)
                             .padding(20)
-                            .background(Color.white)
+                            .background(Color.adaptiveSecondaryBackground)
                             .clipShape(Circle())
                         
                         Text("Add Cover Photo")
                             .font(.headline)
-                            .foregroundStyle(.gray)
+                            .foregroundStyle(Color.adaptiveSecondaryText)
                     }
                 }
             }
@@ -529,7 +528,7 @@ struct AddEventView: View {
         Text(text)
             .font(.caption)
             .fontWeight(.bold)
-            .foregroundStyle(.gray)
+            .foregroundStyle(Color.adaptiveSecondaryText)
             .padding(.leading, 4)
     }
     
