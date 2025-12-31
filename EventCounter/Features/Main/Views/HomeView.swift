@@ -10,27 +10,54 @@ struct HomeView: View {
     @State private var showingAddEvent = false
     @State private var homePath = NavigationPath()
     
+    // Sorting States
+    @State private var upcomingSort: SortOption = .nearest
+    @State private var pastSort: SortOption = .nearest
+    
+    enum SortOption: String, CaseIterable {
+        case nearest = "Nearest"
+        case recentlyAdded = "Recently Added"
+        case alphabetically = "Alphabetically"
+    }
+    
     // Filtered Events
     var upcomingEvents: [Event] {
         let upcoming = events.filter { $0.date > .now }
         let categoryFiltered = selectedCategory == nil ? upcoming : upcoming.filter { $0.category == selectedCategory }
         
+        let searched: [Event]
         if searchText.isEmpty {
-            return categoryFiltered
+            searched = categoryFiltered
         } else {
-            return categoryFiltered.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+            searched = categoryFiltered.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
         }
+        
+        return sortEvents(searched, by: upcomingSort, isPast: false)
     }
     
     var pastEvents: [Event] {
-        // Sort past events by most recent first
-        let passed = events.filter { $0.date <= .now }.sorted { $0.date > $1.date }
+        // Filter past events
+        let passed = events.filter { $0.date <= .now }
         let categoryFiltered = selectedCategory == nil ? passed : passed.filter { $0.category == selectedCategory }
         
+        let searched: [Event]
         if searchText.isEmpty {
-            return categoryFiltered
+            searched = categoryFiltered
         } else {
-            return categoryFiltered.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+            searched = categoryFiltered.filter { $0.title.localizedCaseInsensitiveContains(searchText) }
+        }
+        
+        return sortEvents(searched, by: pastSort, isPast: true)
+    }
+    
+    private func sortEvents(_ events: [Event], by option: SortOption, isPast: Bool) -> [Event] {
+        switch option {
+        case .nearest:
+            return events.sorted { isPast ? $0.date > $1.date : $0.date < $1.date }
+        case .recentlyAdded:
+            return events.sorted { $0.createdAt > $1.createdAt }
+        case .alphabetically:
+            return events.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
         }
     }
     
@@ -116,7 +143,7 @@ struct HomeView: View {
                         // 2. Upcoming Section
                         if !upcomingEvents.isEmpty {
                             VStack(alignment: .leading, spacing: 16) {
-                                sectionHeader(title: "UPCOMING", icon: "🚀", color: .orange)
+                                sectionHeader(title: "UPCOMING", icon: "🚀", color: .orange, sortOption: $upcomingSort)
                                 ForEach(upcomingEvents) { event in
                                     NavigationLink(value: event.id) {
                                         HomeEventCardView(event: event)
@@ -140,7 +167,7 @@ struct HomeView: View {
                         // 3. Memory Lane Section (Past)
                         if !pastEvents.isEmpty {
                             VStack(alignment: .leading, spacing: 16) {
-                                sectionHeader(title: "MEMORY LANE", icon: "🕰️", color: .gray)
+                                sectionHeader(title: "MEMORY LANE", icon: "🕰️", color: .gray, sortOption: $pastSort)
                                 ForEach(pastEvents) { event in
                                     NavigationLink(value: event.id) {
                                         HomeEventCardView(event: event)
@@ -267,20 +294,50 @@ struct HomeView: View {
         }
     }
     
-    private func sectionHeader(title: String, icon: String, color: Color) -> some View {
-        HStack(spacing: 8) {
-            Text(title)
-                .font(.system(size: 13, weight: .bold))
-                .foregroundStyle(color)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(color.opacity(0.1))
-                .clipShape(Capsule())
-            
-            Text(icon)
-                .font(.caption)
+    private func sectionHeader(title: String, icon: String, color: Color, sortOption: Binding<SortOption>) -> some View {
+        HStack {
+            HStack(spacing: 8) {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(color)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(color.opacity(0.1))
+                    .clipShape(Capsule())
+                
+                Text(icon)
+                    .font(.caption)
+            }
             
             Spacer()
+            
+            Menu {
+                ForEach(SortOption.allCases, id: \.self) { option in
+                    Button {
+                        sortOption.wrappedValue = option
+                    } label: {
+                        HStack {
+                            Text(option.rawValue)
+                            if sortOption.wrappedValue == option {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 4) {
+                    Text(sortOption.wrappedValue.rawValue)
+                        .font(.system(size: 12, weight: .medium))
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(Color.white)
+                .foregroundStyle(.gray)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.05), radius: 5)
+            }
         }
     }
 }
