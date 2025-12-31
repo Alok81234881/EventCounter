@@ -14,7 +14,15 @@ struct EventDetailView: View {
     @State private var showingReminderPicker = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
+            // Root Background: Theme color for top (to prevent flicker), light gray for bottom
+            VStack(spacing: 0) {
+                (Color(hex: event.colorHex) ?? .blue)
+                    .frame(height: 300)
+                Color(white: 0.97)
+            }
+            .ignoresSafeArea()
+            
             if event.isDeleted {
                 ContentUnavailableView("Event Deleted", systemImage: "trash")
             } else {
@@ -24,34 +32,19 @@ struct EventDetailView: View {
                     ScrollView {
                         VStack(spacing: 0) {
                             // Hero Image Section
-                            ZStack(alignment: .topLeading) {
-                                // Background Image
+                            Group {
                                 if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(height: 300)
-                                        .clipped()
                                 } else {
                                     Rectangle()
-                                        .fill(
-                                            LinearGradient(
-                                                colors: [Color(hex: event.colorHex) ?? .blue, Color(hex: event.colorHex)?.opacity(0.6) ?? .blue.opacity(0.6)],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                        .frame(height: 300)
+                                        .fill(Color(hex: event.colorHex) ?? .blue)
                                 }
-                                
-                                // Gradient Overlay
-                                LinearGradient(
-                                    colors: [.black.opacity(0.3), .clear, .black.opacity(0.2)],
-                                    startPoint: .top,
-                                    endPoint: .bottom
-                                )
-                                .frame(height: 300)
-                                
+                            }
+                            .frame(height: 300)
+                            .clipped()
+                            .overlay(alignment: .top) {
                                 // Top Navigation Buttons
                                 HStack {
                                     Button {
@@ -60,10 +53,11 @@ struct EventDetailView: View {
                                         Image(systemName: "chevron.left")
                                             .font(.system(size: 18, weight: .semibold))
                                             .foregroundStyle(.white)
-                                            .frame(width: 40, height: 40)
+                                            .frame(width: 44, height: 44)
                                             .background(.white.opacity(0.3))
                                             .clipShape(Circle())
                                     }
+                                    .contentShape(Circle())
                                     
                                     Spacer()
                                     
@@ -74,10 +68,11 @@ struct EventDetailView: View {
                                             Image(systemName: "square.and.arrow.up")
                                                 .font(.system(size: 18, weight: .semibold))
                                                 .foregroundStyle(.white)
-                                                .frame(width: 40, height: 40)
+                                                .frame(width: 44, height: 44)
                                                 .background(.white.opacity(0.3))
                                                 .clipShape(Circle())
                                         }
+                                        .contentShape(Circle())
                                         
                                         Button {
                                             showingEditSheet = true
@@ -90,11 +85,13 @@ struct EventDetailView: View {
                                                 .background(.white.opacity(0.3))
                                                 .clipShape(Capsule())
                                         }
+                                        .contentShape(Capsule())
                                     }
                                 }
                                 .padding()
                                 .padding(.top, 40)
-                                
+                            }
+                            .overlay(alignment: .bottomLeading) {
                                 // Title Overlay
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(event.title)
@@ -107,9 +104,8 @@ struct EventDetailView: View {
                                 }
                                 .padding(.horizontal, 24)
                                 .padding(.bottom, 100)
-                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                                .allowsHitTesting(false) //Decorative overlay
                             }
-                            .frame(height: 300)
                             
                             // Countdown Card (Overlapping)
                             VStack(spacing: 16) {
@@ -372,6 +368,8 @@ struct EventDetailView: View {
                 }
             }
         }
+        .toolbar(.hidden, for: .navigationBar)
+        .navigationBarBackButtonHidden(true)
         .alert("Activity Already Running", isPresented: $showingLiveActivityAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Add") {

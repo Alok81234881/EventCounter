@@ -45,7 +45,10 @@ class LiveActivityService {
         let attributes = EventActivityAttributes(eventID: event.id)
         let state = EventActivityAttributes.ContentState(
             eventTitle: event.title,
-            eventDate: event.date
+            eventDate: event.date,
+            categoryIcon: event.category.icon,
+            colorHex: event.colorHex,
+            creationDate: event.createdAt
         )
         
         do {

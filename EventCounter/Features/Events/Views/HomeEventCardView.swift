@@ -50,27 +50,27 @@ struct HomeEventCardView: View {
             
             Spacer()
             
-            // 3. Right Side - Days Left Circle
+            // 3. Right Side - Countdown Circle
             if event.date > .now {
-                // Upcoming: "14 DAYS"
-                VStack(spacing: 0) {
-                    let components = Calendar.current.dateComponents([.day], from: .now, to: event.date)
-                    let days = max(0, components.day ?? 0)
+                TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
+                    let components = CountdownService.calculateComponents(from: timeline.date, to: event.date, isCountUp: event.isCountUp)
+                    let info = getUnitInfo(for: components, entryDate: timeline.date, targetDate: event.date)
                     
-                    Text("\(days)")
-                        .font(.system(size: 20, weight: .heavy))
-                        .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
-                    
-                    Text("DAYS")
-                        .font(.system(size: 9, weight: .bold))
-                        .foregroundStyle(.gray)
+                    VStack(spacing: 0) {
+                        Text(info.value)
+                            .font(.system(size: 20, weight: .heavy))
+                            .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                        
+                        Text(info.label)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.gray)
+                    }
+                    .frame(width: 50, height: 50)
+                    .background(Color(white: 0.97))
+                    .clipShape(Circle())
                 }
-                .frame(width: 50, height: 50)
-                .background(Color(white: 0.97)) // Very light gray/white circle
-                .clipShape(Circle())
             } else {
-                // Past: "1 year ago" text (no circle per mockup logic for memory lane, but mockup shows card with "1 year ago" text on right)
-                // Let's match the "Memory Lane" card in mockup: "Summer BBQ ... 3 mo ago"
+                // Past: "1 year ago" text
                 Text(event.date, style: .relative)
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.gray) +
@@ -85,5 +85,28 @@ struct HomeEventCardView: View {
                 .fill(.white)
                 .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 4)
         )
+    }
+    
+    private func getUnitInfo(for components: CountdownComponents, entryDate: Date, targetDate: Date) -> (value: String, label: String) {
+        let timeInterval = targetDate.timeIntervalSince(entryDate)
+        
+        if timeInterval <= 0 && !event.isCountUp {
+            return ("0", "SEC")
+        }
+        
+        let absInterval = abs(timeInterval)
+        
+        if absInterval >= 30 * 24 * 3600 {
+            return ("\(components.months)", components.months == 1 ? "MONTH" : "MONTHS")
+        } else if absInterval >= 24 * 3600 {
+            let totalDays = (components.months * 30) + components.days
+            return ("\(totalDays)", totalDays == 1 ? "DAY" : "DAYS")
+        } else if absInterval >= 3600 {
+            return ("\(components.hours)", components.hours == 1 ? "HR" : "HRS")
+        } else if absInterval >= 60 {
+            return ("\(components.minutes)", "MIN")
+        } else {
+            return ("\(components.seconds)", "SEC")
+        }
     }
 }
