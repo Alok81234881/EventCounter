@@ -3,21 +3,26 @@ import SwiftUI
 struct HomeEventCardView: View {
     let event: Event
     
+    private var isPastEvent: Bool {
+        event.date <= .now
+    }
+    
     var body: some View {
         HStack(spacing: 16) {
             // 1. Icon Circle
             ZStack {
-                Circle()
-                    .fill(Color(hex: event.colorHex)?.opacity(0.1) ?? .blue.opacity(0.1))
-                    .frame(width: 50, height: 50)
+               
                 
                 if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                        .frame(width: 30, height: 30) // Smaller than circle
+                        .frame(width: 50, height: 50) // Smaller than circle
                         .clipShape(Circle())
                 } else {
+                    Circle()
+                        .fill(Color(hex: event.colorHex)?.opacity(0.1) ?? .blue.opacity(0.1))
+                        .frame(width: 50, height: 50)
                     Image(systemName: event.category.icon)
                         .font(.system(size: 24))
                         .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
@@ -29,6 +34,7 @@ struct HomeEventCardView: View {
                 Text(event.title)
                     .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(Color.adaptivePrimaryText)
+                    .opacity(isPastEvent ? 0.5 : 1.0)
                 
                 HStack(spacing: 8) {
                     Text(event.date.formatted(.dateTime.month().day()))
@@ -39,11 +45,13 @@ struct HomeEventCardView: View {
                     Text(event.category.rawValue.uppercased())
                         .font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                        .opacity(isPastEvent ? 0.5 : 1.0)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 3)
                         .background(
                             Capsule()
                                 .fill(Color(hex: event.colorHex)?.opacity(0.15) ?? .blue.opacity(0.15))
+                                .opacity(isPastEvent ? 0.5 : 1.0)
                         )
                 }
             }
@@ -70,20 +78,20 @@ struct HomeEventCardView: View {
                     .clipShape(Circle())
                 }
             } else {
-                // Past: "1 year ago" text
-                Text(event.date, style: .relative)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color.adaptiveSecondaryText) +
-                Text(" ago")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(Color.adaptiveSecondaryText)
+                // Past: Show only highest component (e.g., "1 year ago", "3 hrs ago")
+                TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
+                    let timeAgoText = getTimeAgoText(from: event.date, to: timeline.date)
+                    Text(timeAgoText)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Color.adaptiveSecondaryText)
+                }
             }
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
                 .fill(Color.adaptiveSecondaryBackground)
-                .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 4)
+                .shadow(color: .black.opacity(0.08), radius: 10, x: 0, y: 4)
         )
     }
     
@@ -107,6 +115,28 @@ struct HomeEventCardView: View {
             return ("\(components.minutes)", "MIN")
         } else {
             return ("\(components.seconds)", "SEC")
+        }
+    }
+    
+    private func getTimeAgoText(from pastDate: Date, to currentDate: Date) -> String {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: pastDate, to: currentDate)
+        
+        // Check in order: year, month, day, hour, minute, second
+        if let years = components.year, years > 0 {
+            return "\(years) \(years == 1 ? "year" : "years") ago"
+        } else if let months = components.month, months > 0 {
+            return "\(months) \(months == 1 ? "month" : "months") ago"
+        } else if let days = components.day, days > 0 {
+            return "\(days) \(days == 1 ? "day" : "days") ago"
+        } else if let hours = components.hour, hours > 0 {
+            return "\(hours) \(hours == 1 ? "hr" : "hrs") ago"
+        } else if let minutes = components.minute, minutes > 0 {
+            return "\(minutes) \(minutes == 1 ? "min" : "mins") ago"
+        } else if let seconds = components.second, seconds > 0 {
+            return "\(seconds) \(seconds == 1 ? "sec" : "secs") ago"
+        } else {
+            return "just now"
         }
     }
 }

@@ -40,18 +40,31 @@ struct EventLiveActivity: Widget {
                         .padding(.leading, 8)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Text(context.state.eventDate, style: .timer)
-                        .font(.title3)
-                        .bold()
-                        .monospacedDigit()
-                        .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                    if Date() >= context.state.eventDate {
+                        HStack(spacing: 4) {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.title3)
+                            Text("Done")
+                                .font(.title3)
+                                .bold()
+                        }
+                        .foregroundStyle(Color.green)
                         .padding(.trailing, 8)
+                    } else {
+                        Text(context.state.eventDate, style: .timer)
+                            .font(.title3)
+                            .bold()
+                            .monospacedDigit()
+                            .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                            .padding(.trailing, 8)
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(context.state.eventTitle)
                             .font(.headline)
                         
+                        let isCompleted = Date() >= context.state.eventDate
                         let total = context.state.eventDate.timeIntervalSince(context.state.creationDate)
                         let elapsed = Date().timeIntervalSince(context.state.creationDate)
                         let progress = total > 0 ? min(max(elapsed / total, 0), 1) : 1
@@ -63,7 +76,7 @@ struct EventLiveActivity: Widget {
                                     .frame(height: 4)
                                 
                                 Capsule()
-                                    .fill(Color(hex: context.state.colorHex) ?? .blue)
+                                    .fill(isCompleted ? Color.green : (Color(hex: context.state.colorHex) ?? .blue))
                                     .frame(width: geo.size.width * CGFloat(progress), height: 4)
                             }
                         }
@@ -76,12 +89,22 @@ struct EventLiveActivity: Widget {
                 Image(systemName: context.state.categoryIcon)
                     .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
             } compactTrailing: {
-                Text(context.state.eventDate, style: .timer)
-                    .monospacedDigit()
-                    .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                if Date() >= context.state.eventDate {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.green)
+                } else {
+                    Text(context.state.eventDate, style: .timer)
+                        .monospacedDigit()
+                        .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                }
             } minimal: {
-                Image(systemName: context.state.categoryIcon)
-                    .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                if Date() >= context.state.eventDate {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(Color.green)
+                } else {
+                    Image(systemName: context.state.categoryIcon)
+                        .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                }
             }
             .keylineTint(Color(hex: context.state.colorHex) ?? .blue)
         }
@@ -91,6 +114,14 @@ struct EventLiveActivity: Widget {
 struct EventLockScreenView: View {
     let context: ActivityViewContext<EventActivityAttributes>
     
+    private var isCompleted: Bool {
+        Date() >= context.state.eventDate
+    }
+    
+    private var timeSinceCompletion: TimeInterval {
+        max(0, Date().timeIntervalSince(context.state.eventDate))
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
             // Header Row
@@ -99,76 +130,129 @@ struct EventLockScreenView: View {
                 // Category Icon
                 ZStack {
                     Circle()
-                        .fill(Color(white: 0.95))
+                        .fill(Color(uiColor: .secondarySystemBackground))
                         .frame(width: 48, height: 48)
                     
                     Image(systemName: context.state.categoryIcon)
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Color(red: 0.2, green: 0.25, blue: 0.35))
+                        .foregroundStyle(Color.primary)
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("UPCOMING")
+                    Text(isCompleted ? "COMPLETED" : "UPCOMING")
                         .font(.system(size: 14, weight: .bold))
-                        .foregroundStyle(Color(red: 0.45, green: 0.5, blue: 0.6))
+                        .foregroundStyle(Color.secondary)
                         .tracking(1)
                     
                     Text(context.state.eventTitle)
                         .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Color.primary)
                 }
                 
                 Spacer()
                 
-                // LIVE Badge
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(Color(hex: context.state.colorHex) ?? .blue)
-                        .frame(width: 8, height: 8)
-                    
-                    Text("LIVE")
-                        .font(.system(size: 12, weight: .black))
-                        .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                // Status Badge
+                if isCompleted {
+                    HStack(spacing: 6) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 10))
+                        Text("DONE")
+                            .font(.system(size: 12, weight: .black))
+                    }
+                    .foregroundStyle(Color.green)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.green.opacity(0.1))
+                    .clipShape(Capsule())
+                } else {
+                    // LIVE Badge
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(Color(hex: context.state.colorHex) ?? .blue)
+                            .frame(width: 8, height: 8)
+                        
+                        Text("LIVE")
+                            .font(.system(size: 12, weight: .black))
+                            .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
+                    }
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background((Color(hex: context.state.colorHex) ?? .blue).opacity(0.1))
+                    .clipShape(Capsule())
                 }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background((Color(hex: context.state.colorHex) ?? .blue).opacity(0.1))
-                .clipShape(Capsule())
             }
             .padding(.top, 20)
             .padding(.horizontal, 20)
             
-            // Countdown Row
+            // Countdown/Completion Row
             HStack(alignment: .lastTextBaseline, spacing: 12) {
-                Text(context.state.eventDate, style: .timer)
-                    .font(.system(size: 44, weight: .bold, design: .rounded))
-                    .monospacedDigit()
-                    .foregroundStyle(.black)
+                if isCompleted {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Event Completed!")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundStyle(Color.green)
+                        
+                        Text(formatTimeSinceCompletion(timeSinceCompletion))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color.secondary)
+                    }
+                } else {
+                    Text(context.state.eventDate, style: .timer)
+                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .monospacedDigit()
+                        .foregroundStyle(Color.primary)
+                }
                 
                 Spacer()
                 
-                Text("T-Minus")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(Color(red: 0.6, green: 0.65, blue: 0.75))
+                if !isCompleted {
+                    Text("T-Minus")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Color.secondary)
+                }
             }
             .padding(.horizontal, 20)
             
             // Progress Bar
-            VStack(spacing: 8) {
-                // Using ProgressView with timerInterval for live-animating progress bar
-                ProgressView(
-                    timerInterval: context.state.creationDate...context.state.eventDate,
-                    countsDown: false
-                )
-                .tint(Color(hex: context.state.colorHex) ?? .blue)
-                .scaleEffect(x: 1, y: 2, anchor: .center) // Make it slightly thicker
+            if !isCompleted {
+                VStack(spacing: 8) {
+                    // Using ProgressView with timerInterval for live-animating progress bar
+                    ProgressView(
+                        timerInterval: context.state.creationDate...context.state.eventDate,
+                        countsDown: false
+                    )
+                    .tint(Color(hex: context.state.colorHex) ?? .blue)
+                    .scaleEffect(x: 1, y: 2, anchor: .center) // Make it slightly thicker
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+            } else {
+                // Completed progress bar (100%)
+                VStack(spacing: 8) {
+                    ProgressView(value: 1.0)
+                        .tint(Color.green)
+                        .scaleEffect(x: 1, y: 2, anchor: .center)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
             
-            Spacer(minLength: 10)
+           // Spacer(minLength: 10)
         }
-        .activityBackgroundTint(.white)
+        .activityBackgroundTint(Color(uiColor: .systemBackground))
+    }
+    
+    private func formatTimeSinceCompletion(_ interval: TimeInterval) -> String {
+        let minutes = Int(interval / 60)
+        let hours = Int(interval / 3600)
+        
+        if hours > 0 {
+            return "\(hours) hour\(hours == 1 ? "" : "s") ago"
+        } else if minutes > 0 {
+            return "\(minutes) minute\(minutes == 1 ? "" : "s") ago"
+        } else {
+            return "Just completed"
+        }
     }
 }
 

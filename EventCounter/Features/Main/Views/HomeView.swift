@@ -220,6 +220,10 @@ struct HomeView: View {
         .onOpenURL { url in
             handleDeepLink(url)
         }
+        .onAppear {
+            // Debug: List pending notifications
+            NotificationService.shared.listPendingNotifications()
+        }
     }
     
     private func handleDeepLink(_ url: URL) {
@@ -355,11 +359,13 @@ struct HomeView: View {
                 HStack(spacing: 4) {
                     Text(sortOption.wrappedValue.rawValue)
                         .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
                     Image(systemName: "chevron.down")
                         .font(.system(size: 10, weight: .bold))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
+                .frame(width: 150)
                 .background(Color.adaptiveSecondaryBackground)
                 .foregroundStyle(Color.adaptiveSecondaryText)
                 .clipShape(Capsule())

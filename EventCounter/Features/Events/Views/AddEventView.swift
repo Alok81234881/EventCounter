@@ -52,7 +52,7 @@ struct AddEventView: View {
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
-                ScrollView {
+                ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 24) {
                         
                         // 1. Cover Photo Area
@@ -202,22 +202,22 @@ struct AddEventView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
-                        // 6. Import Button
-                        Button {
-                            showingCalendarPicker = true
-                        } label: {
-                            HStack {
-                                Image(systemName: "calendar.badge.plus")
-                                Text("Import from Calendar")
-                                    .fontWeight(.medium)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.blue.opacity(0.1))
-                            .foregroundStyle(.blue)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.blue.opacity(0.2), lineWidth: 1))
-                        }
+//                        // 6. Import Button
+//                        Button {
+//                            showingCalendarPicker = true
+//                        } label: {
+//                            HStack {
+//                                Image(systemName: "calendar.badge.plus")
+//                                Text("Import from Calendar")
+//                                    .fontWeight(.medium)
+//                            }
+//                            .frame(maxWidth: .infinity)
+//                            .padding()
+//                            .background(Color.blue.opacity(0.1))
+//                            .foregroundStyle(.blue)
+//                            .clipShape(RoundedRectangle(cornerRadius: 16))
+//                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.blue.opacity(0.2), lineWidth: 1))
+//                        }
                         
                         // 7. Event Type
                         VStack(alignment: .leading, spacing: 12) {
@@ -330,39 +330,30 @@ struct AddEventView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
-                        // Bottom Padding
-                        Color.clear.frame(height: 80)
+
+                        // Save Button moved inside scroll
+                        Button(action: saveEvent) {
+                            HStack {
+                                Image(systemName: "checkmark")
+                                Text("Save Event")
+                            }
+                            .font(.system(size: 18, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(selectedColor)
+                            .clipShape(RoundedRectangle(cornerRadius: 30))
+                            .shadow(color: selectedColor.opacity(0.3), radius: 10, y: 5)
+                        }
+                        .padding(.top, 10)
+                        .disabled(title.isEmpty)
+                        .opacity(title.isEmpty ? 0.6 : 1.0)
                     }
                     .padding(20)
                 }
                 .background(Color.adaptiveGroupedBackground) // Main Background
                 .scrollDismissesKeyboard(.interactively)
                 
-                // Save Button
-                Button(action: saveEvent) {
-                    HStack {
-                        Image(systemName: "checkmark")
-                        Text("Save Event")
-                    }
-                    .font(.system(size: 18, weight: .bold))
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(selectedColor)
-                    .clipShape(RoundedRectangle(cornerRadius: 30))
-                    .shadow(color: selectedColor.opacity(0.3), radius: 10, y: 5)
-                }
-                .padding()
-                .padding(.bottom, 10) // Extra safety padding
-                .background(
-                    LinearGradient(
-                        colors: [Color.adaptiveGroupedBackground.opacity(0), Color.adaptiveGroupedBackground],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-                .disabled(title.isEmpty)
-                .opacity(title.isEmpty ? 0.6 : 1.0)
             }
             .navigationTitle("Create Event")
             .navigationBarTitleDisplayMode(.inline)
@@ -377,9 +368,7 @@ struct AddEventView: View {
                         Image(systemName: "xmark")
                             .foregroundStyle(Color.adaptivePrimaryText)
                             .font(.system(size: 16, weight: .bold))
-                            .padding(8)
-                            .background(Color.adaptiveSecondaryBackground)
-                            .clipShape(Circle())
+                            .padding(6)
                     }
                 }
             }

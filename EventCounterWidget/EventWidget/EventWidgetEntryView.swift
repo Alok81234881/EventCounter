@@ -25,13 +25,13 @@ struct EventWidgetEntryView : View {
             }
             .containerBackground(for: .widget) {
                 ZStack {
-                    Color.white
+                    Color(uiColor: .systemBackground)
                     // Subtle background gradient to match the "glass" look from the image
                     LinearGradient(
                         colors: [
-                            Color.white,
-                            Color(red: 0.98, green: 0.95, blue: 0.98).opacity(0.8),
-                            Color(red: 0.95, green: 0.98, blue: 1.0).opacity(0.6)
+                            Color(uiColor: .systemBackground),
+                            Color(uiColor: .secondarySystemBackground).opacity(0.8),
+                            Color(uiColor: .tertiarySystemBackground).opacity(0.6)
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -90,11 +90,11 @@ struct SmallEventView: View {
                 VStack(alignment: .trailing, spacing: -2) {
                     Text(info.value)
                         .font(.system(size: 32, weight: .black, design: .rounded))
-                        .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                        .foregroundStyle(Color.primary)
                     
                     Text(info.label)
                         .font(.system(size: 10, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.45, green: 0.5, blue: 0.6))
+                        .foregroundStyle(Color.secondary)
                         .tracking(1)
                 }
             }
@@ -105,13 +105,13 @@ struct SmallEventView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
                     .font(.system(size: 18, weight: .bold, design: .rounded))
-                    .foregroundStyle(Color(red: 0.1, green: 0.15, blue: 0.2))
+                    .foregroundStyle(Color.primary)
                     .lineLimit(2)
                     .minimumScaleFactor(0.8)
                 
                 Text(event.date.formatted(.dateTime.month().day()))
                     .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundStyle(Color.gray)
+                    .foregroundStyle(Color.secondary)
             }
         }
         .padding(10)
@@ -170,11 +170,11 @@ struct MediumEventView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(event.title)
                         .font(.system(size: 18, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.1, green: 0.15, blue: 0.2))
+                        .foregroundStyle(Color.primary)
                     
                     Text(event.date.formatted(date: .long, time: .omitted))
                         .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundStyle(Color.gray)
+                        .foregroundStyle(Color.secondary)
                 }
                 
                 Spacer()
@@ -207,7 +207,7 @@ struct MediumEventView: View {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(primaryUnitValue(for: components))
                                 .font(.system(size: 48, weight: .black, design: .rounded))
-                                .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                                .foregroundStyle(Color.primary)
                             
                             Text(primaryUnitLabel(for: components).uppercased())
                                 .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -216,13 +216,13 @@ struct MediumEventView: View {
                         
                         Text(secondaryUnitsDescription(for: components))
                             .font(.system(size: 14, weight: .bold, design: .rounded))
-                            .foregroundStyle(Color(red: 0.4, green: 0.45, blue: 0.5))
+                            .foregroundStyle(Color.secondary)
                             .padding(.top, -4)
                     } else if timeUntil > 0 {
                         // Final 24 hours: Live timer
                         Text(event.date, style: .timer)
                             .font(.system(size: 32, weight: .black, design: .monospaced))
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                            .foregroundStyle(Color.primary)
                             .minimumScaleFactor(0.5)
                         
                         Text("remaining")
@@ -231,7 +231,7 @@ struct MediumEventView: View {
                     } else if event.isCountUp {
                         Text(event.date, style: .timer)
                             .font(.system(size: 32, weight: .black, design: .monospaced))
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                            .foregroundStyle(Color.primary)
                         
                         Text("elapsed")
                             .font(.system(size: 14, weight: .bold, design: .rounded))
@@ -239,7 +239,7 @@ struct MediumEventView: View {
                     } else {
                         Text("Event Completed")
                             .font(.system(size: 18, weight: .black, design: .rounded))
-                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15))
+                            .foregroundStyle(Color.primary)
                     }
                 }
                 
@@ -258,7 +258,7 @@ struct MediumEventView: View {
                     
                     Text("\(Int(progress * 100))%")
                         .font(.system(size: 12, weight: .bold, design: .rounded))
-                        .foregroundStyle(Color(red: 0.1, green: 0.15, blue: 0.2))
+                        .foregroundStyle(Color.primary)
                 }
             }
             .padding(.horizontal, 16)

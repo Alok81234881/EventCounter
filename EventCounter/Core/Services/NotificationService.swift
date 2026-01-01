@@ -38,20 +38,31 @@ class NotificationService: NSObject, ObservableObject {
     func scheduleNotification(for event: Event) {
         // Double check permission before scheduling
         UNUserNotificationCenter.current().getNotificationSettings { settings in
-            guard settings.authorizationStatus == .authorized else { return }
+            guard settings.authorizationStatus == .authorized else {
+                print("[NotificationService] Not authorized. Status: \(settings.authorizationStatus.rawValue)")
+                return
+            }
             
             // Cancel existing notifications for this event
             self.cancelNotification(for: event)
             
             if let notifyMinutes = event.notifyBefore {
+                print("[NotificationService] Scheduling notification for '\(event.title)' \(notifyMinutes) minutes before event at \(event.date)")
                 self.scheduleSpecificNotification(for: event, minutesBefore: notifyMinutes)
+            } else {
+                print("[NotificationService] No notification scheduled for '\(event.title)' - notifyBefore is nil")
             }
         }
     }
     
     private func scheduleSpecificNotification(for event: Event, minutesBefore: Int) {
-        guard let triggerDate = Calendar.current.date(byAdding: .minute, value: -minutesBefore, to: event.date),
-              triggerDate > Date() else {
+        guard let triggerDate = Calendar.current.date(byAdding: .minute, value: -minutesBefore, to: event.date) else {
+            print("[NotificationService] ERROR: Could not calculate trigger date for '\(event.title)'")
+            return
+        }
+        
+        guard triggerDate > Date() else {
+            print("[NotificationService] WARNING: Trigger date (\(triggerDate)) is in the past for '\(event.title)'. Event date: \(event.date), Minutes before: \(minutesBefore)")
             return
         }
         
@@ -83,7 +94,13 @@ class NotificationService: NSObject, ObservableObject {
         let identifier = event.id.uuidString
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
         
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("[NotificationService] ERROR: Failed to schedule notification for '\(event.title)': \(error.localizedDescription)")
+            } else {
+                print("[NotificationService] SUCCESS: Notification scheduled for '\(event.title)' at \(triggerDate) (event at \(event.date))")
+            }
+        }
     }
     
     func cancelNotification(for event: Event) {
@@ -92,7 +109,40 @@ class NotificationService: NSObject, ObservableObject {
         // Cancel the main ID and any older staged IDs from the previous version
         UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
             let relatedIDs = requests.filter { $0.identifier.hasPrefix(baseID) }.map { $0.identifier }
+            if !relatedIDs.isEmpty {
+                print("[NotificationService] Cancelling \(relatedIDs.count) notification(s) for event '\(event.title)'")
+            }
             UNUserNotificationCenter.current().removePendingNotificationRequests(withIdentifiers: relatedIDs)
+        }
+    }
+    
+    // Debug method to list all pending notifications
+    func listPendingNotifications() {
+        UNUserNotificationCenter.current().getPendingNotificationRequests { requests in
+            print("[NotificationService] Total pending notifications: \(requests.count)")
+            for request in requests {
+                if let trigger = request.trigger as? UNCalendarNotificationTrigger {
+                    print("  - ID: \(request.identifier)")
+                    print("    Title: \(request.content.title)")
+                    print("    Body: \(request.content.body)")
+                    print("    Trigger: \(trigger.dateComponents)")
+                } else if let trigger = request.trigger as? UNTimeIntervalNotificationTrigger {
+                    print("  - ID: \(request.identifier)")
+                    print("    Title: \(request.content.title)")
+                    print("    Body: \(request.content.body)")
+                    print("    Trigger: Time interval \(trigger.timeInterval) seconds")
+                }
+            }
+        }
+    }
+    
+    // Reschedule notifications for all events (useful on app launch)
+    func rescheduleNotificationsForEvents(_ events: [Event]) {
+        print("[NotificationService] Rescheduling notifications for \(events.count) events")
+        for event in events {
+            if event.date > Date() && event.notifyBefore != nil {
+                scheduleNotification(for: event)
+            }
         }
     }
 }
