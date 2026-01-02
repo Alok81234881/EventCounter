@@ -120,60 +120,69 @@ struct AddEventView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             labelView("LOCATION")
                             VStack(spacing: 0) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "mappin.and.ellipse")
-                                        .foregroundStyle(Color.adaptiveSecondaryText)
-                                    TextField("", text: $location, prompt: Text("e.g. Central Park, NY").foregroundColor(.adaptiveSecondaryText))
-                                        .foregroundStyle(Color.adaptivePrimaryText)
-                                        .submitLabel(.done)
-                                        .focused($isLocationFocused)
-                                        .onChange(of: location) { newValue in
-                                            locationSearchService.searchQuery = newValue
-                                            withAnimation {
-                                                showLocationSuggestions = !newValue.isEmpty && isLocationFocused
-                                            }
-                                        }
-                                }
-                                .padding()
-                                
-                                if showLocationSuggestions && !locationSearchService.completions.isEmpty {
-                                    Divider()
-                                        .padding(.horizontal)
-                                    
-                                    VStack(alignment: .leading, spacing: 0) {
-                                        ForEach(locationSearchService.completions, id: \.self) { completion in
-                                            Button {
-                                                location = "\(completion.title), \(completion.subtitle)"
+                                VStack(spacing: 0) {
+                                    HStack(spacing: 12) {
+                                        Image(systemName: "mappin.and.ellipse")
+                                            .foregroundStyle(Color.adaptiveSecondaryText)
+                                        TextField("", text: $location, prompt: Text("e.g. Central Park, NY").foregroundColor(.adaptiveSecondaryText))
+                                            .foregroundStyle(Color.adaptivePrimaryText)
+                                            .submitLabel(.done)
+                                            .focused($isLocationFocused)
+                                            .onChange(of: location) { newValue in
+                                                locationSearchService.searchQuery = newValue
                                                 withAnimation {
-                                                    showLocationSuggestions = false
-                                                    isLocationFocused = false
+                                                    showLocationSuggestions = !newValue.isEmpty && isLocationFocused
                                                 }
-                                            } label: {
-                                                HStack(spacing: 12) {
-                                                    Image(systemName: "mappin.circle.fill")
-                                                        .foregroundStyle(.gray.opacity(0.5))
-                                                    
-                                                    VStack(alignment: .leading, spacing: 2) {
-                                                        Text(completion.title)
-                                                            .font(.system(size: 15, weight: .medium))
-                                                            .foregroundStyle(Color.adaptivePrimaryText)
-                                                        Text(completion.subtitle)
-                                                            .font(.system(size: 12))
-                                                            .foregroundStyle(Color.adaptiveSecondaryText)
-                                                    }
-                                                    Spacer()
-                                                }
-                                                .padding(.vertical, 12)
-                                                .padding(.horizontal)
                                             }
-                                            
-                                            if completion != locationSearchService.completions.last {
-                                                Divider()
-                                                    .padding(.leading, 44)
-                                            }
-                                        }
                                     }
-                                    .frame(maxHeight: 250)
+                                    .padding()
+                                    .background(Color.clear)
+                                    .zIndex(1)
+                                    if showLocationSuggestions && !locationSearchService.completions.isEmpty {
+                                        ScrollView(.vertical, showsIndicators: true) {
+                                            VStack(alignment: .leading, spacing: 0) {
+                                                ForEach(locationSearchService.completions, id: \.self) { completion in
+                                                    Button {
+                                                        location = "\(completion.title), \(completion.subtitle)"
+                                                        withAnimation {
+                                                            showLocationSuggestions = false
+                                                            isLocationFocused = false
+                                                        }
+                                                    } label: {
+                                                        HStack(spacing: 12) {
+                                                            Image(systemName: "mappin.circle.fill")
+                                                                .foregroundStyle(.gray.opacity(0.5))
+                                                            VStack(alignment: .leading, spacing: 2) {
+                                                                Text(completion.title)
+                                                                    .font(.system(size: 15, weight: .medium))
+                                                                    .foregroundStyle(Color.adaptivePrimaryText)
+                                                                Text(completion.subtitle)
+                                                                    .font(.system(size: 12))
+                                                                    .foregroundStyle(Color.adaptiveSecondaryText)
+                                                            }
+                                                            Spacer()
+                                                        }
+                                                        .padding(.vertical, 12)
+                                                        .padding(.horizontal)
+                                                    }
+                                                    if completion != locationSearchService.completions.last {
+                                                        Divider()
+                                                            .padding(.leading, 44)
+                                                    }
+                                                }
+                                            }
+                                            .padding(.vertical, 4)
+                                        }
+                                        .background(RoundedRectangle(cornerRadius: 16).fill(Color.adaptiveSecondaryBackground))
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 16)
+                                                .stroke(Color.adaptiveSecondaryText.opacity(0.15), lineWidth: 1)
+                                        )
+                                        .shadow(color: Color.black.opacity(0.12), radius: 10, x: 0, y: 6)
+                                        .frame(maxHeight: 250)
+                                        .padding(.horizontal, 4)
+                                        .zIndex(10)
+                                    }
                                 }
                             }
                             .background(Color.adaptiveSecondaryBackground)
@@ -306,6 +315,7 @@ struct AddEventView: View {
                                     Picker("Time", selection: $notifyBefore) {
                                         Text("None").tag(nil as Int?)
                                         Text("At time of event").tag(0 as Int?)
+                                        Text("5 min").tag(5 as Int?)
                                         Text("15 min").tag(15 as Int?)
                                         Text("30 min").tag(30 as Int?)
                                         Text("1 hour").tag(60 as Int?)
@@ -524,6 +534,7 @@ struct AddEventView: View {
     private var reminderText: String {
         guard let mins = notifyBefore else { return "None" }
         if mins == 0 { return "At time" }
+        if mins == 5 { return "5 min" }
         if mins == 15 { return "15 min" }
         if mins == 30 { return "30 min" }
         if mins == 60 { return "1 hour" }

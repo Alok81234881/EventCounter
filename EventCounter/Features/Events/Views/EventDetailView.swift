@@ -14,14 +14,14 @@ struct EventDetailView: View {
     @State private var showingReminderPicker = false
 
     var body: some View {
-        ZStack(alignment: .top) {
+        VStack {
             // Root Background: Theme color for top (to prevent flicker), adaptive background for bottom
-            VStack(spacing: 0) {
-                (Color(hex: event.colorHex) ?? .blue)
-                    .frame(height: 300)
-                Color.adaptiveGroupedBackground
-            }
-            .ignoresSafeArea()
+//            VStack(spacing: 0) {
+//                (Color(hex: event.colorHex) ?? .blue)
+//                    .frame(height: 300)
+//                Color.adaptiveGroupedBackground
+//            }
+//            .ignoresSafeArea()
             
             if event.isDeleted {
                 ContentUnavailableView("Event Deleted", systemImage: "trash")
@@ -29,7 +29,7 @@ struct EventDetailView: View {
                 TimelineView(.periodic(from: .now, by: 1.0)) { context in
                     let components = CountdownService.calculateComponents(from: context.date, to: event.date, isCountUp: event.isCountUp)
                     
-                    ScrollView {
+                    ScrollView(showsIndicators: false) {
                         VStack(spacing: 0) {
                             // Hero Image Section
                             Group {
@@ -44,53 +44,7 @@ struct EventDetailView: View {
                             }
                             .frame(height: 300)
                             .clipped()
-                            .overlay(alignment: .top) {
-                                // Top Navigation Buttons
-                                HStack {
-                                    Button {
-                                        dismiss()
-                                    } label: {
-                                        Image(systemName: "chevron.left")
-                                            .font(.system(size: 18, weight: .semibold))
-                                            .foregroundStyle(.white)
-                                            .frame(width: 44, height: 44)
-                                            .background(.white.opacity(0.3))
-                                            .clipShape(Circle())
-                                    }
-                                    .contentShape(Circle())
-                                    
-                                    Spacer()
-                                    
-                                    HStack(spacing: 12) {
-                                        Button {
-                                            showingSharePreview = true
-                                        } label: {
-                                            Image(systemName: "square.and.arrow.up")
-                                                .font(.system(size: 18, weight: .semibold))
-                                                .foregroundStyle(.white)
-                                                .frame(width: 44, height: 44)
-                                                .background(.white.opacity(0.3))
-                                                .clipShape(Circle())
-                                        }
-                                        .contentShape(Circle())
-                                        
-                                        Button {
-                                            showingEditSheet = true
-                                        } label: {
-                                            Text("Edit")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundStyle(.white)
-                                                .padding(.horizontal, 16)
-                                                .padding(.vertical, 10)
-                                                .background(.white.opacity(0.3))
-                                                .clipShape(Capsule())
-                                        }
-                                        .contentShape(Capsule())
-                                    }
-                                }
-                                .padding()
-                                .padding(.top, 40)
-                            }
+                            
                             .overlay(alignment: .bottomLeading) {
                                 // Title Overlay
                                 VStack(alignment: .leading, spacing: 4) {
@@ -268,9 +222,9 @@ struct EventDetailView: View {
                                 
                                 VStack(spacing: 16) {
                                     // Notify Before
-                                    Button {
-                                        showingReminderPicker = true
-                                    } label: {
+//                                    Button {
+//                                        showingReminderPicker = true
+//                                    } label: {
                                         HStack(spacing: 16) {
                                             ZStack {
                                                 Circle()
@@ -292,11 +246,11 @@ struct EventDetailView: View {
                                             
                                             Spacer()
                                             
-                                            Image(systemName: "chevron.right")
-                                                .font(.system(size: 14, weight: .semibold))
-                                                .foregroundStyle(.gray.opacity(0.5))
+//                                            Image(systemName: "chevron.right")
+//                                                .font(.system(size: 14, weight: .semibold))
+//                                                .foregroundStyle(.gray.opacity(0.5))
                                         }
-                                    }
+                                 //   }
                                     
                                     // Live Activity Toggle
                                     HStack(spacing: 16) {
@@ -367,6 +321,55 @@ struct EventDetailView: View {
                     .ignoresSafeArea(edges: .top)
                 }
             }
+        }
+        .overlay(alignment: .top) {
+            // Top Navigation Buttons
+            HStack {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "arrow.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color.adaptivePrimaryText)
+                        .frame(width: 42, height: 42)
+                        .background(Color.adaptiveTertiaryBackground)
+                        .clipShape(Circle())
+                        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                }
+                .contentShape(Circle())
+                
+                Spacer()
+                
+                HStack(spacing: 12) {
+                    Button {
+                        showingSharePreview = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.adaptivePrimaryText)
+                            .frame(width: 42, height: 42)
+                            .background(Color.adaptiveTertiaryBackground)
+                            .clipShape(Circle())
+                            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    }
+                    .contentShape(Circle())
+                    
+                    Button {
+                        showingEditSheet = true
+                    } label: {
+                        Text("Edit")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color.adaptivePrimaryText)
+                            .frame(width: 50, height: 42)
+                            .background(Color.adaptiveTertiaryBackground)
+                            .clipShape(Capsule())
+                            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                    }
+                    .contentShape(Capsule())
+                }
+            }
+            .padding()
+//            .padding(.top, 20)
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)

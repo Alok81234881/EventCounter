@@ -17,34 +17,37 @@ struct SharePreviewView: View {
             
             VStack(spacing: 0) {
                 // Header
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(spacing: 0) {
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Share Event")
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundStyle(Color.adaptivePrimaryText)
+                                .frame(width: 50, height: 50)
+                                .background(Color.adaptiveSecondaryBackground)
+                                .clipShape(Circle())
+                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
+                        }
+                        Spacer()
+                        VStack {
+                            Text("Share \(event.title)")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundStyle(Color.adaptivePrimaryText)
                             Text("Preview your card")
                                 .font(.system(size: 15))
                                 .foregroundStyle(Color.adaptiveSecondaryText)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
-                        
                         Spacer()
-                        
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Color.adaptiveSecondaryText)
-                                .frame(width: 32, height: 32)
-                                .background(Color.adaptiveSecondaryText.opacity(0.1))
-                                .clipShape(Circle())
-                        }
+                        Color.clear.frame(width: 50, height: 50)
                     }
+                   
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, 24)
-                .padding(.bottom, 20)
+                .padding(.horizontal, 18)
+                .padding(.top, 18)
+                .padding(.bottom, 10)
                 
                 // Card Carousel
                 TabView(selection: $selectedTemplate) {
@@ -58,8 +61,18 @@ struct SharePreviewView: View {
                         .tag(index)
                     }
                 }
-                .tabViewStyle(.page(indexDisplayMode: .always))
                 .frame(height: 480)
+                .tabViewStyle(.page(indexDisplayMode: .never))
+                
+                HStack(spacing: 8) {
+                    ForEach(0..<6, id: \.self) { index in
+                        Circle()
+                            .fill(index == selectedTemplate ? Color.primary : Color.secondary.opacity(0.3))
+                            .frame(width: 8, height: 8)
+                    }
+                }
+                .padding(.top, 8)
+                .padding(.bottom, 8)
                 
                 // Share Button
                 Button {
@@ -74,24 +87,26 @@ struct SharePreviewView: View {
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
-                    .background(Color(red: 0.11, green: 0.11, blue: 0.15))
+                    .background(Color(hex: event.colorHex) ?? .blue)
                     .cornerRadius(16)
                 }
                 .padding(.horizontal, 24)
                 .padding(.top, 20)
+                .padding(.bottom, 20)
+
                 
-                // Cancel Button
-                Button {
-                    dismiss()
-                } label: {
-                    Text("Cancel")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(Color.adaptiveSecondaryText)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 24)
+//                // Cancel Button
+//                Button {
+//                    dismiss()
+//                } label: {
+//                    Text("Cancel")
+//                        .font(.system(size: 17, weight: .medium))
+//                        .foregroundStyle(Color.adaptiveSecondaryText)
+//                        .frame(maxWidth: .infinity)
+//                        .padding(.vertical, 16)
+//                }
+//                .padding(.horizontal, 24)
+//                .padding(.bottom, 24)
             }
             .background(Color.adaptiveSecondaryBackground)
             .cornerRadius(24)
@@ -109,12 +124,12 @@ struct SharePreviewView: View {
         let style = ShareCardStyle(rawValue: selectedTemplate) ?? .heroImage
         
         // Exact 3x scale of the 340x440 preview card to ensure layout is identical
-        let width: CGFloat = 1020
-        let height: CGFloat = 1320
+        let width: CGFloat = 340
+        let height: CGFloat = 440
         
         let cardView = ShareCardTemplate(event: event, components: components, templateStyle: style)
             .frame(width: width, height: height)
-            .background(Color.white)
+            .background(Color.clear)
         
         let renderer = ImageRenderer(content: cardView)
         renderer.proposedSize = .init(width: width, height: height)
@@ -146,4 +161,10 @@ enum ShareCardStyle: Int {
     case dark = 3
     case polaroid = 4
     case circular = 5
+}
+#Preview {
+    SharePreviewView(
+        event: Event(title: "test", date: Date()),
+        components: .init(months: 3, days: 3, hours: 3, minutes: 3, seconds: 3, isPast: false, isCountUp: false)
+    )
 }

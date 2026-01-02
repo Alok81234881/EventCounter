@@ -4,6 +4,7 @@ struct ShareCardTemplate: View {
     let event: Event
     let components: CountdownComponents
     let templateStyle: ShareCardStyle
+    let scale: CGFloat = 1.0
     
     var body: some View {
         Group {
@@ -30,9 +31,10 @@ struct ShareCardTemplate: View {
 struct HeroImageTemplate: View {
     let event: Event
     let components: CountdownComponents
+    let scale: CGFloat = 1.0
     
     var body: some View {
-        ZStack {
+        VStack {
             // Background Image/Color
             GeometryReader { geo in
                 if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
@@ -54,32 +56,39 @@ struct HeroImageTemplate: View {
             }
             
             // Dark gradient overlay
+           
+            
+           
+        }
+        
+        .overlay {
             LinearGradient(
                 colors: [.clear, .black.opacity(0.7)],
                 startPoint: .top,
                 endPoint: .bottom
             )
-            
-            VStack(spacing: 16) {
-                Spacer()
+        }
+        .overlay(alignment: .center) {
+            VStack(spacing: 16 * scale) {
+               
                 
                 Text("UPCOMING")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 12 * scale, weight: .bold))
                     .foregroundStyle(.white.opacity(0.8))
                     .tracking(2)
                 
                 Text(event.title)
-                    .font(.system(size: 42, weight: .bold))
+                    .font(.system(size: 42 * scale, weight: .bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 20 * scale)
                 
-                HStack(spacing: 24) {
+                HStack(spacing: 24 * scale) {
                     TimeUnitColumn(value: "\(components.days)", label: "DAYS")
                     TimeUnitColumn(value: String(format: "%02d", components.hours), label: "HRS")
                     TimeUnitColumn(value: String(format: "%02d", components.minutes), label: "MINS")
                 }
-                .padding(.bottom, 60)
+                .padding(.bottom, 60 * scale)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -444,4 +453,8 @@ struct CountdownBox: View {
         )
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
+}
+
+#Preview {
+    HeroImageTemplate(event: Event(title: "test event", date: Date()), components: .init(months: 1, days: 1, hours: 1, minutes: 1, seconds: 1, isPast: false, isCountUp: false))
 }
