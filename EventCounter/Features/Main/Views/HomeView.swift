@@ -115,7 +115,7 @@ struct HomeView: View {
                                 
                                 TextField("", text: $searchText, prompt: Text("Search events...").foregroundColor(.adaptiveSecondaryText))
                                     .foregroundStyle(Color.adaptivePrimaryText)
-                                    .tint(.orange)
+                                    .tint(Color(hex: "#800080"))
                                     .submitLabel(.done)
                                     .onSubmit {
                                         hideKeyboard()
@@ -146,7 +146,7 @@ struct HomeView: View {
                         // 2. Upcoming Section
                         if !upcomingEvents.isEmpty {
                             VStack(alignment: .leading, spacing: 16) {
-                                sectionHeader(title: "UPCOMING", icon: "🚀", color: .orange, sortOption: $upcomingSort)
+                                sectionHeader(title: "UPCOMING", icon: "🚀", color: Color(hex: "#800080")  ?? .purple, sortOption: $upcomingSort)
                                 ForEach(upcomingEvents) { event in
                                     NavigationLink(value: event.id) {
                                         HomeEventCardView(event: event)
@@ -194,8 +194,8 @@ struct HomeView: View {
                 Button(action: { showingAddEvent = true }) {
                     ZStack {
                         Circle()
-                            .fill(Color.orange)
-                            .shadow(color: .orange.opacity(0.4), radius: 10, x: 0, y: 5)
+                            .fill(Color(hex: "#800080") ?? .purple)
+//                            .shadow(color: Color(hex: "#800080").opacity(0.4) as? Color ?? .purple, radius: 10, x: 0, y: 5)
                             
                         Image(systemName: "plus")
                             .font(.system(size: 30, weight: .light))
@@ -303,7 +303,7 @@ struct HomeView: View {
                     title: "All",
                     icon: "square.grid.2x2.fill",
                     isSelected: selectedCategory == nil,
-                    color: .orange
+                    color: Color(hex: "#800080") ?? .purple
                 ) {
                     withAnimation { selectedCategory = nil }
                 }
@@ -314,7 +314,7 @@ struct HomeView: View {
                         title: category.displayName,
                         icon: category.icon,
                         isSelected: selectedCategory == category,
-                        color: Color(red: 1.0, green: 0.7, blue: 0.2) // Golden Yellow from Login
+                        color: Color(hex: "#800080") ?? .purple // Golden Yellow from Login
                     ) {
                         withAnimation { selectedCategory = category }
                     }

@@ -59,7 +59,7 @@ struct EventCardView: View {
                 if event.isPinned {
                     Image(systemName: "pin.fill")
                         .font(.caption)
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color(hex: "#800080") ?? .purple)
                         .padding(6)
                         .background(.ultraThinMaterial)
                         .clipShape(Circle())

@@ -16,7 +16,7 @@ struct ImageCropperView: View {
     private let cropSize: CGFloat = 300 // The fixed crop box size
     private let cornerLength: CGFloat = 20
     private let cornerThickness: CGFloat = 4
-    private let cropColor = Color.orange
+    private let cropColor = Color(hex: "#800080")
     
     var body: some View {
         VStack(spacing: 0) {
@@ -27,7 +27,7 @@ struct ImageCropperView: View {
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 20, weight: .semibold))
-                        .foregroundStyle(.black)
+                        .foregroundStyle(Color.adaptivePrimaryText)
                         .padding()
                 }
                 
@@ -35,7 +35,7 @@ struct ImageCropperView: View {
                 
                 Text("Adjust Image")
                     .font(.headline)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(Color.adaptivePrimaryText)
                 
                 Spacer()
                 
@@ -55,7 +55,7 @@ struct ImageCropperView: View {
             }
             .padding(.top, 50) // Explicit Notch Padding
             .padding(.bottom, 10)
-            .background(Color.white)
+            .background(Color.adaptiveSecondaryBackground)
             .zIndex(100)
             
             // MARK: - Main Editor
@@ -158,7 +158,7 @@ struct ImageCropperView: View {
                 path.addLine(to: CGPoint(x: 0, y: 0))
                 path.addLine(to: CGPoint(x: cornerLength, y: 0))
             }
-            .stroke(cropColor, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
+            .stroke(cropColor ?? .purple, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
             .frame(width: cropSize, height: cropSize) // Centers path in the cropSize frame if strictly defined path?
             // Wait, path coordinates are absolute. We need to align them.
             // Using standard alignment on the ZStack
@@ -184,7 +184,7 @@ struct ImageCropperView: View {
             path.addLine(to: CGPoint(x: 0, y: 0))
             path.addLine(to: CGPoint(x: cornerLength, y: 0))
         }
-        .stroke(cropColor, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
+        .stroke(cropColor ?? .purple, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
         .frame(width: cornerLength, height: cornerLength)
         .rotationEffect(.degrees(rotation))
     }
@@ -207,7 +207,7 @@ struct ImageCropperView: View {
             .clipped()
         )
         // Ensure scale matches screen scale for quality
-        renderer.scale = UIScreen.main.scale
+      //  renderer.scale = UIScreen.main.scale
         
         if let uiImage = renderer.uiImage {
              onCrop(uiImage)

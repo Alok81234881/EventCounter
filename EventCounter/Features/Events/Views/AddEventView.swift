@@ -18,7 +18,7 @@ struct AddEventView: View {
     @State private var location = ""
     @State private var note = ""
     @State private var category: EventCategory = .personal
-    @State private var selectedColor = Color.orange // Default per mockup (Travel/Orange)
+    @State private var selectedColor = Color(hex: "#800080") ?? .purple // Default per mockup (Travel/Orange)
     @State private var notifyBefore: Int? = 15 // Default 15 min per mockup
     
     // Image Handling
@@ -42,7 +42,7 @@ struct AddEventView: View {
     private let availableColors: [Color] = [
         Color(hex: "#F5A623") ?? .orange, // Orange
         Color(hex: "#E04F97") ?? .pink,   // Pink
-        Color(hex: "#9B51E0") ?? .purple, // Purple
+        Color(hex: "#800080") ?? .purple, // Purple
         Color(hex: "#2F80ED") ?? .blue,   // Blue
         Color(hex: "#27AE60") ?? .green,  // Green
         Color(hex: "#2C3E50") ?? .black   // Dark
@@ -549,7 +549,7 @@ struct AddEventView: View {
             title = event.title
             date = event.date
             category = event.category
-            selectedColor = Color(hex: event.colorHex) ?? .orange
+            selectedColor = Color(hex: event.colorHex) ?? Color(hex: "#800080") ?? .purple
             note = event.note ?? ""
             location = event.location ?? ""
             notifyBefore = event.notifyBefore

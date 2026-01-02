@@ -27,7 +27,7 @@ struct ProfileView: View {
                 Section("Account") {
                     Label("Sync Data", systemImage: "arrow.triangle.2.circlepath")
                     Label("Premium Subscription", systemImage: "crown.fill")
-                        .foregroundStyle(.orange)
+                        .foregroundStyle(Color(hex: "#800080") ?? .purple)
                 }
                 
                 Section {

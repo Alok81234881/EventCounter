@@ -3,8 +3,8 @@ import UIKit
 
 struct CustomDatePicker: UIViewRepresentable {
     @Binding var date: Date
-    var color: UIColor = .orange
-    
+    var color: UIColor = UIColor(Color(hex: "#800080") ?? .purple)
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }

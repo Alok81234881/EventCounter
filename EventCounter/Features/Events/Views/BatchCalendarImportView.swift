@@ -37,7 +37,7 @@ struct BatchCalendarImportView: View {
                     }
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(Color(hex: "#800080") ?? .purple)
                 } else {
                     Text("Cancel")
                         .foregroundStyle(.clear)
@@ -88,7 +88,7 @@ struct BatchCalendarImportView: View {
                                         HStack(spacing: 12) {
                                             Image(systemName: "calendar")
                                                 .font(.system(size: 20))
-                                                .foregroundStyle(isSelected ? .orange : Color.adaptiveSecondaryText)
+                                                .foregroundStyle(isSelected ? Color(hex: "#800080") ?? .purple : Color.adaptiveSecondaryText)
                                             
                                             VStack(alignment: .leading, spacing: 2) {
                                                 Text(event.title)
@@ -104,14 +104,14 @@ struct BatchCalendarImportView: View {
                                             
                                             Image(systemName: isSelected ? (singleSelect ? "largecircle.fill.circle" : "checkmark.circle.fill") : "circle")
                                                 .font(.system(size: 20))
-                                                .foregroundStyle(isSelected ? (singleSelect ? .orange : .green) : Color.adaptiveSecondaryText.opacity(0.3))
+                                                .foregroundStyle(isSelected ? (singleSelect ? Color(hex: "#800080") ?? .purple : .green) : Color.adaptiveSecondaryText.opacity(0.3))
                                         }
                                         .padding()
                                         .background(Color.adaptiveSecondaryBackground)
                                         .clipShape(RoundedRectangle(cornerRadius: 24))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 24)
-                                                .stroke(isSelected ? .orange.opacity(0.5) : Color.clear, lineWidth: 2)
+                                                .stroke(isSelected ? Color(hex: "#800080")?.opacity(0.5) ?? .purple.opacity(0.5) : Color.clear, lineWidth: 2)
                                         )
                                         .shadow(color: .black.opacity(0.03), radius: 8, y: 4)
                                     }
@@ -139,9 +139,9 @@ struct BatchCalendarImportView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(selectedEventIDs.isEmpty ? Color.gray.opacity(0.5) : Color.orange)
+                        .background(selectedEventIDs.isEmpty ? Color.gray.opacity(0.5) : Color(hex: "#800080") ?? .purple)
                         .clipShape(Capsule())
-                        .shadow(color: selectedEventIDs.isEmpty ? .clear : .orange.opacity(0.3), radius: 10, y: 5)
+                        .shadow(color: selectedEventIDs.isEmpty ? .clear : Color(hex: "#800080")?.opacity(0.3) ?? .purple, radius: 10, y: 5)
                     }
                     .disabled(selectedEventIDs.isEmpty)
                     .padding()

@@ -67,7 +67,7 @@ class NotificationService: NSObject, ObservableObject {
         }
         
         let content = UNMutableNotificationContent()
-        content.title = "Event Reminder"
+        content.title = "\(event.category) Reminder"
         
         // Dynamic label based on minutes
         let label: String

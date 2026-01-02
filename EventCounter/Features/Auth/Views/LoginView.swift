@@ -140,7 +140,7 @@ struct LoginIllustrationView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .frame(width: 80, height: 80)
-                .foregroundStyle(Color.orange)
+                .foregroundStyle(Color(hex: "#800080") ?? .purple)
                 .fontWeight(.bold)
                 .offset(x: -5, y: -10)
                 .rotationEffect(.degrees(-5))

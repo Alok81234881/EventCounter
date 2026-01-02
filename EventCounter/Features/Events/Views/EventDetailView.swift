@@ -114,7 +114,7 @@ struct EventDetailView: View {
                                     } else {
                                         Text("Event Completed")
                                             .font(.system(size: 28, weight: .bold, design: .rounded))
-                                            .foregroundStyle(Color.orange)
+                                            .foregroundStyle(Color(hex: "#800080") ?? Color.purple)
                                     }
                                 }
                                 
@@ -140,7 +140,10 @@ struct EventDetailView: View {
                                     Capsule()
                                         .fill(
                                             LinearGradient(
-                                                colors: [Color.orange, Color.pink],
+                                                colors: [
+                                                    Color(hex: "#800080") ?? .purple,
+                                                    .pink
+                                                ],
                                                 startPoint: .leading,
                                                 endPoint: .trailing
                                             )
@@ -169,7 +172,7 @@ struct EventDetailView: View {
                                     // Date Row
                                     DetailRow(
                                         icon: "calendar",
-                                        iconColor: Color.orange,
+                                        iconColor: Color(hex: "#800080") ?? Color.purple,
                                         title: "DATE",
                                         value: event.date.formatted(date: .long, time: .omitted),
                                         trailingSubtitle: event.date.formatted(.dateTime.weekday(.wide))
@@ -290,7 +293,7 @@ struct EventDetailView: View {
                                                 WidgetCenter.shared.reloadAllTimelines()
                                             }
                                         ))
-                                        .tint(.orange)
+                                        .tint(Color(hex: "#800080"))
                                     }
                                 }
                                 .padding(20)
@@ -545,7 +548,7 @@ struct CountdownUnitView: View {
             Text(unit)
                 .font(.system(size: 20, weight: .semibold))
         }
-        .foregroundStyle(Color.orange)
+        .foregroundStyle(Color(hex: "#800080") ?? Color.purple)
     }
 }
 
@@ -553,6 +556,6 @@ struct SeparatorView: View {
     var body: some View {
         Text(" : ")
             .font(.system(size: 36, weight: .bold))
-            .foregroundStyle(Color.orange)
+            .foregroundStyle(Color(hex: "#800080") ?? Color.purple)
     }
 }

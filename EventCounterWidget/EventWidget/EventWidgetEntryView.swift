@@ -342,11 +342,13 @@ struct AccessoryRectangularView: View {
                     Text("Event Passed")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                } else if components.days > 0 {
-                    Text(components.naturalDescription(category: category, title: event.title))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                } else {
+                }
+//                else if components.days > 0 {
+//                    Text(components.naturalDescription(category: category, title: event.title))
+//                        .font(.caption)
+//                        .foregroundStyle(.secondary)
+//                }
+                else {
                     Text(event.date, style: .timer)
                         .font(.system(.body, design: .monospaced))
                         .foregroundStyle(.secondary)
