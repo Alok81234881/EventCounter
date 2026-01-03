@@ -247,8 +247,8 @@ struct HomeView: View {
                 title: ekEvent.title,
                 date: ekEvent.startDate,
                 note: ekEvent.notes,
-                category: .personal,
-                colorHex: "#F5A623", // Default orange
+                category: .calendar,
+                colorHex: "#800080", // Default orange
                 notifyBefore: 15,    // Default 15 min
                 location: ekEvent.location
             )

@@ -309,16 +309,18 @@ struct EventDetailView: View {
                                 showingDeleteAlert = true
                             } label: {
                                 Text("Delete Event")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundStyle(.white)
+                                    .font(.system(size: 17, weight: .semibold))
+                                    .foregroundColor(.red)
                                     .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 16)
-                                    .background(Color.red)
-                                    .cornerRadius(12)
+                                    .padding(.vertical, 18)
+                                    .background(
+                                        Color.red.opacity(0.08)
+                                    )
+                                    .clipShape(Capsule())
                             }
                             .padding(.horizontal, 24)
-                            .padding(.top, 40)
-                            .padding(.bottom, 40)
+                            .padding(.vertical, 40)
+
                         }
                     }
                     .ignoresSafeArea(edges: .top)
@@ -399,13 +401,14 @@ struct EventDetailView: View {
                 Text("One Live Activity is already started. If you add this, the upcoming event's activity will show first. When it's done, the next one can start.")
             }
         }
-        .alert("Delete Event?", isPresented: $showingDeleteAlert) {
+        .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
+                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                 deleteEvent()
             }
         } message: {
-            Text("Are you sure you want to delete this event?\nThis action cannot be undone.")
+            Text("Are you sure you want to delete this event? This action cannot be undone.")
         }
         .sheet(isPresented: $showingEditSheet) {
             AddEventView(eventToEdit: event)

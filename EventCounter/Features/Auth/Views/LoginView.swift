@@ -41,14 +41,14 @@ struct LoginView: View {
                         // Subtle highlight/underline shape if needed, or just text color
                         Text("counts")
                             .font(.system(size: 36, weight: .heavy, design: .rounded))
-                            .foregroundStyle(Color(red: 1.0, green: 0.7, blue: 0.2)) // Golden Yellow
+                            .foregroundStyle(.purple) // Golden Yellow
                         
                         // Yellow underline shape
-                        Capsule()
-                            .fill(Color(red: 1.0, green: 0.85, blue: 0.4).opacity(0.3))
-                            .frame(height: 12)
-                            .offset(y: 4)
-                            .zIndex(-1)
+//                        Capsule()
+//                            .fill(Color(red: 1.0, green: 0.85, blue: 0.4).opacity(0.3))
+//                            .frame(height: 12)
+//                            .offset(y: 4)
+//                            .zIndex(-1)
                     }
                 }
                 .padding(.bottom, 24)

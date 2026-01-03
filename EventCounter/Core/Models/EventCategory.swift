@@ -1,16 +1,22 @@
 import Foundation
 
 public enum EventCategory: String, Codable, CaseIterable {
+    case anniversary
     case birthday
-    case travel
+    case calendar
     case exam
+    case festival
+    case holiday
     case launch
+    case meeting
     case personal
+    case travel
     case wedding
     case work
-    case sobriety
-    case quitting
-    case anniversary
+   
+   
+   
+    
     
     public var icon: String {
         switch self {
@@ -21,9 +27,11 @@ public enum EventCategory: String, Codable, CaseIterable {
         case .personal: return "person"
         case .wedding: return "heart.fill"
         case .work: return "briefcase"
-        case .sobriety: return "heart.text.square"
-        case .quitting: return "nosign"
+        case .meeting: return "person.2"
+        case .holiday: return "sun.max"
+        case .festival: return "party.popper"
         case .anniversary: return "star.fill"
+        case .calendar: return "calendar"
         }
     }
     
@@ -35,14 +43,18 @@ public enum EventCategory: String, Codable, CaseIterable {
         switch self {
         case .wedding: return "\(time) since Wedding"
         case .work: return "\(time) since I joined"
-        case .sobriety: return "\(time) Sober"
-        case .quitting: return "\(time) since I quit"
+        case .meeting: return "Meeting"
+        case .holiday: return "Holiday"
+        case .festival: return "Festival"
+       // case .sobriety: return "\(time) Sober"
+      //  case .quitting: return "\(time) since I quit"
         case .birthday: return "\(time) since Birthday"
         case .anniversary: return "\(time) since Anniversary"
         case .travel: return "\(time) since Travel"
         case .exam: return "\(time) since Exam"
         case .launch: return "\(time) since Launch"
         case .personal: return "\(time) since \(title)"
+        case .calendar: return "Calender Event"
         }
     }
 }
