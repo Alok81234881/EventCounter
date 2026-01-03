@@ -9,6 +9,7 @@ import MapKit
 struct AddEventView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Query var existingEvents: [Event]
     
     var eventToEdit: Event?
     
@@ -20,6 +21,8 @@ struct AddEventView: View {
     @State private var category: EventCategory = .personal
     @State private var selectedColor = Color(hex: "#800080") ?? .purple // Default per mockup (Travel/Orange)
     @State private var notifyBefore: Int? = 15 // Default 15 min per mockup
+    
+    @State private var showDuplicateAlert = false
     
     // Image Handling
     @State private var selectedItem: PhotosPickerItem?
@@ -464,6 +467,11 @@ struct AddEventView: View {
                 .presentationCornerRadius(24)
             }
         }
+        .alert("Duplicate Event", isPresented: $showDuplicateAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("An event with \(title) and \(date) already exists.")
+        }
     }
     
     // MARK: - Subviews
@@ -558,6 +566,17 @@ struct AddEventView: View {
     }
     
     private func saveEvent() {
+        // Duplicate check
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        if existingEvents.contains(where: {
+            $0.title.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(trimmedTitle) == .orderedSame &&
+            Calendar.current.isDate($0.date, equalTo: date, toGranularity: .minute) &&
+            (eventToEdit == nil || $0.id != eventToEdit!.id)
+        }) {
+            showDuplicateAlert = true
+            return
+        }
+        
         let hex = selectedColor.toHex() ?? "#F5A623"
         
         if let event = eventToEdit {
@@ -642,3 +661,4 @@ extension UIImage {
 //        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
 //    }
 //}
+

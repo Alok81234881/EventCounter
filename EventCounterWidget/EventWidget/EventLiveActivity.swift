@@ -9,13 +9,15 @@ public struct EventActivityAttributes: ActivityAttributes {
         public var categoryIcon: String
         public var colorHex: String
         public var creationDate: Date
+        public var eventID: UUID
         
-        public init(eventTitle: String, eventDate: Date, categoryIcon: String, colorHex: String, creationDate: Date) {
+        public init(eventTitle: String, eventDate: Date, categoryIcon: String, colorHex: String, creationDate: Date, eventID: UUID) {
             self.eventTitle = eventTitle
             self.eventDate = eventDate
             self.categoryIcon = categoryIcon
             self.colorHex = colorHex
             self.creationDate = creationDate
+            self.eventID = eventID
         }
     }
 
@@ -63,6 +65,7 @@ struct EventLiveActivity: Widget {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(context.state.eventTitle)
                             .font(.headline)
+                            .foregroundStyle(Color.primary)
                         
                         let isCompleted = Date() >= context.state.eventDate
                         let total = context.state.eventDate.timeIntervalSince(context.state.creationDate)
@@ -84,6 +87,7 @@ struct EventLiveActivity: Widget {
                     }
                     .padding(.horizontal)
                     .padding(.bottom, 8)
+                    
                 }
             } compactLeading: {
                 Image(systemName: context.state.categoryIcon)
@@ -107,6 +111,7 @@ struct EventLiveActivity: Widget {
                 }
             }
             .keylineTint(Color(hex: context.state.colorHex) ?? .blue)
+            .widgetURL(URL(string: "eventcounter://event/\(context.state.eventID)"))
         }
     }
 }
@@ -240,6 +245,7 @@ struct EventLockScreenView: View {
            // Spacer(minLength: 10)
         }
         .activityBackgroundTint(Color(uiColor: .systemBackground))
+        .widgetURL(URL(string: "eventcounter://event/\(context.state.eventID)"))
     }
     
     private func formatTimeSinceCompletion(_ interval: TimeInterval) -> String {
@@ -264,7 +270,7 @@ struct EventLockScreenView: View {
         eventDate: Date().addingTimeInterval(3600 * 24 * 12 + 3600 * 5 + 180),
         categoryIcon: "rocket.fill",
         colorHex: "#5B56E1",
-        creationDate: Date().addingTimeInterval(-3600 * 24)
+        creationDate: Date().addingTimeInterval(-3600 * 24), eventID: UUID()
     )
 }
 
@@ -276,6 +282,6 @@ struct EventLockScreenView: View {
         eventDate: Date().addingTimeInterval(3600 * 2 + 180),
         categoryIcon: "airplane",
         colorHex: "#FF9500",
-        creationDate: Date().addingTimeInterval(-3600 * 4)
+        creationDate: Date().addingTimeInterval(-3600 * 4), eventID: UUID()
     )
 }

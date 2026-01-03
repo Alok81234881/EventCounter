@@ -41,3 +41,54 @@ extension Color {
 }
 
 
+extension Color {
+
+    // MARK: - Adaptive Gradient Backgrounds
+
+    /// Primary subtle background gradient
+    static var adaptiveGradientBackground: LinearGradient {
+        LinearGradient(
+            colors: adaptiveGradientColors(
+                light: [
+                    Color(hex: "#B57EDC")?.opacity(0.15) ?? .purple.opacity(0.15),
+                    Color(hex: "#E6D9F2")?.opacity(0.25) ?? .purple.opacity(0.08),
+                    .white
+                ],
+                dark: [
+                    Color(hex: "#B57EDC")?.opacity(0.25) ?? .purple.opacity(0.25),
+                    Color.black.opacity(0.6),
+                    .black
+                ]
+            ),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    /// Softer version for cards / grouped sections
+    static var adaptiveGradientCardBackground: LinearGradient {
+        LinearGradient(
+            colors: adaptiveGradientColors(
+                light: [
+                    Color(hex: "#B57EDC")?.opacity(0.08) ?? .purple.opacity(0.08),
+                    .white
+                ],
+                dark: [
+                    Color(hex: "#B57EDC")?.opacity(0.18) ?? .purple.opacity(0.18),
+                    Color.black.opacity(0.8)
+                ]
+            ),
+            startPoint: .top,
+            endPoint: .bottom
+        )
+    }
+
+    // MARK: - Internal Helper
+
+    private static func adaptiveGradientColors(
+        light: [Color],
+        dark: [Color]
+    ) -> [Color] {
+        UITraitCollection.current.userInterfaceStyle == .dark ? dark : light
+    }
+}

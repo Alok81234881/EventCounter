@@ -88,7 +88,7 @@ class LiveActivityService {
             eventDate: event.date,
             categoryIcon: event.category.icon,
             colorHex: event.colorHex,
-            creationDate: event.createdAt
+            creationDate: event.createdAt, eventID: event.id
         )
         
         do {

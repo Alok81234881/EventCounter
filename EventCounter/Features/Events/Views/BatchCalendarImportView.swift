@@ -1,5 +1,6 @@
 import SwiftUI
 import EventKit
+import SwiftData
 
 struct BatchCalendarImportView: View {
     @Environment(\.dismiss) private var dismiss
@@ -7,8 +8,14 @@ struct BatchCalendarImportView: View {
     @State private var selectedEventIDs: Set<String> = []
     @State private var isLoading = false
     
+    @Query var existingEvents: [Event]
+    
     let onImport: ([EKEvent]) -> Void
     var singleSelect: Bool = false
+    
+    private func isDuplicate(_ ekEvent: EKEvent) -> Bool {
+        existingEvents.contains(where: { $0.title.trimmingCharacters(in: .whitespacesAndNewlines).caseInsensitiveCompare(ekEvent.title.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame && Calendar.current.isDate($0.date, equalTo: ekEvent.startDate, toGranularity: .minute) })
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -28,11 +35,11 @@ struct BatchCalendarImportView: View {
                 Spacer()
                 
                 if !singleSelect && !events.isEmpty {
-                    Button(selectedEventIDs.count == events.count ? "Deselect All" : "Select All") {
-                        if selectedEventIDs.count == events.count {
+                    Button(selectedEventIDs.count == events.filter { !isDuplicate($0) }.count ? "Deselect All" : "Select All") {
+                        if selectedEventIDs.count == events.filter { !isDuplicate($0) }.count {
                             selectedEventIDs.removeAll()
                         } else {
-                            selectedEventIDs = Set(events.map { $0.eventIdentifier })
+                            selectedEventIDs = Set(events.filter { !isDuplicate($0) }.map { $0.eventIdentifier })
                         }
                     }
                     .font(.subheadline)
@@ -70,6 +77,7 @@ struct BatchCalendarImportView: View {
                             
                             VStack(spacing: 12) {
                                 ForEach(events, id: \.eventIdentifier) { event in
+                                    let duplicate = isDuplicate(event)
                                     let isSelected = selectedEventIDs.contains(event.eventIdentifier)
                                     
                                     Button {
@@ -102,12 +110,18 @@ struct BatchCalendarImportView: View {
                                             
                                             Spacer()
                                             
-                                            Image(systemName: isSelected ? (singleSelect ? "largecircle.fill.circle" : "checkmark.circle.fill") : "circle")
-                                                .font(.system(size: 20))
-                                                .foregroundStyle(isSelected ? (singleSelect ? Color(hex: "#800080") ?? .purple : .green) : Color.adaptiveSecondaryText.opacity(0.3))
+                                            if duplicate {
+                                                Image(systemName: "lock.fill")
+                                                    .font(.system(size: 20))
+                                                    .foregroundStyle(.gray)
+                                            } else {
+                                                Image(systemName: isSelected ? (singleSelect ? "largecircle.fill.circle" : "checkmark.circle.fill") : "circle")
+                                                    .font(.system(size: 20))
+                                                    .foregroundStyle(isSelected ? (singleSelect ? Color(hex: "#800080") ?? .purple : .green) : Color.adaptiveSecondaryText.opacity(0.3))
+                                            }
                                         }
                                         .padding()
-                                        .background(Color.adaptiveSecondaryBackground)
+                                        .background(duplicate ? Color.gray.opacity(0.18) : Color.adaptiveSecondaryBackground)
                                         .clipShape(RoundedRectangle(cornerRadius: 24))
                                         .overlay(
                                             RoundedRectangle(cornerRadius: 24)
@@ -116,6 +130,7 @@ struct BatchCalendarImportView: View {
                                         .shadow(color: .black.opacity(0.03), radius: 8, y: 4)
                                     }
                                     .buttonStyle(.plain)
+                                    .disabled(duplicate)
                                 }
                             }
                             .padding(.horizontal)

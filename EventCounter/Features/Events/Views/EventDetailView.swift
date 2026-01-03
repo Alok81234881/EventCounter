@@ -441,6 +441,7 @@ struct EventDetailView: View {
    
     
     private func deleteEvent() {
+        LiveActivityService.shared.endLiveActivity(for: event.id)
         modelContext.delete(event)
         try? modelContext.save() // Force write to disk before widget reloads
         WidgetCenter.shared.reloadAllTimelines()
