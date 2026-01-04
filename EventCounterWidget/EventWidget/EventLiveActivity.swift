@@ -58,7 +58,7 @@ struct EventLiveActivity: Widget {
                             .bold()
                             .monospacedDigit()
                             .foregroundStyle(Color(hex: context.state.colorHex) ?? .blue)
-                            .padding(.trailing, 8)
+                           // .padding(.trailing, 8)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {

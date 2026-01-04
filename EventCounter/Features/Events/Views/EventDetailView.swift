@@ -8,7 +8,6 @@ struct EventDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @State private var showingEditSheet = false
-    @State private var showingLiveActivityAlert = false
     @State private var showingDeleteAlert = false
     @State private var showingSharePreview = false
     @State private var showingReminderPicker = false
@@ -279,13 +278,24 @@ struct EventDetailView: View {
                                         Toggle("", isOn: Binding(
                                             get: { event.isPinned },
                                             set: { isOn in
-                                                event.isPinned = isOn
                                                 if isOn {
-                                                    if !LiveActivityService.shared.startLiveActivity(for: event) {
-                                                        event.isPinned = false
-                                                        showingLiveActivityAlert = true
+                                                    // 1. Unpin all other events in the DB to keep state consistent
+                                                    // (We can't use a Predicate with != ID easily in SwiftData sometimes due to UUID issues, 
+                                                    // so we fetch all pinned and filter, or just fetch all pinned)
+                                                    // Simpler: Fetch all events where isPinned == true
+                                                    // Note: Complex predicates can crash previews/etc, keep it simple.
+                                                    let descriptor = FetchDescriptor<Event>(predicate: #Predicate { $0.isPinned })
+                                                    if let pinnedEvents = try? modelContext.fetch(descriptor) {
+                                                        for pinnedEvent in pinnedEvents {
+                                                            pinnedEvent.isPinned = false
+                                                        }
                                                     }
+                                                    
+                                                    // 2. Pin this one and start activity
+                                                    event.isPinned = true
+                                                    LiveActivityService.shared.startLiveActivity(for: event)
                                                 } else {
+                                                    event.isPinned = false
                                                     LiveActivityService.shared.endLiveActivity(for: event.id)
                                                 }
                                                 try? modelContext.save()
@@ -323,6 +333,20 @@ struct EventDetailView: View {
                         }
                     }
                     .ignoresSafeArea(edges: .top)
+                    .onAppear {
+                        // Double-check: If UI says pinned, is it REALLY running?
+                        // If the system killed it, we should reflect that.
+                        // Or if we switched to another event on a different device (iCloud) - though Live Activity is local.
+                        // Mostly: If we came back from another screen and something changed.
+                        if event.isPinned {
+                            let isRunning = LiveActivityService.shared.activeActivity?.attributes.eventID == event.id
+                            if !isRunning {
+                                event.isPinned = false
+                                // We don't save context here to avoid view-cycle save loops unless necessary, 
+                                // but for correct UI state it's safer to just update the memory object.
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -377,29 +401,7 @@ struct EventDetailView: View {
         }
         .toolbar(.hidden, for: .navigationBar)
         .navigationBarBackButtonHidden(true)
-        .alert("Activity Already Running", isPresented: $showingLiveActivityAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Add") {
-                event.isPinned = true
-                LiveActivityService.shared.startSmartLiveActivity(for: event)
-                
-                try? modelContext.save()
-                WidgetCenter.shared.reloadAllTimelines()
-            }
-        } message: {
-            if let active = LiveActivityService.shared.activeActivity {
-                let activeTitle = active.content.state.eventTitle
-                let activeDate = active.content.state.eventDate
-                
-                if event.date < activeDate {
-                    Text("The event '\(event.title)' starts sooner than '\(activeTitle)'. If you add it, we'll switch to tracking this event immediately to keep your countdown most relevant.")
-                } else {
-                    Text("You're already tracking '\(activeTitle)', which happens earlier. If you add this, we'll continue showing the earliest event first. Once it's done, you can track this one!")
-                }
-            } else {
-                Text("One Live Activity is already started. If you add this, the upcoming event's activity will show first. When it's done, the next one can start.")
-            }
-        }
+
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {
