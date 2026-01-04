@@ -50,7 +50,7 @@ struct AccountDetailsView: View {
             Button {
                 dismiss()
             } label: {
-                Image(systemName: "arrow.left")
+                Image(systemName: "chevron.backward")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(Color.adaptivePrimaryText)
                     .padding(12)

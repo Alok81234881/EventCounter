@@ -29,7 +29,7 @@ struct SettingsView: View {
                         Button {
                             dismiss()
                         } label: {
-                            Image(systemName: "arrow.left")
+                            Image(systemName: "chevron.backward")
                                 .font(.system(size: 20, weight: .semibold))
                                 .foregroundStyle(Color.adaptivePrimaryText)
                                 .frame(width: 50, height: 50)
@@ -219,36 +219,57 @@ struct SettingsView: View {
                             
                             Divider()
                                 .padding(.horizontal, 20)
-                            
-                            Button {
-                                // Default reminder action
-                            } label: {
-                                HStack(spacing: 16) {
+                            HStack(spacing: 16) {
+                                NavigationLink(destination: FAQView()) {
                                     ZStack {
-                                        Circle()
-                                            .fill(Color.gray.opacity(0.1))
-                                            .frame(width: 40, height: 40)
-                                        Image(systemName: "timer")
-                                            .font(.system(size: 18))
-                                            .foregroundStyle(.gray)
-                                    }
+                                                                           Circle()
+                                                                               .fill(Color.purple.opacity(0.1))
+                                                                               .frame(width: 40, height: 40)
+                                                                           Image(systemName: "questionmark.message")
+                                                                               .font(.system(size: 18))
+                                                                               .foregroundStyle(.purple)
+                                                                       }
                                     
-                                    Text("Default Reminder")
+                                    Text("FAQs")
                                         .font(.system(size: 18, weight: .bold))
                                         .foregroundStyle(Color.adaptivePrimaryText)
-                                    
                                     Spacer()
-                                    
-                                    Text("2 hours before")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(.orange)
-                                    
                                     Image(systemName: "chevron.right")
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundStyle(.gray.opacity(0.5))
                                 }
-                                .padding(20)
                             }
+                            .padding(20)
+                            
+                           // Button {
+                                // Default reminder action
+//                            } label: {
+//                                HStack(spacing: 16) {
+//                                    ZStack {
+//                                        Circle()
+//                                            .fill(Color.gray.opacity(0.1))
+//                                            .frame(width: 40, height: 40)
+//                                        Image(systemName: "timer")
+//                                            .font(.system(size: 18))
+//                                            .foregroundStyle(.gray)
+//                                    }
+//                                    
+//                                    Text("Default Reminder")
+//                                        .font(.system(size: 18, weight: .bold))
+//                                        .foregroundStyle(Color.adaptivePrimaryText)
+//                                    
+//                                    Spacer()
+//                                    
+//                                    Text("2 hours before")
+//                                        .font(.system(size: 14, weight: .semibold))
+//                                        .foregroundStyle(.orange)
+//                                    
+//                                    Image(systemName: "chevron.right")
+//                                        .font(.system(size: 14, weight: .semibold))
+//                                        .foregroundStyle(.gray.opacity(0.5))
+//                                }
+//
+//                            }
                         }
                         .background(Color.adaptiveSecondaryBackground)
                         .cornerRadius(24)

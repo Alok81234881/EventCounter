@@ -23,7 +23,7 @@ public enum EventCategory: String, Codable, CaseIterable {
         case .birthday: return "birthday.cake"
         case .travel: return "airplane"
         case .exam: return "book.closed"
-        case .launch: return "rocket.fill"
+        case .launch: return "fork.knife"
         case .personal: return "person"
         case .wedding: return "heart.fill"
         case .work: return "briefcase"

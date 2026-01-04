@@ -15,13 +15,6 @@ struct EventDetailView: View {
 
     var body: some View {
         VStack {
-            // Root Background: Theme color for top (to prevent flicker), adaptive background for bottom
-//            VStack(spacing: 0) {
-//                (Color(hex: event.colorHex) ?? .blue)
-//                    .frame(height: 300)
-//                Color.adaptiveGroupedBackground
-//            }
-//            .ignoresSafeArea()
             
             if event.isDeleted {
                 ContentUnavailableView("Event Deleted", systemImage: "trash")
@@ -248,10 +241,7 @@ struct EventDetailView: View {
                                             }
                                             
                                             Spacer()
-                                            
-//                                            Image(systemName: "chevron.right")
-//                                                .font(.system(size: 14, weight: .semibold))
-//                                                .foregroundStyle(.gray.opacity(0.5))
+
                                         }
                                  //   }
                                     
@@ -333,7 +323,7 @@ struct EventDetailView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "arrow.left")
+                    Image(systemName: "chevron.backward")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color.adaptivePrimaryText)
                         .frame(width: 42, height: 42)
