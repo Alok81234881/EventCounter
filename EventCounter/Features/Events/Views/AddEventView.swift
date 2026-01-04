@@ -485,7 +485,7 @@ struct AddEventView: View {
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                        .frame(height: 200)
+                        .frame(height: 220)
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                         .overlay(
                             RoundedRectangle(cornerRadius: 24)
@@ -495,7 +495,7 @@ struct AddEventView: View {
                     RoundedRectangle(cornerRadius: 24)
                         .stroke(style: StrokeStyle(lineWidth: 2, dash: [10]))
                         .fill(Color.adaptiveSecondaryText.opacity(0.3))
-                        .frame(height: 200)
+                        .frame(height: 220)
                         .background(Color.adaptiveSecondaryText.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                     

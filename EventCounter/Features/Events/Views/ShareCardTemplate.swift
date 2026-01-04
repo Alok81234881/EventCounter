@@ -102,9 +102,9 @@ struct HeroImageTemplate: View {
                     .padding(.horizontal, 20 * scale)
                 
                 HStack(spacing: 24 * scale) {
-                    TimeUnitColumn(value: "\(components.days)", label: "DAYS")
-                    TimeUnitColumn(value: String(format: "%02d", components.hours), label: "HRS")
-                    TimeUnitColumn(value: String(format: "%02d", components.minutes), label: "MINS")
+                    TimeUnitColumn(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
+                    TimeUnitColumn(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
+                    TimeUnitColumn(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                 }
                 .padding(.bottom, 60 * scale)
             }
@@ -164,11 +164,11 @@ struct GradientTemplate: View {
                         .multilineTextAlignment(.center)
                     
                     HStack(spacing: 20) {
-                        GradientUnit(value: "\(components.days)", label: "Days")
+                        GradientUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label.capitalized)
                         Text(":").font(.system(size: 32, weight: .bold)).foregroundStyle(.white)
-                        GradientUnit(value: String(format: "%02d", components.hours), label: "Hours")
+                        GradientUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label.capitalized)
                         Text(":").font(.system(size: 32, weight: .bold)).foregroundStyle(.white)
-                        GradientUnit(value: String(format: "%02d", components.minutes), label: "Mins")
+                        GradientUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label.capitalized)
                     }
                 }
                 .padding(24)
@@ -415,10 +415,10 @@ struct CircularTemplate: View {
                 .frame(width: 300, height: 300)
                 
                 VStack(spacing: 16) {
-                    HStack(spacing: 32) {
-                        CircularUnit(value: "\(components.days)", label: "Days")
-                        CircularUnit(value: String(format: "%02d", components.hours), label: "Hours")
-                        CircularUnit(value: String(format: "%02d", components.minutes), label: "Mins")
+                    HStack(spacing: 30) {
+                        CircularUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
+                        CircularUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
+                        CircularUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                     }
                     
                     Text(event.date.formatted(date: .long, time: .shortened))
@@ -539,10 +539,10 @@ struct IconPillTemplate: View {
                 // Countdown
                 HStack(spacing: 0) {
                     VStack(spacing: 4) {
-                        Text("\(components.days)")
+                        Text(components.shareDisplayUnits[0].value)
                             .font(.system(size: 36, weight: .bold))
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
-                        Text("DAYS")
+                        Text(components.shareDisplayUnits[0].label)
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.gray.opacity(0.6))
                     }
@@ -553,10 +553,10 @@ struct IconPillTemplate: View {
                         .frame(width: 1, height: 40)
                     
                     VStack(spacing: 4) {
-                        Text(String(format: "%02d", components.hours))
+                        Text(components.shareDisplayUnits[1].value)
                             .font(.system(size: 36, weight: .bold))
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
-                        Text("HRS")
+                        Text(components.shareDisplayUnits[1].label)
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.gray.opacity(0.6))
                     }
@@ -567,10 +567,10 @@ struct IconPillTemplate: View {
                         .frame(width: 1, height: 40)
                     
                     VStack(spacing: 4) {
-                        Text(String(format: "%02d", components.minutes))
+                        Text(components.shareDisplayUnits[2].value)
                             .font(.system(size: 36, weight: .bold))
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
-                        Text("MINS")
+                        Text(components.shareDisplayUnits[2].label)
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.gray.opacity(0.6))
                     }
@@ -682,11 +682,11 @@ struct EventTicketTemplate: View {
                         .padding(.top, 30)
                     
                     HStack(spacing: 20) {
-                        TicketUnit(value: "\(components.days)", label: "DAYS", color: .orange)
+                        TicketUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label, color: .orange)
                         Rectangle().fill(.gray.opacity(0.1)).frame(width: 1, height: 40)
-                        TicketUnit(value: String(format: "%02d", components.hours), label: "HRS", color: Color(red: 0.1, green: 0.1, blue: 0.2))
+                        TicketUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label, color: Color(red: 0.1, green: 0.1, blue: 0.2))
                         Rectangle().fill(.gray.opacity(0.1)).frame(width: 1, height: 40)
-                        TicketUnit(value: String(format: "%02d", components.minutes), label: "MINS", color: Color(red: 0.1, green: 0.1, blue: 0.2))
+                        TicketUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label, color: Color(red: 0.1, green: 0.1, blue: 0.2))
                     }
                     
                     Spacer()
@@ -790,28 +790,28 @@ struct CleanPhotoTemplate: View {
                 
                 HStack(spacing: 16) {
                     VStack {
-                        Text("\(components.days)")
+                        Text(components.shareDisplayUnits[0].value)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
-                        Text("DAYS")
+                        Text(components.shareDisplayUnits[0].label)
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.gray)
                     }
                     Rectangle().fill(.gray.opacity(0.2)).frame(width: 1, height: 30)
                     VStack {
-                        Text(String(format: "%02d", components.hours))
+                        Text(components.shareDisplayUnits[1].value)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
-                        Text("HRS")
+                        Text(components.shareDisplayUnits[1].label)
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.gray)
                     }
                      Rectangle().fill(.gray.opacity(0.2)).frame(width: 1, height: 30)
                     VStack {
-                        Text(String(format: "%02d", components.minutes))
+                        Text(components.shareDisplayUnits[2].value)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
-                        Text("MINS")
+                        Text(components.shareDisplayUnits[2].label)
                             .font(.system(size: 10, weight: .bold))
                             .foregroundStyle(.gray)
                     }
@@ -879,13 +879,13 @@ struct HeroOverlayTemplate: View {
                         .padding(.bottom, 24)
                     
                     HStack(spacing: 24) {
-                        HeroUnit(value: "\(components.days)", label: "DAYS")
+                        HeroUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
                         Rectangle().fill(.gray.opacity(0.2)).frame(width: 1, height: 40)
                             .rotationEffect(.degrees(15))
-                        HeroUnit(value: String(format: "%02d", components.hours), label: "HRS")
+                        HeroUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
                          Rectangle().fill(.gray.opacity(0.2)).frame(width: 1, height: 40)
                             .rotationEffect(.degrees(15))
-                        HeroUnit(value: String(format: "%02d", components.minutes), label: "MINS")
+                        HeroUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                     }
                     .padding(.bottom, 40)
                 }
@@ -951,9 +951,9 @@ struct HandwrittenTemplate: View {
                         .padding(.bottom, 24)
                     
                     HStack(spacing: 30) {
-                        HandwrittenUnit(value: "\(components.days)", label: "days")
-                        HandwrittenUnit(value: String(format: "%02d", components.hours), label: "hrs")
-                        HandwrittenUnit(value: String(format: "%02d", components.minutes), label: "min")
+                        HandwrittenUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label.lowercased())
+                        HandwrittenUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label.lowercased())
+                        HandwrittenUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label.lowercased())
                     }
                 }
                 .padding(.bottom, 30)
@@ -1025,11 +1025,11 @@ struct HorizontalSplitTemplate: View {
                         .padding(.bottom, 40)
                     
                     HStack(spacing: 30) {
-                        SplitUnit(value: "\(components.days)", label: "DAYS")
+                        SplitUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
                         Rectangle().fill(.white.opacity(0.2)).frame(width: 1, height: 40)
-                        SplitUnit(value: String(format: "%02d", components.hours), label: "HRS")
+                        SplitUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
                         Rectangle().fill(.white.opacity(0.2)).frame(width: 1, height: 40)
-                        SplitUnit(value: String(format: "%02d", components.minutes), label: "MINS")
+                        SplitUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                     }
                     .padding(.bottom, 40)
                 }
@@ -1155,11 +1155,11 @@ struct CheckInTemplate: View {
                     }
                     
                     HStack(spacing: 0) {
-                        CheckInUnit(value: "\(components.days)", label: "DAYS")
+                        CheckInUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
                         Rectangle().fill(.gray.opacity(0.1)).frame(width: 1, height: 40)
-                        CheckInUnit(value: String(format: "%02d", components.hours), label: "HOURS")
+                        CheckInUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
                         Rectangle().fill(.gray.opacity(0.1)).frame(width: 1, height: 40)
-                        CheckInUnit(value: String(format: "%02d", components.minutes), label: "MINS")
+                        CheckInUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                     }
                 }
                 .padding(24)
@@ -1276,9 +1276,9 @@ struct CornerBubbleTemplate: View {
                         }
                         
                         HStack(spacing: 16) {
-                            BubbleUnit(value: "\(components.days)", label: "DAYS")
-                            BubbleUnit(value: String(format: "%02d", components.hours), label: "HRS")
-                            BubbleUnit(value: String(format: "%02d", components.minutes), label: "MIN")
+                            BubbleUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
+                            BubbleUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
+                            BubbleUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                         }
                     }
                     .padding(24)
@@ -1346,11 +1346,11 @@ struct SimpleIconTemplate: View {
                 Spacer()
                 
                 HStack(spacing: 40) {
-                    SimpleUnit(value: "\(components.days)", label: "DAYS")
+                    SimpleUnit(value: components.shareDisplayUnits[0].value, label: components.shareDisplayUnits[0].label)
                      Rectangle().fill(.gray.opacity(0.1)).frame(width: 1, height: 40)
-                    SimpleUnit(value: String(format: "%02d", components.hours), label: "HRS")
+                    SimpleUnit(value: components.shareDisplayUnits[1].value, label: components.shareDisplayUnits[1].label)
                      Rectangle().fill(.gray.opacity(0.1)).frame(width: 1, height: 40)
-                    SimpleUnit(value: String(format: "%02d", components.minutes), label: "MINS")
+                    SimpleUnit(value: components.shareDisplayUnits[2].value, label: components.shareDisplayUnits[2].label)
                 }
                 .padding(.bottom, 60)
                 

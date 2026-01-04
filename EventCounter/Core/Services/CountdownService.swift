@@ -65,6 +65,27 @@ public struct CountdownComponents {
             return "Time Remaining"
         }
     }
+    public var shareDisplayUnits: [(value: String, label: String)] {
+        if months > 0 {
+            return [
+                ("\(months)", "MONTHS"),
+                ("\(days)", "DAYS"),
+                ("\(hours)", "HOURS")
+            ]
+        } else if days > 0 {
+            return [
+                ("\(days)", "DAYS"),
+                (String(format: "%02d", hours), "HOURS"),
+                (String(format: "%02d", minutes), "MINS")
+            ]
+        } else {
+            return [
+                (String(format: "%02d", hours), "HOURS"),
+                (String(format: "%02d", minutes), "MINS"),
+                (String(format: "%02d", seconds), "SECS")
+            ]
+        }
+    }
 }
 
 public struct CountdownService {

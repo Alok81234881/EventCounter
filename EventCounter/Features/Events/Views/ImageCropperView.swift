@@ -11,9 +11,10 @@ struct ImageCropperView: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
+    @State private var previewSize: CGSize = .zero // Capture the screen/container size
     
-    // Constants
-    private let cropSize: CGFloat = 300 // The fixed crop box size
+    private let cropWidth: CGFloat = 350
+    private let cropHeight: CGFloat = 200
     private let cornerLength: CGFloat = 20
     private let cornerThickness: CGFloat = 4
     private let cropColor = Color(hex: "#800080")
@@ -96,6 +97,8 @@ struct ImageCropperView: View {
                             )
                     }
                     .frame(width: geometry.size.width, height: geometry.size.height)
+                    .onAppear { previewSize = geometry.size }
+                    .onChange(of: geometry.size) { previewSize = $0 }
                 }
                 
                 // 3. Dimmed Mask (Overlay with Hole)
@@ -123,7 +126,7 @@ struct ImageCropperView: View {
                     // Orange Corners
                     cornersView()
                 }
-                .frame(width: cropSize, height: cropSize)
+                .frame(width: cropWidth, height: cropHeight)
                 .allowsHitTesting(false)
             }
             .clipShape(Rectangle())
@@ -140,9 +143,9 @@ struct ImageCropperView: View {
             context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black.opacity(0.7)))
             
             // Create the hole for crop box
-            let x = (size.width - cropSize) / 2
-            let y = (size.height - cropSize) / 2
-            let cropRect = CGRect(x: x, y: y, width: cropSize, height: cropSize)
+            let x = (size.width - cropWidth) / 2
+            let y = (size.height - cropHeight) / 2
+            let cropRect = CGRect(x: x, y: y, width: cropWidth, height: cropHeight)
             
             // Cut it out
             context.blendMode = .destinationOut
@@ -159,7 +162,7 @@ struct ImageCropperView: View {
                 path.addLine(to: CGPoint(x: cornerLength, y: 0))
             }
             .stroke(cropColor ?? .purple, style: StrokeStyle(lineWidth: cornerThickness, lineCap: .butt, lineJoin: .miter))
-            .frame(width: cropSize, height: cropSize) // Centers path in the cropSize frame if strictly defined path?
+            .frame(width: cropWidth, height: cropHeight)
             // Wait, path coordinates are absolute. We need to align them.
             // Using standard alignment on the ZStack
             
@@ -200,14 +203,16 @@ struct ImageCropperView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
+                    .frame(width: previewSize.width, height: previewSize.height) // Match the screen geometry
+                    .clipped() // Clip to screen bounds first if desired, but not strictly necessary for the center crop
                     .scaleEffect(scale)
                     .offset(offset)
             }
-            .frame(width: cropSize, height: cropSize)
+            .frame(width: cropWidth, height: cropHeight) // The "hole" cropping frame
             .clipped()
         )
         // Ensure scale matches screen scale for quality
-      //  renderer.scale = UIScreen.main.scale
+        renderer.scale = 3.0 // High Quality
         
         if let uiImage = renderer.uiImage {
              onCrop(uiImage)
