@@ -22,7 +22,7 @@ struct SettingsView: View {
             Color.adaptiveGroupedBackground
                 .ignoresSafeArea()
             
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 24) {
                     // Header
                     HStack {
@@ -241,35 +241,6 @@ struct SettingsView: View {
                             }
                             .padding(20)
                             
-                           // Button {
-                                // Default reminder action
-//                            } label: {
-//                                HStack(spacing: 16) {
-//                                    ZStack {
-//                                        Circle()
-//                                            .fill(Color.gray.opacity(0.1))
-//                                            .frame(width: 40, height: 40)
-//                                        Image(systemName: "timer")
-//                                            .font(.system(size: 18))
-//                                            .foregroundStyle(.gray)
-//                                    }
-//                                    
-//                                    Text("Default Reminder")
-//                                        .font(.system(size: 18, weight: .bold))
-//                                        .foregroundStyle(Color.adaptivePrimaryText)
-//                                    
-//                                    Spacer()
-//                                    
-//                                    Text("2 hours before")
-//                                        .font(.system(size: 14, weight: .semibold))
-//                                        .foregroundStyle(.orange)
-//                                    
-//                                    Image(systemName: "chevron.right")
-//                                        .font(.system(size: 14, weight: .semibold))
-//                                        .foregroundStyle(.gray.opacity(0.5))
-//                                }
-//
-//                            }
                         }
                         .background(Color.adaptiveSecondaryBackground)
                         .cornerRadius(24)

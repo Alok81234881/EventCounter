@@ -45,7 +45,7 @@ struct FAQView: View {
     ]
 
     var body: some View {
-        ScrollView {
+        ScrollView(showsIndicators: false) {
             VStack(spacing: 20) {
 
                 // FAQ List
@@ -69,6 +69,7 @@ struct FAQView: View {
                     .padding(.top, 24)
             }
             .padding(.bottom, 40)
+            .padding(.top, 10)
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarBackButtonHidden(true)
@@ -112,6 +113,11 @@ struct FAQView: View {
                 .foregroundColor(Color.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
+            
+            Text("support@redonelabs.com")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(Color.purple)
+                .padding(.top, -4)
 
             Button {
                 contactSupport()
@@ -133,7 +139,11 @@ struct FAQView: View {
 
     // MARK: - Actions
     private func contactSupport() {
-        print("Contact support tapped")
+        if let url = URL(string: "mailto:support@redonelabs.com") {
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url)
+            }
+        }
     }
 }
 

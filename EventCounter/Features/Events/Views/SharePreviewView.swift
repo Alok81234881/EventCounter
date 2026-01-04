@@ -8,6 +8,7 @@ struct SharePreviewView: View {
     @State private var selectedTemplate = 0
     @State private var showingShareSheet = false
     @State private var shareImage: UIImage?
+    @State private var shareURL: URL?
     
     var body: some View {
         ZStack {
@@ -51,7 +52,7 @@ struct SharePreviewView: View {
                 
                 // Card Carousel
                 TabView(selection: $selectedTemplate) {
-                    ForEach(0..<6, id: \.self) { index in
+                    ForEach(0..<15, id: \.self) { index in
                         ShareCardTemplate(
                             event: event,
                             components: components,
@@ -65,7 +66,7 @@ struct SharePreviewView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 
                 HStack(spacing: 8) {
-                    ForEach(0..<6, id: \.self) { index in
+                    ForEach(0..<15, id: \.self) { index in
                         Circle()
                             .fill(index == selectedTemplate ? Color.primary : Color.secondary.opacity(0.3))
                             .frame(width: 8, height: 8)
@@ -114,8 +115,8 @@ struct SharePreviewView: View {
             .padding(.vertical, 60)
         }
         .sheet(isPresented: $showingShareSheet) {
-            if let image = shareImage {
-                ShareSheet(items: [image])
+            if let image = shareImage, let url = shareURL {
+                ShareSheet(items: [ShareActivityItemSource(shareImage: image, shareURL: url, eventTitle: event.title)])
             }
         }
     }
@@ -133,11 +134,25 @@ struct SharePreviewView: View {
         
         let renderer = ImageRenderer(content: cardView)
         renderer.proposedSize = .init(width: width, height: height)
-        renderer.scale = 1.0 
+        renderer.scale = 3.0 // High quality output 
         
         if let image = renderer.uiImage {
-            shareImage = image
-            showingShareSheet = true
+            // Save to temporary file with custom name
+            let sanitizedTitle = event.title.replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: "/", with: "-")
+            let filename = "\(sanitizedTitle)_card.png"
+            let tempDir = FileManager.default.temporaryDirectory
+            let fileURL = tempDir.appendingPathComponent(filename)
+            
+            do {
+                if let data = image.pngData() {
+                    try data.write(to: fileURL)
+                    shareImage = image
+                    shareURL = fileURL
+                    showingShareSheet = true
+                }
+            } catch {
+                print("Error saving share image: \(error)")
+            }
         }
     }
 }
@@ -161,7 +176,48 @@ enum ShareCardStyle: Int {
     case dark = 3
     case polaroid = 4
     case circular = 5
+    case iconPill = 6
+    case eventTicket = 7
+    case cleanPhoto = 8
+    case heroOverlay = 9
+    case handwritten = 10
+    case horizontalSplit = 11
+    case checkIn = 12
+    case cornerBubble = 13
+    case simpleIcon = 14
 }
+
+import LinkPresentation
+
+class ShareActivityItemSource: NSObject, UIActivityItemSource {
+    let shareImage: UIImage
+    let shareURL: URL
+    let eventTitle: String
+    
+    init(shareImage: UIImage, shareURL: URL, eventTitle: String) {
+        self.shareImage = shareImage
+        self.shareURL = shareURL
+        self.eventTitle = eventTitle
+        super.init()
+    }
+    
+    func activityViewControllerPlaceholderItem(_ activityViewController: UIActivityViewController) -> Any {
+        return shareURL
+    }
+    
+    func activityViewController(_ activityViewController: UIActivityViewController, itemForActivityType activityType: UIActivity.ActivityType?) -> Any? {
+        return shareURL
+    }
+    
+    func activityViewControllerLinkMetadata(_ activityViewController: UIActivityViewController) -> LPLinkMetadata? {
+        let metadata = LPLinkMetadata()
+        metadata.title = eventTitle
+        metadata.iconProvider = NSItemProvider(object: shareImage)
+        metadata.imageProvider = NSItemProvider(object: shareImage)
+        return metadata
+    }
+}
+
 #Preview {
     SharePreviewView(
         event: Event(title: "test", date: Date()),

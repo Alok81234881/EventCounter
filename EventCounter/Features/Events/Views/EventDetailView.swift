@@ -25,18 +25,27 @@ struct EventDetailView: View {
                     ScrollView(showsIndicators: false) {
                         VStack(spacing: 0) {
                             // Hero Image Section
-                            Group {
-                                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
-                                    Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                } else {
-                                    Rectangle()
-                                        .fill(Color(hex: event.colorHex) ?? .blue)
+                            GeometryReader { geometry in
+                                let minY = geometry.frame(in: .global).minY
+                                let size = geometry.size
+                                let height = size.height + (minY > 0 ? minY : 0)
+                                let yOffset = minY > 0 ? -minY : 0
+                                
+                                Group {
+                                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                                        Image(uiImage: uiImage)
+                                            .resizable()
+                                            .scaledToFill()
+                                    } else {
+                                        Rectangle()
+                                            .fill(Color(hex: event.colorHex) ?? .blue)
+                                    }
                                 }
+                                .frame(width: size.width, height: height)
+                                .clipped()
+                                .offset(y: yOffset)
                             }
                             .frame(height: 300)
-                            .clipped()
                             
                             .overlay(alignment: .bottomLeading) {
                                 // Title Overlay
