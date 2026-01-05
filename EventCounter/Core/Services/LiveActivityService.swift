@@ -52,8 +52,9 @@ class LiveActivityService {
     
 
     
-    func startLiveActivity(for event: Event) {
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
+    @discardableResult
+    func startLiveActivity(for event: Event) -> Bool {
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return false }
         
         // Automatically end any other running activities, THEN start the new one
         Task {
@@ -82,6 +83,7 @@ class LiveActivityService {
                 print("Error requesting Live Activity: \(error.localizedDescription)")
             }
         }
+        return true
     }
     
     func endAllLiveActivities() async {

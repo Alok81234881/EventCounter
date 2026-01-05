@@ -344,23 +344,8 @@ struct AddEventView: View {
                         }
                         
 
-                        // Save Button moved inside scroll
-                        Button(action: saveEvent) {
-                            HStack {
-                                Image(systemName: "checkmark")
-                                Text("Save Event")
-                            }
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(selectedColor)
-                            .clipShape(RoundedRectangle(cornerRadius: 30))
-                            .shadow(color: selectedColor.opacity(0.3), radius: 10, y: 5)
-                        }
-                        .padding(.top, 10)
-                        .disabled(title.isEmpty)
-                        .opacity(title.isEmpty ? 0.6 : 1.0)
+                        // Save Button Removed (Moved to Toolbar)
+
                     }
                     .padding(20)
                 }
@@ -383,6 +368,23 @@ struct AddEventView: View {
                             .font(.system(size: 16, weight: .bold))
                             .padding(6)
                     }
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        saveEvent()
+                    } label: {
+                        Image(systemName: "checkmark")
+                            
+                            .foregroundStyle(Color.white)
+                            .font(.system(size: 16, weight: .bold))
+                            .padding(6)
+                            .background(title.isEmpty ? Color.gray.opacity(0.3) : selectedColor)
+                            .aspectRatio(contentMode: .fill)
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(title.isEmpty)
                 }
             }
             .onAppear(perform: loadEventData)
@@ -609,6 +611,7 @@ struct AddEventView: View {
         WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
+    
     
 }
 

@@ -99,6 +99,8 @@ struct HeroImageTemplate: View {
                     .font(.system(size: 42 * scale, weight: .bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
                     .padding(.horizontal, 20 * scale)
                 
                 HStack(spacing: 24 * scale) {
@@ -147,14 +149,26 @@ struct GradientTemplate: View {
             )
             
             VStack(spacing: 24) {
-                Image(systemName: event.category.icon)
-                    .font(.system(size: 60))
-                    .foregroundStyle(.white)
+                if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 140, height: 140)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(.white, lineWidth: 4))
+                        .shadow(radius: 10)
+                } else {
+                    Image(systemName: event.category.icon)
+                        .font(.system(size: 60))
+                        .foregroundStyle(.white)
+                }
                 
                 Text(event.title)
                     .font(.system(size: 36, weight: .bold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
                     .padding(.horizontal, 20)
                 
                 VStack(spacing: 12) {
@@ -210,18 +224,28 @@ struct MinimalTemplate: View {
             VStack(spacing: 40) {
                 VStack(spacing: 16) {
                     ZStack {
-                        Circle()
-                            .fill(Color(hex: event.colorHex)?.opacity(0.1) ?? .blue.opacity(0.1))
-                            .frame(width: 100, height: 100)
-                        Image(systemName: event.category.icon)
-                            .font(.system(size: 44))
-                            .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                        if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                            Image(uiImage: uiImage)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 100, height: 100)
+                                .clipShape(Circle())
+                        } else {
+                            Circle()
+                                .fill(Color(hex: event.colorHex)?.opacity(0.1) ?? .blue.opacity(0.1))
+                                .frame(width: 100, height: 100)
+                            Image(systemName: event.category.icon)
+                                .font(.system(size: 44))
+                                .foregroundStyle(Color(hex: event.colorHex) ?? .blue)
+                        }
                     }
                     
                     Text(event.title)
                         .font(.system(size: 32, weight: .bold))
                         .foregroundStyle(.black)
                         .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.6)
                         .padding(.horizontal, 20)
                     
                     Text(event.date.formatted(date: .long, time: .shortened))
@@ -289,7 +313,18 @@ struct DarkTemplate: View {
                         .font(.system(size: 36, weight: .bold))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.6)
                         .padding(.horizontal, 20)
+                        
+                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 80, height: 80)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .padding(.top, 10)
+                    }
                 }
                 
                 HStack(spacing: 16) {
@@ -352,6 +387,8 @@ struct PolaroidTemplate: View {
                         .font(.custom("Bradley Hand", size: 28))
                         .foregroundStyle(.black)
                         .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.6)
                     
                     HStack(spacing: 16) {
                         Text("\(components.days) days")
@@ -393,6 +430,8 @@ struct CircularTemplate: View {
                     .font(.system(size: 32, weight: .bold))
                     .foregroundStyle(.black)
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
                     .padding(.horizontal, 24)
                 
                 ZStack {
@@ -500,6 +539,8 @@ struct IconPillTemplate: View {
                     .font(.system(size: 42, weight: .black))
                     .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
                     .padding(.horizontal)
                 
                 Text(event.category.displayName.uppercased())
@@ -523,15 +564,25 @@ struct IconPillTemplate: View {
                         .frame(width: 140, height: 140)
                         .shadow(color: .pink.opacity(0.3), radius: 20, y: 10)
                     
-                    Image(systemName: event.category.icon)
-                        .font(.system(size: 60))
-                        .foregroundStyle(.white)
+                    if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width: 140, height: 140)
+                            .clipShape(RoundedRectangle(cornerRadius: 40))
+                    } else {
+                        Image(systemName: event.category.icon)
+                            .font(.system(size: 60))
+                            .foregroundStyle(.white)
+                    }
                     
-                    // Underline
-                    Capsule()
-                        .fill(.white)
-                        .frame(width: 60, height: 6)
-                        .offset(y: 45)
+                    if event.imageData == nil {
+                        // Underline only if icon
+                        Capsule()
+                            .fill(.white)
+                            .frame(width: 60, height: 6)
+                            .offset(y: 45)
+                    }
                 }
                 
                 Spacer()
@@ -643,6 +694,8 @@ struct EventTicketTemplate: View {
                                 Text(event.title)
                                     .font(.system(size: 36, weight: .bold))
                                     .foregroundStyle(.white)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.6)
                                 
                                 HStack {
                                     Image(systemName: "calendar")
@@ -786,6 +839,9 @@ struct CleanPhotoTemplate: View {
                     .font(.system(size: 38, weight: .bold))
                     .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.2))
                     .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.6)
+                    .padding(.horizontal, 20)
                     .padding(.top, 24)
                 
                 HStack(spacing: 16) {

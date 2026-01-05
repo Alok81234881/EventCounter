@@ -6,14 +6,43 @@ struct UpcomingEventsView: View {
     @Query(sort: \Event.createdAt, order: .reverse) private var events: [Event]
     @Environment(\.modelContext) private var modelContext
     @State private var showingAddEvent = false
+    @State private var sortOption: SortOption = .dateAsc
+
+    enum SortOption: String, CaseIterable {
+        case dateAsc = "Date (Soonest First)"
+        case week = "Next 7 Days"
+        case month = "Next 30 Days"
+        case alphabetical = "A-Z"
+    }
 
     private var upcomingEvents: [Event] {
-        events.filter { $0.date > .now }
+         let now = Date()
+         // Base filter: always future events
+         let baseList = events.filter { $0.date > now }
+         
+         switch sortOption {
+         case .dateAsc:
+             return baseList.sorted { $0.date < $1.date }
+         case .week:
+             let endOfWeek = Calendar.current.date(byAdding: .day, value: 7, to: now)!
+             return baseList
+                .filter { $0.date <= endOfWeek }
+                .sorted { $0.date < $1.date }
+         case .month:
+             let endOfMonth = Calendar.current.date(byAdding: .day, value: 30, to: now)!
+             return baseList
+                .filter { $0.date <= endOfMonth }
+                .sorted { $0.date < $1.date }
+         case .alphabetical:
+             return baseList.sorted { $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending }
+         }
     }
 
     var body: some View {
         TimelineView(.periodic(from: .now, by: 1.0)) { timeline in
-            let upcoming = events.filter { $0.date > timeline.date }
+            // Use the computed property which handles logic, but ensure 'now' in logic stays fresh.
+            // Since computed property uses Date(), view refresh triggers re-calc.
+            let upcoming = upcomingEvents
             
             List {
                 if upcoming.isEmpty {
@@ -44,7 +73,19 @@ struct UpcomingEventsView: View {
         }
         .navigationTitle("Upcoming")
         .toolbar {
-            ToolbarItem {
+            ToolbarItem(placement: .topBarLeading) {
+                Menu {
+                    Picker("Filter & Sort", selection: $sortOption) {
+                        ForEach(SortOption.allCases, id: \.self) { option in
+                            Text(option.rawValue).tag(option)
+                        }
+                    }
+                } label: {
+                    Label("Filter", systemImage: "line.3.horizontal.decrease.circle")
+                }
+            }
+            
+            ToolbarItem(placement: .primaryAction) {
                 Button(action: { showingAddEvent = true }) {
                     Label("Add Item", systemImage: "plus")
                 }

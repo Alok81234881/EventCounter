@@ -11,6 +11,7 @@ struct EventDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var showingSharePreview = false
     @State private var showingReminderPicker = false
+    @State private var showingPermissionAlert = false
 
     var body: some View {
         VStack {
@@ -293,7 +294,11 @@ struct EventDetailView: View {
                                                     
                                                     // 2. Pin this one and start activity
                                                     event.isPinned = true
-                                                    LiveActivityService.shared.startLiveActivity(for: event)
+                                                    if !LiveActivityService.shared.startLiveActivity(for: event) {
+                                                        // Failed likely due to permissions
+                                                        event.isPinned = false
+                                                        showingPermissionAlert = true
+                                                    }
                                                 } else {
                                                     event.isPinned = false
                                                     LiveActivityService.shared.endLiveActivity(for: event.id)
@@ -424,6 +429,16 @@ struct EventDetailView: View {
             Button("1 day before") { updateReminder(1440) }
             Button("1 week before") { updateReminder(10080) }
             Button("Cancel", role: .cancel) { }
+        }
+        .alert("Enable Live Activities", isPresented: $showingPermissionAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        } message: {
+            Text("Please enable Live Activities in Settings to track this event on your Lock Screen.")
         }
         .fullScreenCover(isPresented: $showingSharePreview) {
             if let components = try? CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: event.isCountUp) {

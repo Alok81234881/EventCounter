@@ -7,6 +7,7 @@ struct BatchCalendarImportView: View {
     @State private var events: [EKEvent] = []
     @State private var selectedEventIDs: Set<String> = []
     @State private var isLoading = false
+    @State private var showPermissionAlert = false
     
     @Query var existingEvents: [Event]
     
@@ -171,9 +172,56 @@ struct BatchCalendarImportView: View {
             }
         }
         .task {
+            await checkPermissionAndLoad()
+        }
+        // If user returns from settings without dismissing the sheet, we might want to re-check, 
+        // but .task runs on appear.
+        .alert("Calendar Access Needed", isPresented: $showPermissionAlert) {
+            Button("Cancel", role: .cancel) { dismiss() }
+            Button("Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+        } message: {
+            Text("Please enable Calendar access in Settings to import events.")
+        }
+    }
+    
+    // MARK: - Logic
+    
+    private func checkPermissionAndLoad() async {
+        let status = EKEventStore.authorizationStatus(for: .event)
+        
+        switch status {
+        case .authorized, .fullAccess, .writeOnly:
+            // Already authorized, load
             isLoading = true
-            events = await CalendarService.shared.fetchUpcomingEvents()
+            events = await CalendarService.shared.fetchUpcomingEvents() // This uses shared store which is fine
             isLoading = false
+            
+        case .notDetermined:
+             // Request
+             isLoading = true
+             // CalendarService.requestAccess() just returns bool, but we want to intercept the denial FOR ALERT
+             // So we do it manually or assume CalendarService handles it... 
+             // But CalendarService is a singleton wrapper.
+             // Let's use CalendarService's request, but if it returns false and status was notDetermined, 
+             // it means user just said NO.
+             let granted = await CalendarService.shared.requestAccess()
+             if granted {
+                 events = await CalendarService.shared.fetchUpcomingEvents()
+             } else {
+                 // User just denied it
+                 showPermissionAlert = true
+             }
+             isLoading = false
+            
+        case .denied, .restricted:
+            showPermissionAlert = true
+            
+        @unknown default:
+            break
         }
     }
 }
