@@ -16,7 +16,7 @@ struct EventWidgetEntryView : View {
                 case .accessoryCircular:
                     AccessoryCircularView(event: event)
                 case .accessoryRectangular:
-                    AccessoryRectangularView(event: event)
+                    AccessoryRectangularView(event: event, entryDate: entry.date)
                 case .accessoryInline:
                     AccessoryInlineView(event: event)
                 default:
@@ -298,24 +298,41 @@ struct AccessoryCircularView: View {
     var body: some View {
         ZStack {
             AccessoryWidgetBackground()
+            
+            // Circular Progress
+            let progress = calculateProgress(from: event.createdAt, to: event.date)
+            CircularProgressView(
+                progress: progress,
+                color: Color(hex: event.colorHex),
+                lineWidth: 5,
+                showBackground: true
+            )
+            .widgetAccentable()
+            
+            // Center Content
             VStack(spacing: 0) {
-                Image(systemName: event.categoryIcon)
-                    .font(.system(size: 14))
+                Text("IN")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(.secondary)
+                    .padding(.bottom, -2)
                 
                 let components = CountdownService.calculateComponents(from: Date(), to: event.date, isCountUp: event.isCountUp)
-                let category = EventCategory(rawValue: event.categoryRaw) ?? .personal
-                if components.isPast && !event.isCountUp {
-                    Text("Done")
-                        .font(.system(size: 10))
-                } else if components.days > 0 {
+                
+                if components.days > 0 {
                     Text("\(components.days)d")
-                        .font(.system(size: 10, weight: .bold))
+                        .font(.system(size: 16, weight: .black, design: .rounded))
+                } else if components.hours > 0 {
+                    Text("\(components.hours)h")
+                        .font(.system(size: 16, weight: .black, design: .rounded))
+                } else if components.minutes > 0 {
+                    Text("\(components.minutes)m")
+                        .font(.system(size: 16, weight: .black, design: .rounded))
                 } else {
-                    Text(event.date, style: .timer)
-                        .font(.system(size: 10))
-                        .minimumScaleFactor(0.5)
+                    Text("\(components.seconds)s")
+                        .font(.system(size: 16, weight: .black, design: .rounded))
                 }
             }
+            .widgetAccentable()
         }
         .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
@@ -323,40 +340,115 @@ struct AccessoryCircularView: View {
 
 struct AccessoryRectangularView: View {
     let event: EventDTO
+    let entryDate: Date
     
     var body: some View {
-        HStack(spacing: 8) {
-            VStack(alignment: .leading, spacing: 2) {
-                Label {
-                    Text(event.title)
-                        .font(.headline)
-                        .widgetAccentable()
-                        .minimumScaleFactor(0.7)
-                } icon: {
+        let timeUntil = event.date.timeIntervalSince(entryDate)
+        let oneDay: TimeInterval = 24 * 3600
+        
+        if timeUntil > oneDay {
+            // MARK: - > 24 Hours Layout (Linear)
+            // Design: Title+Icon Top | Number+Unit Middle | Progress Bottom
+            VStack(alignment: .leading, spacing: 0) {
+                // Header
+                HStack(spacing: 4) {
                     Image(systemName: event.categoryIcon)
+                        .font(.system(size: 10))
+                        .foregroundStyle(Color(hex: event.colorHex))
+                    Text(event.title)
+                        .font(.system(size: 12, weight: .semibold))
+                        //.lineLimit(1)
                 }
+                // Header should be subtle, not accented
+                .foregroundStyle(.secondary)
                 
-                let components = CountdownService.calculateComponents(from: Date(), to: event.date, isCountUp: event.isCountUp)
-                let category = EventCategory(rawValue: event.categoryRaw) ?? .personal
-                if components.isPast && !event.isCountUp {
-                    Text("Event Passed")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                Spacer(minLength: 0)
+                
+                // Days & Hours Count
+                let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
+                let days = (components.months * 30) + components.days
+                let hours = components.hours
+                
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    // Days
+                    Text("\(days)")
+                        .font(.system(size: 28, weight: .heavy, design: .rounded))
+                    Text("days")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundStyle(.primary.opacity(0.8))
+                        .padding(.trailing, 2)
+                    
+                    // Hours (if > 0)
+                    if hours > 0 {
+                        Text("\(hours)")
+                            .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        Text("hours")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundStyle(.primary.opacity(0.8))
+                    }
                 }
-//                else if components.days > 0 {
-//                    Text(components.naturalDescription(category: category, title: event.title))
-//                        .font(.caption)
-//                        .foregroundStyle(.secondary)
-//                }
-                else {
-                    Text(event.date, style: .timer)
-                        .font(.system(.body, design: .monospaced))
+                .widgetAccentable() // Pop effect
+                .padding(.bottom, 2)
+                
+                // Progress Bar
+                GeometryReader { geo in
+                    let progress = calculateProgress(from: event.createdAt, to: event.date)
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.secondary.opacity(0.3))
+                            .frame(height: 5)
+                        
+                        Capsule()
+                            .fill(Color.primary) // Will be tinted by accentable
+                            .frame(width: geo.size.width * CGFloat(progress), height: 5)
+                    }
+                }
+                .frame(height: 5)
+                .widgetAccentable() // This makes the bar POP
+            }
+            .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
+        } else {
+            // MARK: - < 24 Hours Layout (Circular + Timer)
+            // Design: Circle+Icon Left | Timer+Title Right
+            HStack(spacing: 12) {
+                // Circular Progress with Icon
+                ZStack {
+                    let progress = calculateProgress(from: event.createdAt, to: event.date)
+                    CircularProgressView(
+                        progress: progress,
+                        color: Color(hex: event.colorHex),
+                        lineWidth: 4,
+                        showBackground: true
+                    )
+                    
+                    Image(systemName: event.categoryIcon)
+                        .font(.system(size: 14, weight: .bold))
+                }
+                .frame(width: 44, height: 44)
+                .widgetAccentable()
+                
+                // Right Side: Timer & Label
+                VStack(alignment: .leading, spacing: 0) {
+                    if timeUntil > 0 {
+                        Text(event.date, style: .timer)
+                            .font(.system(size: 16, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Color.primary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                    } else {
+                         Text("00:00")
+                            .font(.system(size: 16, weight: .heavy, design: .rounded))
+                            .foregroundStyle(Color.primary)
+                    }
+                    
+                    Text(event.title.uppercased())
+                        .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
+                        //.lineLimit(1)
                 }
             }
-            Spacer()
+            .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
         }
-        .widgetURL(URL(string: "eventcounter://event/\(event.id)"))
     }
 }
 
