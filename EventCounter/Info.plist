@@ -4,11 +4,13 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Pulse</string>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
 	<key>UIBackgroundModes</key>
 	<array/>
 	<key>NSSupportsLiveActivities</key>
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>EventCounter needs calendar access to let you import your important dates and countdowns.</string>
+	<string>Pulse needs calendar access to let you import your important dates and countdowns.</string>
 </dict>
 </plist>

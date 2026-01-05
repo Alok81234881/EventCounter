@@ -61,33 +61,52 @@ class NotificationService: NSObject, ObservableObject {
             return
         }
         
-        guard triggerDate > Date() else {
-            print("[NotificationService] WARNING: Trigger date (\(triggerDate)) is in the past for '\(event.title)'. Event date: \(event.date), Minutes before: \(minutesBefore)")
-            return
+        let timeInterval = triggerDate.timeIntervalSinceNow
+        
+        let trigger: UNNotificationTrigger
+        
+        if timeInterval > 0 {
+            // Standard future notification
+            let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: triggerDate)
+            trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+        } else {
+            // Trigger date is in the past.
+            guard event.date > Date() else {
+                print("[NotificationService] WARNING: Trigger date (\(triggerDate)) AND Event date are in the past. Skipping.")
+                return
+            }
+            
+            // Event is future, but we missed the specific second (e.g. tight creation time).
+            // Fire immediately (1 second delay) to ensure user sees it.
+            print("[NotificationService] Trigger in past but event future. Scheduling immediate catch-up.")
+            trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
         }
         
         let content = UNMutableNotificationContent()
-        content.title = "\(event.title) Reminder"
+        content.title = "Event Reminder: \(event.title)"
         
-        // Dynamic label based on minutes
-        let label: String
+        // Dynamic body based on minutes
+        let timeString: String
         if minutesBefore == 0 {
-            label = "Now"
+            timeString = "now"
         } else if minutesBefore < 60 {
-            label = "\(minutesBefore) minutes"
+            timeString = "\(minutesBefore) minutes"
         } else if minutesBefore < 1440 {
-            label = "\(minutesBefore / 60) hour\(minutesBefore / 60 == 1 ? "" : "s")"
-        } else if minutesBefore < 10080 {
-            label = "\(minutesBefore / 1440) day\(minutesBefore / 1440 == 1 ? "" : "s")"
+            let hours = minutesBefore / 60
+            timeString = "\(hours) hour\(hours == 1 ? "" : "s")"
         } else {
-            label = "\(minutesBefore / 10080) week\(minutesBefore / 10080 == 1 ? "" : "s")"
+            let days = minutesBefore / 1440
+            timeString = "\(days) day\(days == 1 ? "" : "s")"
         }
         
-        content.body = minutesBefore == 0 ? "\(event.title) is happening now!" : "\(event.title) is in \(label)!"
+        if minutesBefore == 0 {
+            content.body = "Your \(event.title) event is happening now! Tap to view details."
+        } else {
+            content.body = "Your \(event.title) event is starting in \(timeString)! Tap to view details."
+        }
         content.sound = .default
         
-        let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: triggerDate)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
+
         
         content.userInfo = ["eventID": event.id.uuidString]
         
