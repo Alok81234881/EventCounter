@@ -12,5 +12,18 @@
 	<true/>
 	<key>NSCalendarsFullAccessUsageDescription</key>
 	<string>Pulse needs calendar access to let you import your important dates and countdowns.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.alok.singh.EventCounter</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>eventcounter</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

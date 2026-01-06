@@ -185,9 +185,6 @@ struct HomeView: View {
                         Color.clear.frame(height: 80)
                     }
                 }
-                .navigationDestination(for: UUID.self) { eventID in
-                    EventResolverView(eventID: eventID)
-                }
                 .background(Color.adaptiveGroupedBackground)
                 
                 // FAB
@@ -195,7 +192,6 @@ struct HomeView: View {
                     ZStack {
                         Circle()
                             .fill(Color(hex: "#800080") ?? .purple)
-//                            .shadow(color: Color(hex: "#800080").opacity(0.4) as? Color ?? .purple, radius: 10, x: 0, y: 5)
                             
                         Image(systemName: "plus")
                             .font(.system(size: 30, weight: .light))
@@ -215,6 +211,9 @@ struct HomeView: View {
                 BatchCalendarImportView { selectedEvents in
                     batchImportEvents(selectedEvents)
                 }
+            }
+            .navigationDestination(for: UUID.self) { eventID in
+                EventResolverView(eventID: eventID)
             }
         }
         .onOpenURL { url in

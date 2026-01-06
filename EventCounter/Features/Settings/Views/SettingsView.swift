@@ -10,269 +10,211 @@ struct SettingsView: View {
     @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = true
     
     @Environment(\.dismiss) private var dismiss
-    @State private var showingLogin = false
     @State private var showPermissionAlert = false
-    
-    private var appTheme: AppTheme {
-        themeManager.currentTheme
-    }
+    @State private var showingLogin = false
     
     var body: some View {
         ZStack {
-            Color.adaptiveGroupedBackground
+            Color(uiColor: .systemBackground)
                 .ignoresSafeArea()
             
-            ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Header
-                    HStack {
-                        Button {
-                            dismiss()
-                        } label: {
-                            Image(systemName: "chevron.backward")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundStyle(Color.adaptivePrimaryText)
-                                .frame(width: 50, height: 50)
-                                .background(Color.adaptiveSecondaryBackground)
-                                .clipShape(Circle())
-                                .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
-                        }
-                        Spacer()
-                    }
-                    .padding(.top, 20)
-                    
-                    Text("Settings")
-                        .font(.system(size: 42, weight: .bold))
-                        .foregroundStyle(Color.adaptivePrimaryText)
-                    
-                    // ACCOUNT Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "ACCOUNT", icon: "👤", color: Color(hex: "#E0EFFF") ?? .blue.opacity(0.1), textColor: Color(hex: "#4A90E2") ?? .blue)
+            VStack(spacing: 0) {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
                         
-                        VStack(spacing: 0) {
-                            if authService.isAuthenticated {
-                                Button {
-                                    // Profile action
-                                } label: {
-                                    HStack(spacing: 16) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(LinearGradient(colors: [.orange.opacity(0.3), .purple.opacity(0.3)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                                                .frame(width: 50, height: 50)
-                                            Image(systemName: "person.fill")
-                                                .font(.system(size: 24))
-                                                .foregroundStyle(Color.adaptivePrimaryText.opacity(0.6))
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(authService.userId ?? "Alex Doe")
-                                                .font(.system(size: 18, weight: .bold))
-                                                .foregroundStyle(Color.adaptivePrimaryText)
-                                            Text("alex.doe@example.com")
-                                                .font(.system(size: 14))
-                                                .foregroundStyle(Color.adaptiveSecondaryText)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: "chevron.right")
-                                            .font(.system(size: 14, weight: .semibold))
-                                            .foregroundStyle(.gray.opacity(0.5))
+                        // 1. Profile Section
+                        VStack(spacing: 8) {
+                            ZStack(alignment: .bottomTrailing) {
+                                // Avatar
+                                Image(systemName: "person.crop.circle.fill") // Placeholder for illustration
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 80, height: 80)
+                                    .foregroundStyle(Color(hex: "#E0C9A6") ?? .orange.opacity(0.3)) // Skin/Pastel tone
+                                    .background(Circle().fill(Color(hex: "#F5E6D3") ?? .orange.opacity(0.1)))
+                                
+                                // Edit Badge
+                                Circle()
+                                    .fill(Color(hex: "#F59E0B") ?? .orange)
+                                    .frame(width: 24, height: 24)
+                                    .overlay(
+                                        Image(systemName: "pencil")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundStyle(.white)
+                                    )
+                                    .offset(x: 0, y: 0)
+                            }
+                            .padding(.top, 10)
+                            
+                            VStack(spacing: 4) {
+                                Text(authService.isAuthenticated ? (authService.userId ?? "Alex Johnson") : "Guest User")
+                                    .font(.title2)
+                                    .fontWeight(.bold)
+                                    .foregroundStyle(Color.adaptivePrimaryText)
+                                
+                                Text(authService.isAuthenticated ? "alex.j@example.com" : "Sign in to sync")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.gray)
+                            }
+                        }
+                        .padding(.bottom, 10)
+                        
+                        // 2. Preferences Group
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("PREFERENCES")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.gray)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 24) {
+                                // iCloud Sync
+                                SettingsRowItem(
+                                    icon: "arrow.triangle.2.circlepath",
+                                    iconColor: .purple,
+                                    title: "iCloud Sync",
+                                    subtitle: "Last synced: Just now"
+                                ) {
+                                    Toggle("", isOn: $iCloudSyncEnabled)
+                                        .labelsHidden()
+                                        .tint(.purple)
+                                }
+                                
+                                // Theme Picker
+                                SettingsRowItem(
+                                    icon: "paintpalette.fill",
+                                    iconColor: .purple,
+                                    title: "Theme",
+                                    subtitle: nil
+                                ) {
+                                    Picker("Theme", selection: $themeManager.currentTheme) {
+                                        Text("Light").tag(AppTheme.light)
+                                        Text("Dark").tag(AppTheme.dark)
+                                        Text("System").tag(AppTheme.system)
                                     }
-                                    .padding(20)
+                                    .pickerStyle(.segmented)
+                                    .frame(width: 180)
+                                }
+                                
+                                // Notifications
+                                SettingsRowItem(
+                                    icon: "bell.fill",
+                                    iconColor: .purple,
+                                    title: "Notifications",
+                                    subtitle: nil
+                                ) {
+                                    Toggle("", isOn: Binding(
+                                        get: { notificationsEnabled && notificationService.isAuthorized },
+                                        set: { newValue in
+                                            if newValue {
+                                                enableNotifications()
+                                            } else {
+                                                notificationsEnabled = false
+                                            }
+                                        }
+                                    ))
+                                    .labelsHidden()
+                                    .tint(.purple)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        
+                        Divider().padding(.horizontal)
+                        
+                        // 3. Support & Legal Group
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("SUPPORT & LEGAL")
+                                .font(.caption)
+                                .fontWeight(.bold)
+                                .foregroundStyle(.gray)
+                                .padding(.horizontal)
+                            
+                            VStack(spacing: 24) {
+                                // Rate App
+                                Button(action: { /* Rate */ }) {
+                                    SettingsNavigationRow(icon: "star.fill", iconColor: .purple, title: "Rate the App")
+                                }
+                                
+                                // FAQ
+                                NavigationLink(destination: FAQView()) {
+                                    SettingsNavigationRow(icon: "questionmark.circle.fill", iconColor: .purple, title: "FAQ & Support")
+                                }
+                                
+                                // Privacy Policy
+                                NavigationLink(destination: PrivacyPolicyView(isOnboarding: false)) {
+                                    SettingsNavigationRow(icon: "lock.fill", iconColor: .purple, title: "Privacy Policy")
+                                }
+                                
+                                // Terms
+                                Button(action: { /* Terms */ }) {
+                                    SettingsNavigationRow(icon: "doc.text.fill", iconColor: .purple, title: "Terms of Service")
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        
+                        // 4. Footer Actions
+                        VStack(spacing: 16) {
+                            if authService.isAuthenticated {
+                                Button(action: { authService.signOut() }) {
+                                    HStack {
+                                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                                        Text("Log Out")
+                                    }
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(Color.adaptivePrimaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color(hex: "#F5F5F5") ?? .gray.opacity(0.1))
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                                }
+                                
+                                Button(action: { /* Delete Account */ }) {
+                                    Text("Delete Account")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundStyle(.red)
                                 }
                             } else {
-                                Button {
-                                    showingLogin = true
-                                } label: {
-                                    HStack(spacing: 16) {
-                                        Image(systemName: "person.crop.circle.badge.plus")
-                                            .font(.system(size: 24))
-                                            .foregroundStyle(.blue)
-                                        Text("Sign In with Apple")
-                                            .font(.system(size: 18, weight: .bold))
-                                            .foregroundStyle(Color.adaptivePrimaryText)
-                                        Spacer()
+                                Button(action: { showingLogin = true }) {
+                                    HStack {
+                                        Text("Sign In / Sign Up")
                                     }
-                                    .padding(20)
+                                    .font(.system(size: 16, weight: .bold))
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 56)
+                                    .background(Color.purple)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
                                 }
                             }
                             
-                            Divider()
-                                .padding(.horizontal, 20)
-                            
-                            HStack(spacing: 16) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.blue.opacity(0.1))
-                                        .frame(width: 40, height: 40)
-                                    Image(systemName: "cloud.fill")
-                                        .font(.system(size: 18))
-                                        .foregroundStyle(.blue)
-                                }
-                                
-                                Text("iCloud Sync")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundStyle(Color.adaptivePrimaryText)
-                                
-                                Spacer()
-                                
-                                Toggle("", isOn: $iCloudSyncEnabled)
-                                    .tint(.blue)
-                            }
-                            .padding(20)
+                            Text("Version 2.4.0 (124)")
+                                .font(.caption)
+                                .foregroundStyle(.gray.opacity(0.6))
+                                .padding(.top, 10)
                         }
-                        .background(Color.adaptiveSecondaryBackground)
-                        .cornerRadius(24)
-                        .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
-                        
-                        Text("Last synced: Just now")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Color.adaptiveSecondaryText)
-                            .padding(.leading, 8)
+                        .padding(24)
                     }
-                    
-                    // APPEARANCE Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "APPEARANCE", icon: "🎨", color: Color(hex: "#F5EBFF") ?? .purple.opacity(0.1), textColor: Color(hex: "#A855F7") ?? .purple)
-                        
-                        VStack(spacing: 0) {
-                            ForEach(AppTheme.allCases) { theme in
-                                Button {
-                                    themeManager.currentTheme = theme
-                                } label: {
-                                    HStack(spacing: 16) {
-                                        ZStack {
-                                            Circle()
-                                                .fill(Color.purple.opacity(0.1))
-                                                .frame(width: 40, height: 40)
-                                            Image(systemName: theme == .system ? "circle.lefthalf.filled" : (theme == .dark ? "moon.fill" : "sun.max.fill"))
-                                                .font(.system(size: 18))
-                                                .foregroundStyle(.purple)
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(theme.rawValue)
-                                                .font(.system(size: 18, weight: .bold))
-                                                .foregroundStyle(Color.adaptivePrimaryText)
-                                            Text(theme == .system ? "Follow system setting" : (theme == .dark ? "Easier on the eyes" : "Always light"))
-                                                .font(.system(size: 13))
-                                                .foregroundStyle(Color.adaptiveSecondaryText)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        if appTheme == theme {
-                                            Image(systemName: "checkmark.circle.fill")
-                                                .font(.system(size: 20))
-                                                .foregroundStyle(.purple)
-                                        }
-                                    }
-                                    .padding(20)
-                                }
-                                
-                                if theme != AppTheme.allCases.last {
-                                    Divider()
-                                        .padding(.horizontal, 20)
-                                }
-                            }
-                        }
-                        .background(Color.adaptiveSecondaryBackground)
-                        .cornerRadius(24)
-                        .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
-                    }
-                    
-                    // NOTIFICATIONS Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "NOTIFICATIONS", icon: "🔔", color: Color(hex: "#FFF4E5") ?? .orange.opacity(0.1), textColor: Color(hex: "#F59E0B") ?? .orange)
-                        
-                        VStack(spacing: 0) {
-                            HStack(spacing: 16) {
-                                ZStack {
-                                    Circle()
-                                        .fill(Color.orange.opacity(0.1))
-                                        .frame(width: 40, height: 40)
-                                    Image(systemName: "bell.fill")
-                                        .font(.system(size: 18))
-                                        .foregroundStyle(.orange)
-                                }
-                                
-                                Text("Allow Notifications")
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundStyle(Color.adaptivePrimaryText)
-                                
-                                Spacer()
-                                
-                                Toggle("", isOn: Binding(
-                                    get: { notificationsEnabled && notificationService.isAuthorized },
-                                    set: { newValue in
-                                        if newValue {
-                                            enableNotifications()
-                                        } else {
-                                            notificationsEnabled = false
-                                        }
-                                    }
-                                ))
-                                .tint(.orange)
-                            }
-                            .padding(20)
-                            
-                            Divider()
-                                .padding(.horizontal, 20)
-                            HStack(spacing: 16) {
-                                NavigationLink(destination: FAQView()) {
-                                    ZStack {
-                                                                           Circle()
-                                                                               .fill(Color.purple.opacity(0.1))
-                                                                               .frame(width: 40, height: 40)
-                                                                           Image(systemName: "questionmark.message")
-                                                                               .font(.system(size: 18))
-                                                                               .foregroundStyle(.purple)
-                                                                       }
-                                    
-                                    Text("FAQs")
-                                        .font(.system(size: 18, weight: .bold))
-                                        .foregroundStyle(Color.adaptivePrimaryText)
-                                    Spacer()
-                                    Image(systemName: "chevron.right")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundStyle(.gray.opacity(0.5))
-                                }
-                            }
-                            .padding(20)
-                            
-                        }
-                        .background(Color.adaptiveSecondaryBackground)
-                        .cornerRadius(24)
-                        .shadow(color: .black.opacity(0.03), radius: 10, x: 0, y: 5)
-                    }
-                    
-                    // Footer
-                    VStack(spacing: 16) {
-                        VStack(spacing: 4) {
-                            Text("VERSION 3.0.1")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(.gray.opacity(0.7))
-                                .tracking(1)
-                            Text("Made with ❤️ for iOS")
-                                .font(.system(size: 12))
-                                .foregroundStyle(.gray.opacity(0.5))
-                        }
-                        
-                        HStack(spacing: 24) {
-                            Button("Privacy Policy") {}
-                            Button("Terms of Service") {}
-                        }
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(.gray.opacity(0.7))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
+                    .padding(.top, 10)
                 }
-                .padding(.horizontal, 24)
             }
         }
-        .navigationBarHidden(true)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundStyle(Color.adaptivePrimaryText)
+                }
+            }
+            
+            ToolbarItem(placement: .principal) {
+                Text("Settings")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Color.adaptivePrimaryText)
+            }
+        }
         .sheet(isPresented: $showingLogin) {
             LoginView()
         }
@@ -291,6 +233,7 @@ struct SettingsView: View {
         }
     }
     
+    // Logic for Notifications
     private func enableNotifications() {
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             DispatchQueue.main.async {
@@ -311,26 +254,80 @@ struct SettingsView: View {
     }
 }
 
-struct SectionHeader: View {
-    let title: String
+// MARK: - Reusable Rows
+
+struct SettingsRowItem<Content: View>: View {
     let icon: String
-    let color: Color
-    let textColor: Color
+    let iconColor: Color
+    let title: String
+    let subtitle: String?
+    let content: () -> Content
+    
+    init(icon: String, iconColor: Color, title: String, subtitle: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+        self.icon = icon
+        self.iconColor = iconColor
+        self.title = title
+        self.subtitle = subtitle
+        self.content = content
+    }
     
     var body: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 6) {
-                Text(title)
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(textColor)
+        HStack(spacing: 16) {
+            // Icon Circle
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.1))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(iconColor)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(color)
-            .cornerRadius(12)
             
-            Text(icon)
-                .font(.system(size: 20))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundStyle(Color.adaptivePrimaryText)
+                
+                if let subtitle = subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 12))
+                        .foregroundStyle(.gray)
+                }
+            }
+            
+            Spacer()
+            
+            content()
+        }
+    }
+}
+
+struct SettingsNavigationRow: View {
+    let icon: String
+    let iconColor: Color
+    let title: String
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Icon Circle
+            ZStack {
+                Circle()
+                    .fill(iconColor.opacity(0.1))
+                    .frame(width: 44, height: 44)
+                Image(systemName: icon)
+                    .font(.system(size: 20))
+                    .foregroundStyle(iconColor)
+            }
+            
+            Text(title)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(Color.adaptivePrimaryText)
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(Color.gray.opacity(0.4))
         }
     }
 }

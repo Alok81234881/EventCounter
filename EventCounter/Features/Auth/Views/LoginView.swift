@@ -5,6 +5,9 @@ struct LoginView: View {
     @ObservedObject var authService = AuthenticationService.shared
     @Environment(\.dismiss) private var dismiss
     
+    @State private var showingPrivacy = false
+    @AppStorage("hasAgreedToPrivacy") private var hasAgreedToPrivacy = false
+    
     // Gradient Colors from the mockup (Cream/Peachy to Soft Purple)
     let backgroundGradient = LinearGradient(
         colors: [
@@ -70,7 +73,11 @@ struct LoginView: View {
                     } onCompletion: { result in
                         authService.handleSignIn(result: result)
                         if authService.isAuthenticated {
-                            dismiss()
+                            if !hasAgreedToPrivacy {
+                                showingPrivacy = true
+                            } else {
+                                dismiss()
+                            }
                         }
                     }
                     .signInWithAppleButtonStyle(.black)
@@ -91,6 +98,12 @@ struct LoginView: View {
                         .padding(.top, 20)
                 }
                 .padding(.bottom, 20)
+            }
+        }
+        .fullScreenCover(isPresented: $showingPrivacy) {
+            PrivacyPolicyView(isOnboarding: true) {
+                hasAgreedToPrivacy = true
+                dismiss() // Dismiss Login View
             }
         }
     }

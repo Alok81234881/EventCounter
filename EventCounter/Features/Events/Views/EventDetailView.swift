@@ -355,37 +355,31 @@ struct EventDetailView: View {
                 }
             }
         }
-        .overlay(alignment: .top) {
-            // Top Navigation Buttons
-            HStack {
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "chevron.backward")
-                        .font(.system(size: 16, weight: .semibold))
+                    Image(systemName: "chevron.left")
                         .foregroundStyle(Color.adaptivePrimaryText)
-                        .frame(width: 42, height: 42)
-                        .background(Color.adaptiveTertiaryBackground)
-                        .clipShape(Circle())
-                        .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
                 }
-                .contentShape(Circle())
-                
-                Spacer()
-                
-                HStack(spacing: 12) {
+            }
+            
+//            ToolbarItem(placement: .principal) {
+//                Text("Event Details")
+//                    .font(.system(size: 18, weight: .semibold))
+//                    .foregroundStyle(Color.adaptivePrimaryText)
+//            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: 8) {
                     Button {
                         showingSharePreview = true
                     } label: {
                         Image(systemName: "square.and.arrow.up")
-                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(Color.adaptivePrimaryText)
-                            .frame(width: 42, height: 42)
-                            .background(Color.adaptiveTertiaryBackground)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
                     }
-                    .contentShape(Circle())
                     
                     Button {
                         showingEditSheet = true
@@ -393,19 +387,12 @@ struct EventDetailView: View {
                         Text("Edit")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(Color.adaptivePrimaryText)
-                            .frame(width: 50, height: 42)
-                            .background(Color.adaptiveTertiaryBackground)
-                            .clipShape(Capsule())
-                            .shadow(color: .black.opacity(0.1), radius: 5, x: 0, y: 2)
                     }
-                    .contentShape(Capsule())
                 }
+                .padding(.leading, 5)
             }
-            .padding()
-//            .padding(.top, 20)
         }
-        .toolbar(.hidden, for: .navigationBar)
-        .navigationBarBackButtonHidden(true)
+        .toolbarBackground(.hidden, for: .navigationBar)
 
         .alert("Delete Event", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
