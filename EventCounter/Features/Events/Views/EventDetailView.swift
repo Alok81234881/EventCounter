@@ -427,9 +427,10 @@ struct EventDetailView: View {
         } message: {
             Text("Please enable Live Activities in Settings to track this event on your Lock Screen.")
         }
-        .fullScreenCover(isPresented: $showingSharePreview) {
+        .sheet(isPresented: $showingSharePreview) {
             if let components = try? CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: event.isCountUp) {
                 SharePreviewView(event: event, components: components)
+                    .presentationDetents([.fraction(0.82)])
             }
         }
     }

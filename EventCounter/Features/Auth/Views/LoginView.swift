@@ -88,6 +88,21 @@ struct LoginView: View {
                     
                     // "Continue with Email" removed as per request
                     
+                    Button {
+                        authService.signInAsGuest()
+                        if authService.isAuthenticated {
+                            if !hasAgreedToPrivacy {
+                                showingPrivacy = true
+                            } else {
+                                dismiss()
+                            }
+                        }
+                    } label: {
+                        Text("Continue as Guest (Dev)")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.top, 8)
                     // Terms Footer
                     Text("By continuing, you agree to our\n[Terms of Service](https://example.com/terms) and [Privacy Policy](https://example.com/privacy).")
                         .font(.system(size: 13))

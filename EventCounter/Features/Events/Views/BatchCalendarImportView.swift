@@ -22,10 +22,14 @@ struct BatchCalendarImportView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button("Cancel") {
+                Button {
                     dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(Color.adaptivePrimaryText)
+                        .font(.system(size: 16, weight: .bold))
+                        .padding(6)
                 }
-                .foregroundStyle(Color.adaptiveSecondaryText)
                 
                 Spacer()
                 
