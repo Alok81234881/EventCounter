@@ -67,7 +67,7 @@ struct Provider: AppIntentTimelineProvider {
         let schema = Schema([Event.self])
         
         let modelConfiguration: ModelConfiguration
-        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.alok.singh.EventCounter") {
+        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.redonelabs.EventCounter") {
              let storeURL = appGroupURL.appendingPathComponent("EventCout.sqlite")
              modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
         } else {

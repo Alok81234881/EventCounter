@@ -23,7 +23,7 @@ struct EventCounterApp: App {
         
         // IMPORTANT: Replace 'group.com.yourcompany.eventcount' with your actual App Group ID from Xcode
         let modelConfiguration: ModelConfiguration
-        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.alok.singh.EventCounter") {
+        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.redonelabs.EventCounter") {
              let storeURL = appGroupURL.appendingPathComponent("EventCout.sqlite")
              modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
         } else {
@@ -38,19 +38,29 @@ struct EventCounterApp: App {
         }
     }()
 
+    @StateObject private var authService = AuthenticationService.shared
+    @AppStorage("hasAgreedToPrivacy") private var hasAgreedToPrivacy = false
     @StateObject private var themeManager = ThemeManager.shared
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
-                .preferredColorScheme(themeManager.colorScheme)
-                .environmentObject(themeManager)
-                .onAppear {
-                    // Trigger cleanup when app appears
-                    Task { @MainActor in
-                        await LiveActivityService.shared.triggerCleanup()
-                    }
+            Group {
+                if authService.isAuthenticated && hasAgreedToPrivacy {
+                    HomeView()
+                        .transition(.opacity)
+                } else {
+                    LoginView()
+                        .transition(.opacity)
                 }
+            }
+            .preferredColorScheme(themeManager.colorScheme)
+            .environmentObject(themeManager)
+            .onAppear {
+                // Trigger cleanup when app appears
+                Task { @MainActor in
+                    await LiveActivityService.shared.triggerCleanup()
+                }
+            }
         }
         .modelContainer(sharedModelContainer)
     }

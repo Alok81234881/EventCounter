@@ -10,7 +10,7 @@ struct PrivacyPolicyView: View {
         ZStack(alignment: .bottom) {
             Color(uiColor: .systemBackground).ignoresSafeArea()
             
-            ScrollView {
+            ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 24) {
                     
                     // Last Updated Pill
@@ -135,13 +135,13 @@ struct PrivacyPolicyView: View {
                         .frame(height: 56)
                         .background(
                             LinearGradient(
-                                colors: [Color(hex: "#FFA500") ?? .orange, Color(hex: "#FF8C00") ?? .orange],
+                                colors: [Color.purple, Color.purple],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                         )
                         .clipShape(Capsule())
-                        .shadow(color: .orange.opacity(0.3), radius: 10, y: 5)
+                        .shadow(color: Color.orange.opacity(0.3), radius: 10, y: 5)
                     }
                     
                     Text("By tapping \"I Agree & Continue\", you acknowledge that you have read and understood the Privacy Policy.")

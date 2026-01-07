@@ -201,71 +201,71 @@ struct AccountDetailsView: View {
 }
 
 
-struct DeleteAccountModal: View {
-
-    let onDelete: () -> Void
-    let onCancel: () -> Void
-
-    var body: some View {
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-
-            VStack(spacing: 24) {
-
-                ZStack {
-                    Circle()
-                        .fill(Color.red.opacity(0.1))
-                        .frame(width: 64, height: 64)
-
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.red)
-                        .font(.system(size: 26))
-                }
-
-                Text("Delete Account Permanently?")
-                    .font(.system(size: 20, weight: .semibold))
-                    .multilineTextAlignment(.center)
-
-                Text("This action cannot be undone. All your event data will be permanently removed from your account.")
-                    .font(.system(size: 15))
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-
-                Button {
-                    onDelete()
-                } label: {
-                    Text("Delete Account")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color.red)
-                        .cornerRadius(28)
-                }
-
-                Button {
-                    onCancel()
-                } label: {
-                    Text("Cancel")
-                        .font(.system(size: 17, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .foregroundStyle(Color.primary)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 28)
-                                .stroke(Color.gray.opacity(0.3))
-                        )
-                }
-            }
-            .padding(24)
-            .background(Color(.systemBackground))
-            .cornerRadius(24)
-            .padding(.horizontal, 24)
-            .shadow(radius: 20)
-        }
-    }
-}
+//struct DeleteAccountModal: View {
+//
+//    let onDelete: () -> Void
+//    let onCancel: () -> Void
+//
+//    var body: some View {
+//        ZStack {
+//            Color.black.opacity(0.4)
+//                .ignoresSafeArea()
+//
+//            VStack(spacing: 24) {
+//
+//                ZStack {
+//                    Circle()
+//                        .fill(Color.red.opacity(0.1))
+//                        .frame(width: 64, height: 64)
+//
+//                    Image(systemName: "exclamationmark.triangle.fill")
+//                        .foregroundColor(.red)
+//                        .font(.system(size: 26))
+//                }
+//
+//                Text("Delete Account Permanently?")
+//                    .font(.system(size: 20, weight: .semibold))
+//                    .multilineTextAlignment(.center)
+//
+//                Text("This action cannot be undone. All your event data will be permanently removed from your account.")
+//                    .font(.system(size: 15))
+//                    .foregroundColor(.secondary)
+//                    .multilineTextAlignment(.center)
+//
+//                Button {
+//                    onDelete()
+//                } label: {
+//                    Text("Delete Account")
+//                        .font(.system(size: 17, weight: .semibold))
+//                        .foregroundColor(.white)
+//                        .frame(maxWidth: .infinity)
+//                        .padding(.vertical, 16)
+//                        .background(Color.red)
+//                        .cornerRadius(28)
+//                }
+//
+//                Button {
+//                    onCancel()
+//                } label: {
+//                    Text("Cancel")
+//                        .font(.system(size: 17, weight: .semibold))
+//                        .frame(maxWidth: .infinity)
+//                        .foregroundStyle(Color.primary)
+//                        .padding(.vertical, 16)
+//                        .background(
+//                            RoundedRectangle(cornerRadius: 28)
+//                                .stroke(Color.gray.opacity(0.3))
+//                        )
+//                }
+//            }
+//            .padding(24)
+//            .background(Color(.systemBackground))
+//            .cornerRadius(24)
+//            .padding(.horizontal, 24)
+//            .shadow(radius: 20)
+//        }
+//    }
+//}
 
 #Preview {
     AccountDetailsView()

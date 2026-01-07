@@ -4,20 +4,35 @@ import AuthenticationServices
 struct LoginView: View {
     @ObservedObject var authService = AuthenticationService.shared
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) var colorScheme
     
     @State private var showingPrivacy = false
     @AppStorage("hasAgreedToPrivacy") private var hasAgreedToPrivacy = false
     
-    // Gradient Colors from the mockup (Cream/Peachy to Soft Purple)
-    let backgroundGradient = LinearGradient(
-        colors: [
-            Color(red: 1.0, green: 0.98, blue: 0.94), // Light Cream
-            Color(red: 0.96, green: 0.93, blue: 0.98), // Soft Transition
-            Color(red: 0.95, green: 0.91, blue: 0.98)  // Pale Purple
-        ],
-        startPoint: .topLeading,
-        endPoint: .bottomTrailing
-    )
+    // Gradient Colors
+    var backgroundGradient: LinearGradient {
+        if colorScheme == .dark {
+            return LinearGradient(
+                colors: [
+                    Color(red: 0.12, green: 0.08, blue: 0.05), // Dark Chocolate/Black
+                    Color(red: 0.18, green: 0.12, blue: 0.10), // Warm Dark
+                    Color(red: 0.05, green: 0.05, blue: 0.05)  // Almost Black
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        } else {
+            return LinearGradient(
+                colors: [
+                    Color(red: 1.0, green: 0.98, blue: 0.94), // Light Cream
+                    Color(red: 0.96, green: 0.93, blue: 0.98), // Soft Transition
+                    Color(red: 0.95, green: 0.91, blue: 0.98)  // Pale Purple
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        }
+    }
 
     var body: some View {
         ZStack {
@@ -38,79 +53,66 @@ struct LoginView: View {
                 VStack(spacing: 8) {
                     Text("Every moment")
                         .font(.system(size: 36, weight: .heavy, design: .rounded))
-                        .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.15)) // Dark Navy/Black
+                        .foregroundStyle(colorScheme == .dark ? .white : Color(red: 0.1, green: 0.1, blue: 0.15))
                     
                     ZStack(alignment: .bottom) {
-                        // Subtle highlight/underline shape if needed, or just text color
                         Text("counts")
                             .font(.system(size: 36, weight: .heavy, design: .rounded))
-                            .foregroundStyle(.purple) // Golden Yellow
-                        
-                        // Yellow underline shape
-//                        Capsule()
-//                            .fill(Color(red: 1.0, green: 0.85, blue: 0.4).opacity(0.3))
-//                            .frame(height: 12)
-//                            .offset(y: 4)
-//                            .zIndex(-1)
+                            .foregroundStyle(Color.purple) // Golden Yellow (Always vibrant)
                     }
                 }
                 .padding(.bottom, 24)
                 
                 // Subtitle
                 Text("Track your life's most anticipated\nevents in a vibrant new way.")
-                    .font(.custom("Inter", size: 17)) // Fallback to system if Inter not avail
+                    .font(.custom("Inter", size: 17))
                     .lineSpacing(4)
                     .multilineTextAlignment(.center)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(colorScheme == .dark ? .gray : .secondary)
                     .padding(.horizontal, 40)
                 
                 Spacer()
                 
                 // Action Buttons
                 VStack(spacing: 16) {
-                    SignInWithAppleButton(.signIn) { request in
-                        request.requestedScopes = []
-                    } onCompletion: { result in
-                        authService.handleSignIn(result: result)
-                        if authService.isAuthenticated {
-                            if !hasAgreedToPrivacy {
-                                showingPrivacy = true
-                            } else {
-                                dismiss()
-                            }
-                        }
-                    }
-                    .signInWithAppleButtonStyle(.black)
-                    .frame(height: 54)
-                    .clipShape(Capsule())
-                    .padding(.horizontal, 40)
-                    .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
-                    
-                    // "Continue with Email" removed as per request
-                    
+                    // Custom Apple Sign In Button
                     Button {
-                        authService.signInAsGuest()
-                        if authService.isAuthenticated {
+                        authService.startSignIn()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "apple.logo")
+                                .font(.system(size: 20))
+                                .offset(y: -2) // Slight adjustment for optical alignment
+                            
+                            Text("Sign in with Apple")
+                                .font(.system(size: 19, weight: .medium))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 54)
+                        .background(Color.purple)
+                        .clipShape(Capsule())
+                        .padding(.horizontal, 40)
+                        .shadow(color: .purple.opacity(0.3), radius: 10, x: 0, y: 5)
+                    }
+                    .onChange(of: authService.isAuthenticated) { isAuthenticated in
+                        if isAuthenticated {
                             if !hasAgreedToPrivacy {
                                 showingPrivacy = true
                             } else {
                                 dismiss()
                             }
                         }
-                    } label: {
-                        Text("Continue as Guest (Dev)")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(.secondary)
                     }
-                    .padding(.top, 8)
-                    // Terms Footer
-                    Text("By continuing, you agree to our\n[Terms of Service](https://example.com/terms) and [Privacy Policy](https://example.com/privacy).")
-                        .font(.system(size: 13))
-                        .foregroundStyle(.tertiary)
-                        .tint(Color(red: 0.1, green: 0.1, blue: 0.15)) // Match dark theme color
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                        .padding(.top, 20)
+                                       
+//                    // Terms Footer
+//                    Text("By continuing, you agree to our\n[Terms of Service](https://example.com/terms) and [Privacy Policy](https://example.com/privacy).")
+//                        .font(.system(size: 13))
+//                        .foregroundStyle(.tertiary)
+//                        .tint(colorScheme == .dark ? .white : Color(red: 0.1, green: 0.1, blue: 0.15))
+//                        .multilineTextAlignment(.center)
+//                        .padding(.horizontal, 20)
+//                        .padding(.top, 20)
                 }
                 .padding(.bottom, 20)
             }
@@ -126,6 +128,8 @@ struct LoginView: View {
 
 // MARK: - Illustration View
 struct LoginIllustrationView: View {
+    @Environment(\.colorScheme) var colorScheme
+
     var body: some View {
         ZStack {
             // Floating Decorative Circles
@@ -145,10 +149,11 @@ struct LoginIllustrationView: View {
                 .offset(x: 100, y: 10)
             
             // White Card Background (The "App Icon" feel)
+            // Adaptive background for Dark Mode
             RoundedRectangle(cornerRadius: 40, style: .continuous)
-                .fill(.white)
+                .fill(colorScheme == .dark ? Color(white: 0.15) : .white)
                 .frame(width: 180, height: 180)
-                .shadow(color: Color.purple.opacity(0.1), radius: 30, x: 0, y: 10)
+                .shadow(color: colorScheme == .dark ? .black.opacity(0.3) : Color.purple.opacity(0.1), radius: 30, x: 0, y: 10)
                 .rotationEffect(.degrees(-5))
             
             // "Party" Badge (Pink Circle)
@@ -187,7 +192,7 @@ struct LoginIllustrationView: View {
             .clipShape(Capsule())
             .overlay(
                 Capsule()
-                    .stroke(.white, lineWidth: 4)
+                    .stroke(colorScheme == .dark ? Color(white: 0.15) : .white, lineWidth: 4)
             )
             .offset(x: -50, y: 50)
             .shadow(color: .blue.opacity(0.2), radius: 8, x: 0, y: 4)
