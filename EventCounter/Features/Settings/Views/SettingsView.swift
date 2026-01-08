@@ -5,11 +5,13 @@ import UserNotifications
 struct SettingsView: View {
     @ObservedObject var authService = AuthenticationService.shared
     @ObservedObject var notificationService = NotificationService.shared
+    @ObservedObject var cloudService = CloudKitService.shared
     @EnvironmentObject var themeManager: ThemeManager
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
     @AppStorage("iCloudSyncEnabled") private var iCloudSyncEnabled = true
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) var context
     @Environment(\.colorScheme) var colorScheme
     @State private var showPermissionAlert = false
     @State private var showingLogin = false
@@ -78,11 +80,28 @@ struct SettingsView: View {
                                         icon: "arrow.triangle.2.circlepath",
                                         iconColor: .purple,
                                         title: "iCloud Sync",
-                                        subtitle: "Last synced: Just now"
+                                        subtitle: cloudService.isSyncing ? "Syncing..." : (cloudService.lastSyncDate?.formatted() ?? "Not synced yet")
                                     ) {
-                                        Toggle("", isOn: $iCloudSyncEnabled)
+                                        HStack {
+                                            if cloudService.isSyncing {
+                                                ProgressView()
+                                                    .padding(.trailing, 8)
+                                            }
+                                            Toggle("", isOn: Binding(
+                                                get: { iCloudSyncEnabled },
+                                                set: { newValue in
+                                                    iCloudSyncEnabled = newValue
+                                                    if newValue {
+                                                        // Trigger full sync
+                                                        Task {
+                                                            await cloudService.performFullSync(context: context)
+                                                        }
+                                                    }
+                                                }
+                                            ))
                                             .labelsHidden()
                                             .tint(.purple)
+                                        }
                                     }
                                     
                                     // Theme Picker
@@ -218,7 +237,7 @@ struct SettingsView: View {
                 DeleteAccountModal(
                     onDelete: {
                         showDeleteAlert = false
-                        authService.deleteAccount()
+                        authService.deleteAccount(context: context)
                     },
                     onCancel: {
                         showDeleteAlert = false
@@ -250,7 +269,7 @@ struct SettingsView: View {
         .alert("Log Out?", isPresented: $showLogoutAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Log Out", role: .destructive) {
-                authService.signOut()
+                authService.signOut(context: context)
             }
         } message: {
             Text("Are you sure you want to log out? You will need to sign in again to access your events.")

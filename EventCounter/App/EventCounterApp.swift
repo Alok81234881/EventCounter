@@ -25,7 +25,7 @@ struct EventCounterApp: App {
         let modelConfiguration: ModelConfiguration
         if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.redonelabs.EventCounter") {
              let storeURL = appGroupURL.appendingPathComponent("EventCout.sqlite")
-             modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
+             modelConfiguration = ModelConfiguration(schema: schema, url: storeURL, cloudKitDatabase: .none)
         } else {
             print("WARNING: App Group not found. Using default storage (not shared with widget).")
             modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
@@ -59,6 +59,19 @@ struct EventCounterApp: App {
                 // Trigger cleanup when app appears
                 Task { @MainActor in
                     await LiveActivityService.shared.triggerCleanup()
+                    
+                    // Fetch Cloud Data on App Launch if logged in
+                    if authService.isAuthenticated {
+                         await CloudKitService.shared.performFullSync(context: sharedModelContainer.mainContext)
+                    }
+                }
+            }
+            .onChange(of: authService.isAuthenticated) { isAuthenticated in
+                if isAuthenticated {
+                    Task {
+                        // Fetch Cloud Data on Login
+                        await CloudKitService.shared.performFullSync(context: sharedModelContainer.mainContext)
+                    }
                 }
             }
         }

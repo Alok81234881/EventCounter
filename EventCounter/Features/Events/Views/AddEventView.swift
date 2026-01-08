@@ -581,6 +581,9 @@ struct AddEventView: View {
         
         let hex = selectedColor.toHex() ?? "#F5A623"
         
+        // Define finalEvent to capture the object for syncing
+        let finalEvent: Event
+        
         if let event = eventToEdit {
             event.title = title
             event.date = date
@@ -591,7 +594,7 @@ struct AddEventView: View {
             event.notifyBefore = notifyBefore
             event.imageData = selectedImageData
             
-            NotificationService.shared.scheduleNotification(for: event)
+            finalEvent = event
         } else {
             let newEvent = Event(
                 title: title,
@@ -604,11 +607,16 @@ struct AddEventView: View {
                 location: location.isEmpty ? nil : location
             )
             modelContext.insert(newEvent)
-            NotificationService.shared.scheduleNotification(for: newEvent)
+            finalEvent = newEvent
         }
         
+        NotificationService.shared.scheduleNotification(for: finalEvent)
         try? modelContext.save()
         WidgetCenter.shared.reloadAllTimelines()
+        
+        // Sync to Cloud
+        CloudKitService.shared.syncEvent(finalEvent)
+        
         dismiss()
     }
     

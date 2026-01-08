@@ -40,7 +40,7 @@ struct EventQuery: EntityQuery {
     
     private func fetchEvents() async throws -> [Event] {
         let schema = Schema([Event.self])
-        let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.alok.singh.EventCounter")!
+        let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.redonelabs.EventCounter")!
         let storeURL = appGroupURL.appendingPathComponent("EventCout.sqlite")
         let modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
         

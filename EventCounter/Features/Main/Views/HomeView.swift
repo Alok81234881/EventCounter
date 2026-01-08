@@ -6,6 +6,7 @@ import SwiftData
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Event.createdAt, order: .reverse) private var events: [Event]
+    @ObservedObject var cloudService = CloudKitService.shared
     
     @State private var selectedCategory: EventCategory? // nil = All
     @State private var searchText = ""
@@ -82,6 +83,18 @@ struct HomeView: View {
                                         .background(Color.adaptiveSecondaryBackground)
                                         .clipShape(Circle())
                                         .shadow(color: .black.opacity(0.05), radius: 5)
+                                }
+                                
+                                Spacer()
+                                
+                                if cloudService.isSyncing {
+                                    HStack(spacing: 4) {
+                                        ProgressView()
+                                            .scaleEffect(0.7)
+                                        Text("Syncing...")
+                                            .font(.caption)
+                                            .foregroundStyle(.gray)
+                                    }
                                 }
                                 
                                 Spacer()

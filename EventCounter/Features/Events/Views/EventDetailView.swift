@@ -304,7 +304,8 @@ struct EventDetailView: View {
                                                     LiveActivityService.shared.endLiveActivity(for: event.id)
                                                 }
                                                 try? modelContext.save()
-                                                WidgetCenter.shared.reloadAllTimelines()
+                                                if event.isPinned { WidgetCenter.shared.reloadAllTimelines() }
+                                                CloudKitService.shared.syncEvent(event)
                                             }
                                         ))
                                         .tint(Color(hex: "#800080"))
@@ -451,6 +452,10 @@ struct EventDetailView: View {
         LiveActivityService.shared.endLiveActivity(for: event.id)
         modelContext.delete(event)
         try? modelContext.save() // Force write to disk before widget reloads
+        
+        // Cloud Delete
+        CloudKitService.shared.deleteEvent(event)
+        
         WidgetCenter.shared.reloadAllTimelines()
         dismiss()
     }
@@ -460,7 +465,11 @@ struct EventDetailView: View {
         try? modelContext.save()
         
         // Reschedule notification
+        // Reschedule notification
         NotificationService.shared.scheduleNotification(for: event)
+        
+        // Cloud Sync
+        CloudKitService.shared.syncEvent(event)
     }
     
     private func reminderText(_ minutes: Int?) -> String {

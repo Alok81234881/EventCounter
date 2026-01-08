@@ -1,7 +1,10 @@
 import Foundation
 import AuthenticationServices
 import SwiftUI
+import SwiftData
 import Combine
+
+import WidgetKit
 
 class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
     static let shared = AuthenticationService()
@@ -129,14 +132,21 @@ class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControll
         return email
     }
     
-    func signOut() {
+    func signOut(context: ModelContext) {
         UserDefaults.standard.removeObject(forKey: "userId")
         UserDefaults.standard.removeObject(forKey: "userName")
         UserDefaults.standard.removeObject(forKey: "userEmail")
         UserDefaults.standard.removeObject(forKey: "hasAgreedToPrivacy")
+        UserDefaults.standard.removeObject(forKey: "iCloudSyncEnabled") // Reset Sync Func
         
-        // Clear local event data (SQLite files)
-        clearLocalData()
+        // Clear local event data SAFELY
+        try? context.delete(model: Event.self)
+        
+        // Clear Live Activities & Widgets
+        Task {
+            await LiveActivityService.shared.endAllLiveActivities()
+        }
+        WidgetCenter.shared.reloadAllTimelines()
         
         // Keep name/email in UserDefaults so they persist for next login (Apple doesn't resend them)
         // Only clear them in deleteAccount
@@ -147,38 +157,35 @@ class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControll
         self.isAuthenticated = false
     }
     
-    func deleteAccount() {
+    func deleteAccount(context: ModelContext) {
         // 1. Clear Auth Data
         UserDefaults.standard.removeObject(forKey: "userId")
         UserDefaults.standard.removeObject(forKey: "userName")
         UserDefaults.standard.removeObject(forKey: "userEmail")
         UserDefaults.standard.removeObject(forKey: "hasAgreedToPrivacy") // Reset onboarding
+        UserDefaults.standard.removeObject(forKey: "iCloudSyncEnabled")
         
         // 2. Clear App Data (UserDefaults)
         if let bundleID = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: bundleID)
         }
         
-        // 3. Clear SwiftData (File based)
-        clearLocalData()
+        // 3. Clear SwiftData SAFELY
+        try? context.delete(model: Event.self)
         
-        // 4. Reset State
+        // 4. Delete Cloud Data
+        CloudKitService.shared.deleteCloudData()
+        
+        // 5. Clear Live Activities & Widgets
+        Task {
+            await LiveActivityService.shared.endAllLiveActivities()
+        }
+        WidgetCenter.shared.reloadAllTimelines()
+        
+        // 6. Reset State
         self.userId = nil
         self.userName = nil
         self.userEmail = nil
         self.isAuthenticated = false
-    }
-    
-    // MARK: - Helper
-    private func clearLocalData() {
-        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.redonelabs.EventCounter") {
-            let storeURL = appGroupURL.appendingPathComponent("EventCout.sqlite")
-            let shmURL = appGroupURL.appendingPathComponent("EventCout.sqlite-shm")
-            let walURL = appGroupURL.appendingPathComponent("EventCout.sqlite-wal")
-            
-            try? FileManager.default.removeItem(at: storeURL)
-            try? FileManager.default.removeItem(at: shmURL)
-            try? FileManager.default.removeItem(at: walURL)
-        }
     }
 }
