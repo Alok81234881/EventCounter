@@ -80,7 +80,7 @@ struct SettingsView: View {
                                         icon: "arrow.triangle.2.circlepath",
                                         iconColor: .purple,
                                         title: "iCloud Sync",
-                                        subtitle: cloudService.isSyncing ? "Syncing..." : (cloudService.lastSyncDate?.formatted() ?? "Not synced yet")
+                                        subtitle: cloudService.isSyncing ? "Syncing..." : formatSyncDate(cloudService.lastSyncDate)
                                     ) {
                                         HStack {
                                             if cloudService.isSyncing {
@@ -303,6 +303,18 @@ struct SettingsView: View {
                     break
                 }
             }
+        }
+    }
+    private func formatSyncDate(_ date: Date?) -> String {
+        guard let date = date else { return "Not synced yet" }
+        
+        let calendar = Calendar.current
+        if calendar.isDateInToday(date) {
+            return "Today, \(date.formatted(date: .omitted, time: .shortened))"
+        } else if calendar.isDateInYesterday(date) {
+            return "Yesterday, \(date.formatted(date: .omitted, time: .shortened))"
+        } else {
+            return date.formatted(date: .abbreviated, time: .shortened)
         }
     }
 }

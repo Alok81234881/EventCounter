@@ -3,6 +3,7 @@ import CloudKit
 import SwiftUI
 import SwiftData
 import Combine
+import WidgetKit
 
 class CloudKitService: ObservableObject {
     static let shared = CloudKitService()
@@ -63,6 +64,11 @@ class CloudKitService: ObservableObject {
         }
     }
     
+    func resetSyncState() {
+        self.lastSyncDate = nil
+        self.isSyncing = false
+    }
+    
     // MARK: - CRUD Operations
     
     /// Saves or Updates an Event in iCloud
@@ -74,32 +80,45 @@ class CloudKitService: ObservableObject {
             
             // USE CUSTOM ZONE ID
             let recordID = CKRecord.ID(recordName: event.id.uuidString, zoneID: zone.zoneID)
-            let record = CKRecord(recordType: "Event", recordID: recordID)
             
-            // Map Properties
-            record["title"] = event.title
-            record["date"] = event.date
-            record["note"] = event.note
-            record["category"] = event.category.rawValue
-            record["colorHex"] = event.colorHex
-            record["createdAt"] = event.createdAt
-            record["isPinned"] = event.isPinned
-            record["notifyBefore"] = event.notifyBefore
+            // 1. Fetch Existing Record (Upsert Pattern)
+            var recordToSave: CKRecord
             
-            record["recurrence"] = event.recurrence.rawValue
-            record["isCountUp"] = event.isCountUp
-            record["widgetDisplayStyle"] = event.widgetDisplayStyle.rawValue
-            record["location"] = event.location
+            do {
+                let existingRecord = try await database.record(for: recordID)
+                recordToSave = existingRecord
+            } catch {
+                // If not found, create new
+                recordToSave = CKRecord(recordType: "Event", recordID: recordID)
+            }
+            
+            // 2. Map Properties
+            recordToSave["title"] = event.title
+            recordToSave["date"] = event.date
+            recordToSave["note"] = event.note
+            recordToSave["category"] = event.category.rawValue
+            recordToSave["colorHex"] = event.colorHex
+            recordToSave["createdAt"] = event.createdAt
+            recordToSave["isPinned"] = event.isPinned
+            recordToSave["notifyBefore"] = event.notifyBefore
+            
+            recordToSave["recurrence"] = event.recurrence.rawValue
+            recordToSave["isCountUp"] = event.isCountUp
+            recordToSave["widgetDisplayStyle"] = event.widgetDisplayStyle.rawValue
+            recordToSave["location"] = event.location
             
             // Handle Image Asset
             if let imageData = event.imageData {
                 if let asset = createAsset(from: imageData) {
-                    record["imageData"] = asset
+                    recordToSave["imageData"] = asset
                 }
+            } else {
+                 recordToSave["imageData"] = nil
             }
             
+            // 3. Save
             do {
-                try await database.save(record)
+                try await database.save(recordToSave)
                 print("CloudKit: Successfully synced event \(event.title)")
                 lastSyncDate = Date()
             } catch {
@@ -180,6 +199,7 @@ class CloudKitService: ObservableObject {
                         
                         self.lastSyncDate = Date()
                         self.isSyncing = false
+                        WidgetCenter.shared.reloadAllTimelines()
                     }
                 }
                 continuation.resume()

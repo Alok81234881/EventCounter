@@ -98,6 +98,10 @@ class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControll
                 }
                 
                 self.isAuthenticated = true
+                
+                // Enable Cloud Sync by default on new login
+                UserDefaults.standard.set(true, forKey: "iCloudSyncEnabled")
+                
                 print("Successfully signed in as: \(userIdentifier)")
             }
         case .failure(let error):
@@ -137,10 +141,15 @@ class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControll
         UserDefaults.standard.removeObject(forKey: "userName")
         UserDefaults.standard.removeObject(forKey: "userEmail")
         UserDefaults.standard.removeObject(forKey: "hasAgreedToPrivacy")
+        UserDefaults.standard.removeObject(forKey: "hasAgreedToPrivacy")
         UserDefaults.standard.removeObject(forKey: "iCloudSyncEnabled") // Reset Sync Func
+        UserDefaults.standard.removeObject(forKey: "lastCloudSyncDate")
         
         // Clear local event data SAFELY
         try? context.delete(model: Event.self)
+        
+        // Reset Cloud Service State
+        CloudKitService.shared.resetSyncState()
         
         // Clear Live Activities & Widgets
         Task {
