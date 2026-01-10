@@ -156,7 +156,7 @@ struct SettingsView: View {
                                 
                                 VStack(spacing: 24) {
                                     // Rate App
-                                    Button(action: { /* Rate */ }) {
+                                    Button(action: { rateApp() }) {
                                         SettingsNavigationRow(icon: "star.fill", iconColor: .purple, title: "Rate the App")
                                     }
                                     
@@ -171,7 +171,7 @@ struct SettingsView: View {
                                     }
                                     
                                     // Terms
-                                    Button(action: { /* Terms */ }) {
+                                    NavigationLink(destination: TermsOfServiceView()) {
                                         SettingsNavigationRow(icon: "doc.text.fill", iconColor: .purple, title: "Terms of Service")
                                     }
                                 }
@@ -316,6 +316,23 @@ struct SettingsView: View {
         } else {
             return date.formatted(date: .abbreviated, time: .shortened)
         }
+    }
+    
+    private func rateApp() {
+        // Option 1: StoreKit Review Controller (In-App)
+        // Best for prompting after positive actions, but valid here too.
+//        if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
+//            SKStoreReviewController.requestReview(in: scene)
+//        }
+        
+        // Option 2: Direct text link to App Store "Write a Review" page
+        // USE THIS if you want to force opening the App Store app.
+        // Replace "YOUR_APP_ID" with your actual Apple ID of the app (e.g. 123456789)
+        
+        let appID = "6757456756"
+        guard let url = URL(string: "https://apps.apple.com/app/id\(appID)?action=write-review") else { return }
+        UIApplication.shared.open(url)
+        
     }
 }
 

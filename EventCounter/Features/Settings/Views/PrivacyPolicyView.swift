@@ -77,7 +77,7 @@ struct PrivacyPolicyView: View {
                             .fontWeight(.bold)
                             .foregroundStyle(Color.adaptivePrimaryText)
                         
-                        Text("All events, notes, and preferences you create in Pulse are stored:\n\n• Locally on your device using on-device database technologies (SwiftData).\n• In your private iCloud (if enabled by you) via Apple's standard iCloud backup and synchronization mechanisms. We do not have access to this data.")
+                        Text("All events, notes, and preferences you create in Pulse are stored:\n\n• Locally on your device using on-device database technologies (SwiftData).\n• In your personal iCloud (if signed in): Data is securely stored in your private iCloud container using CloudKit. This allows syncing across devices. We do not have access to this data.")
                             .font(.system(size: 15))
                             .foregroundStyle(.secondary)
                             .lineSpacing(4)
