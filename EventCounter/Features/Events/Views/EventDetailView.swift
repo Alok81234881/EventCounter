@@ -431,9 +431,10 @@ struct EventDetailView: View {
         .sheet(isPresented: $showingSharePreview) {
             if let components = try? CountdownService.calculateComponents(from: .now, to: event.date, isCountUp: event.isCountUp) {
                 SharePreviewView(event: event, components: components)
-                    .presentationDetents([.fraction(0.82)])
+                    .presentationDetents([.fraction(0.86)])
             }
         }
+
     }
     
     

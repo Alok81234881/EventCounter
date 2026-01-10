@@ -19,46 +19,11 @@ struct BatchCalendarImportView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button {
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(Color.adaptivePrimaryText)
-                        .font(.system(size: 16, weight: .bold))
-                        .padding(6)
-                }
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Header removed, using Toolbar
                 
-                Spacer()
-                
-                Text(singleSelect ? "Choose Event" : "Import Events")
-                    .font(.headline)
-                    .foregroundStyle(Color.adaptivePrimaryText)
-                
-                Spacer()
-                
-                if !singleSelect && !events.isEmpty {
-                    Button(selectedEventIDs.count == events.filter { !isDuplicate($0) }.count ? "Deselect All" : "Select All") {
-                        if selectedEventIDs.count == events.filter { !isDuplicate($0) }.count {
-                            selectedEventIDs.removeAll()
-                        } else {
-                            selectedEventIDs = Set(events.filter { !isDuplicate($0) }.map { $0.eventIdentifier })
-                        }
-                    }
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundStyle(Color(hex: "#800080") ?? .purple)
-                } else {
-                    Text("Cancel")
-                        .foregroundStyle(.clear)
-                }
-            }
-            .padding()
-            .background(Color.adaptiveSecondaryBackground)
-            
-            ZStack {
+                ZStack {
                 Color.adaptiveGroupedBackground.ignoresSafeArea()
                 
                 if isLoading {
@@ -189,6 +154,37 @@ struct BatchCalendarImportView: View {
             }
         } message: {
             Text("Please enable Calendar access in Settings to import events.")
+        }
+        .navigationTitle(singleSelect ? "Choose" : "Import")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "xmark")
+                        .foregroundStyle(Color.adaptivePrimaryText)
+                        .font(.system(size: 16, weight: .bold))
+                        .padding(6)
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                if !singleSelect && !events.isEmpty {
+                    Button(selectedEventIDs.count == events.filter { !isDuplicate($0) }.count ? "Deselect All" : "Select All") {
+                        withAnimation {
+                            if selectedEventIDs.count == events.filter { !isDuplicate($0) }.count {
+                                selectedEventIDs.removeAll()
+                            } else {
+                                selectedEventIDs = Set(events.filter { !isDuplicate($0) }.map { $0.eventIdentifier })
+                            }
+                        }
+                    }
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(Color(hex: "#800080") ?? .purple)
+                }
+            }
+        }
         }
     }
     

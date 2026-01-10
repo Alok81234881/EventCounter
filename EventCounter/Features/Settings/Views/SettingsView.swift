@@ -218,10 +218,13 @@ struct SettingsView: View {
                                         .multilineTextAlignment(.center)
                                         .padding(.horizontal)
                                     
-                                    Text("Version 1.0(1)")
-                                        .font(.caption)
-                                        .foregroundStyle(.gray.opacity(0.6))
-                                        .padding(.top, 4)
+                                    VStack(spacing: 4) {
+                                        Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0") (\(Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"))")
+                                        Text("© 2025 RedOne Labs")
+                                    }
+                                    .font(.caption)
+                                    .foregroundStyle(.gray.opacity(0.6))
+                                    .padding(.top, 4)
                                 }
                                 .padding(24)
                             }

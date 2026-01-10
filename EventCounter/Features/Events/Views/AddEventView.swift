@@ -379,8 +379,8 @@ struct AddEventView: View {
                             .foregroundStyle(Color.white)
                             .font(.system(size: 16, weight: .bold))
                             .padding(6)
-                            .background(title.isEmpty ? Color.gray.opacity(0.3) : selectedColor)
-                            .aspectRatio(contentMode: .fill)
+                            .background(title.isEmpty ? Color.clear : selectedColor)
+                            //.aspectRatio(contentMode: )
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)

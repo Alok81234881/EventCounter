@@ -123,6 +123,11 @@ struct LoginView: View {
                 dismiss() // Dismiss Login View
             }
         }
+        .onAppear {
+            if authService.isAuthenticated && !hasAgreedToPrivacy {
+                showingPrivacy = true
+            }
+        }
     }
 }
 
