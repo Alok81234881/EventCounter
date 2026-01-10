@@ -328,8 +328,12 @@ struct AccessoryCircularView: View {
                     Text("\(components.minutes)m")
                         .font(.system(size: 16, weight: .black, design: .rounded))
                 } else {
-                    Text("\(components.seconds)s")
-                        .font(.system(size: 16, weight: .black, design: .rounded))
+                    // Less than 1 minute: Use timer style for live second updates
+                    Text(event.date, style: .timer)
+                         .font(.system(size: 13, weight: .bold, design: .rounded))
+                         .multilineTextAlignment(.center)
+                         .lineLimit(1)
+                         .minimumScaleFactor(0.8)
                 }
             }
             .widgetAccentable()

@@ -168,6 +168,7 @@ class CloudKitService: ObservableObject {
         // Use a continuation to bridge the callback-based operation to async/await
         await withCheckedContinuation { continuation in
             var fetchedDTOs: [CloudEventDTO] = []
+            var deletedIDs: [String] = []
             
             operation.recordWasChangedBlock = { recordID, result in
                 switch result {
@@ -180,19 +181,36 @@ class CloudKitService: ObservableObject {
                 }
             }
             
+            operation.recordWithIDWasDeletedBlock = { recordID, _ in
+                deletedIDs.append(recordID.recordName)
+            }
+            
             operation.fetchRecordZoneChangesCompletionBlock = { error in
                 if let error = error {
                     print("CloudKit: Zone fetch failed: \(error)")
                 } else {
                     print("CloudKit: Zone fetch success. Processing \(fetchedDTOs.count) records.")
                     Task { @MainActor in
+                        // Process Updates/Inserts
                         for dto in fetchedDTOs {
                             self.importDTO(dto, context: context)
                         }
                         
+                        // Process Deletions
+                        for idString in deletedIDs {
+                            if let uuid = UUID(uuidString: idString) {
+                                let descriptor = FetchDescriptor<Event>(predicate: #Predicate { $0.id == uuid })
+                                if let eventToDelete = try? context.fetch(descriptor).first {
+                                    NotificationService.shared.cancelNotification(for: eventToDelete)
+                                    context.delete(eventToDelete)
+                                    print("CloudKit: Synced deletion for \(eventToDelete.title)")
+                                }
+                            }
+                        }
+                        
                         do {
                             try context.save()
-                            print("CloudKit: Synced \(fetchedDTOs.count) events from cloud.")
+                            print("CloudKit: Synced \(fetchedDTOs.count) updates and \(deletedIDs.count) deletions.")
                         } catch {
                             print("CloudKit: Failed to save restored events: \(error.localizedDescription)")
                         }
@@ -225,6 +243,12 @@ class CloudKitService: ObservableObject {
              let event = Event(id: idUUID, title: dto.title, date: dto.date)
              updateEvent(event, from: dto)
              context.insert(event)
+             NotificationService.shared.scheduleNotification(for: event)
+        }
+        
+        // Ensure notification is updated for existing event too
+        if let existing = try? context.fetch(descriptor).first {
+             NotificationService.shared.scheduleNotification(for: existing)
         }
     }
     

@@ -40,8 +40,11 @@ struct Provider: AppIntentTimelineProvider {
                     entries.append(SimpleEntry(date: date, event: event, futureEventCount: count))
                 }
             } else {
-                // Mode 3: < 1 Day. Use style: .timer in the view for second-by-second updates.
-                entries.append(SimpleEntry(date: entryDate, event: event, futureEventCount: count))
+                // Mode 3: < 1 Day. Refresh every minute to support static minute/hour text updates
+                for i in 0..<60 {
+                    let date = entryDate.addingTimeInterval(Double(i) * 60)
+                    entries.append(SimpleEntry(date: date, event: event, futureEventCount: count))
+                }
             }
             
             [thirtyDays, oneDay, 0].forEach { threshold in

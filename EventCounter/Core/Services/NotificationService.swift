@@ -35,7 +35,7 @@ class NotificationService: NSObject, ObservableObject {
         }
     }
     
-    func scheduleNotification(for event: Event) {
+    func scheduleNotification(for event: Event, isReschedule: Bool = false) {
         // Double check permission before scheduling
         UNUserNotificationCenter.current().getNotificationSettings { settings in
             guard settings.authorizationStatus == .authorized else {
@@ -48,14 +48,14 @@ class NotificationService: NSObject, ObservableObject {
             
             if let notifyMinutes = event.notifyBefore {
                 print("[NotificationService] Scheduling notification for '\(event.title)' \(notifyMinutes) minutes before event at \(event.date)")
-                self.scheduleSpecificNotification(for: event, minutesBefore: notifyMinutes)
+                self.scheduleSpecificNotification(for: event, minutesBefore: notifyMinutes, isReschedule: isReschedule)
             } else {
                 print("[NotificationService] No notification scheduled for '\(event.title)' - notifyBefore is nil")
             }
         }
     }
     
-    private func scheduleSpecificNotification(for event: Event, minutesBefore: Int) {
+    private func scheduleSpecificNotification(for event: Event, minutesBefore: Int, isReschedule: Bool) {
         guard let triggerDate = Calendar.current.date(byAdding: .minute, value: -minutesBefore, to: event.date) else {
             print("[NotificationService] ERROR: Could not calculate trigger date for '\(event.title)'")
             return
@@ -65,48 +65,42 @@ class NotificationService: NSObject, ObservableObject {
         
         let trigger: UNNotificationTrigger
         
+        // This variable is used for the message body calculation
+        var effectiveMinutes = minutesBefore
+        
         if timeInterval > 0 {
             // Standard future notification
             let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: triggerDate)
             trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
         } else {
             // Trigger date is in the past.
-            guard event.date > Date() else {
-                print("[NotificationService] WARNING: Trigger date (\(triggerDate)) AND Event date are in the past. Skipping.")
-                return
-            }
-            
-            // Event is future, but we missed the specific second (e.g. tight creation time).
-            // Fire immediately (1 second delay) to ensure user sees it.
-            print("[NotificationService] Trigger in past but event future. Scheduling immediate catch-up.")
-            trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
+            print("[NotificationService] Trigger date (\(triggerDate)) is in the past. Skipping notification logic as requested.")
+            return
         }
         
         let content = UNMutableNotificationContent()
         content.title = "Event Reminder: \(event.title)"
         
-        // Dynamic body based on minutes
+        // Dynamic body based on effectiveMinutes (actual remaining time)
         let timeString: String
-        if minutesBefore == 0 {
+        if effectiveMinutes == 0 {
             timeString = "now"
-        } else if minutesBefore < 60 {
-            timeString = "\(minutesBefore) minutes"
-        } else if minutesBefore < 1440 {
-            let hours = minutesBefore / 60
+        } else if effectiveMinutes < 60 {
+            timeString = "\(effectiveMinutes) minutes"
+        } else if effectiveMinutes < 1440 {
+            let hours = effectiveMinutes / 60
             timeString = "\(hours) hour\(hours == 1 ? "" : "s")"
         } else {
-            let days = minutesBefore / 1440
+            let days = effectiveMinutes / 1440
             timeString = "\(days) day\(days == 1 ? "" : "s")"
         }
         
-        if minutesBefore == 0 {
+        if effectiveMinutes == 0 {
             content.body = "Your \(event.title) event is happening now! Tap to view details."
         } else {
             content.body = "Your \(event.title) event is starting in \(timeString)! Tap to view details."
         }
         content.sound = .default
-        
-
         
         content.userInfo = ["eventID": event.id.uuidString]
         
@@ -160,7 +154,7 @@ class NotificationService: NSObject, ObservableObject {
         print("[NotificationService] Rescheduling notifications for \(events.count) events")
         for event in events {
             if event.date > Date() && event.notifyBefore != nil {
-                scheduleNotification(for: event)
+                scheduleNotification(for: event, isReschedule: true)
             }
         }
     }

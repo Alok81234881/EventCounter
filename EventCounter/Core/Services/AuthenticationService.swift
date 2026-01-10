@@ -3,7 +3,7 @@ import AuthenticationServices
 import SwiftUI
 import SwiftData
 import Combine
-
+import UserNotifications
 import WidgetKit
 
 class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
@@ -157,6 +157,9 @@ class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControll
         }
         WidgetCenter.shared.reloadAllTimelines()
         
+        // Clear all local notifications
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        
         // Keep name/email in UserDefaults so they persist for next login (Apple doesn't resend them)
         // Only clear them in deleteAccount
         
@@ -190,6 +193,9 @@ class AuthenticationService: NSObject, ObservableObject, ASAuthorizationControll
             await LiveActivityService.shared.endAllLiveActivities()
         }
         WidgetCenter.shared.reloadAllTimelines()
+        
+        // Clear all local notifications
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         
         // 6. Reset State
         self.userId = nil
