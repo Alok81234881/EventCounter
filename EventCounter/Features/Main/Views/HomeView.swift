@@ -2,6 +2,7 @@ import SwiftUI
 import WidgetKit
 import EventKit
 import SwiftData
+import Combine
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -13,6 +14,8 @@ struct HomeView: View {
     @State private var showingAddEvent = false
     @State private var showingCalendarImport = false
     @State private var homePath = NavigationPath()
+    @State private var currentDate = Date.now
+    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
     // Sorting States
     @State private var upcomingSort: SortOption = .nearest
@@ -26,7 +29,7 @@ struct HomeView: View {
     
     // Filtered Events
     var upcomingEvents: [Event] {
-        let upcoming = events.filter { $0.date > .now }
+        let upcoming = events.filter { $0.date > currentDate }
         let categoryFiltered = selectedCategory == nil ? upcoming : upcoming.filter { $0.category == selectedCategory }
         
         let searched: [Event]
@@ -41,7 +44,7 @@ struct HomeView: View {
     
     var pastEvents: [Event] {
         // Filter past events
-        let passed = events.filter { $0.date <= .now }
+        let passed = events.filter { $0.date <= currentDate }
         let categoryFiltered = selectedCategory == nil ? passed : passed.filter { $0.category == selectedCategory }
         
         let searched: [Event]
@@ -73,52 +76,6 @@ struct HomeView: View {
                     VStack(spacing: 24) {
                         // 1. Header Area
                         VStack(spacing: 20) {
-                            // Row 1: Top Bar (Notification & Settings)
-                            HStack {
-                                Button(action: { showingCalendarImport = true }) {
-                                    Image(systemName: "calendar.badge.plus")
-                                        .font(.system(size: 20))
-                                        .foregroundStyle(Color.adaptivePrimaryText)
-                                        .frame(width: 44, height: 44)
-                                        .background(Color.adaptiveSecondaryBackground)
-                                        .clipShape(Circle())
-                                        .shadow(color: .black.opacity(0.05), radius: 5)
-                                }
-                                
-                                Spacer()
-                                
-                                if cloudService.isSyncing {
-                                    HStack(spacing: 4) {
-                                        ProgressView()
-                                            .scaleEffect(0.7)
-                                        Text("Syncing...")
-                                            .font(.caption)
-                                            .foregroundStyle(.gray)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                NavigationLink(destination: SettingsView()) {
-                                    Image(systemName: "gearshape.fill")
-                                        .font(.system(size: 20))
-                                        .foregroundStyle(Color.adaptivePrimaryText)
-                                        .frame(width: 44, height: 44)
-                                        .background(Color.adaptiveSecondaryBackground)
-                                        .clipShape(Circle())
-                                        .shadow(color: .black.opacity(0.05), radius: 5)
-                                }
-                            }
-                            .padding(.horizontal)
-                            
-                            // Row 2: Title
-                            HStack {
-                                Text("My Events")
-                                    .font(.system(size: 34, weight: .bold))
-                                    .foregroundStyle(Color.adaptivePrimaryText)
-                                Spacer()
-                            }
-                            .padding(.horizontal)
                             
                             // Row 3: Search Bar
                             HStack {
@@ -228,6 +185,34 @@ struct HomeView: View {
             .navigationDestination(for: UUID.self) { eventID in
                 EventResolverView(eventID: eventID)
             }
+            .navigationTitle("My Events")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(action: { showingCalendarImport = true }) {
+                        Image(systemName: "calendar.badge.plus")
+                            .foregroundStyle(Color.adaptivePrimaryText)
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(destination: SettingsView()) {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundStyle(Color.adaptivePrimaryText)
+                    }
+                }
+                
+                if cloudService.isSyncing {
+                    ToolbarItem(placement: .principal) { // Or possibly .status if supported
+                        HStack(spacing: 4) {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                            Text("Syncing...")
+                                .font(.caption)
+                                .foregroundStyle(.gray)
+                        }
+                    }
+                }
+            }
         }
         .onOpenURL { url in
             handleDeepLink(url)
@@ -235,6 +220,9 @@ struct HomeView: View {
         .onAppear {
             // Debug: List pending notifications
             NotificationService.shared.listPendingNotifications()
+        }
+        .onReceive(timer) { input in
+            currentDate = input
         }
     }
     

@@ -13,8 +13,21 @@ struct ImageCropperView: View {
     @State private var lastOffset: CGSize = .zero
     @State private var previewSize: CGSize = .zero // Capture the screen/container size
     
-    private let cropWidth: CGFloat = 350
-    private let cropHeight: CGFloat = 200
+    private let screenWidth = UIScreen.main.bounds.width
+    
+    // Target Aspect Ratio = ScreenWidth / EventDetailHeight(300)
+    // We want the crop box to have this same ratio.
+    // Crop Box Width = ScreenWidth - Padding
+    // Crop Box Height = CropBoxWidth * (300 / ScreenWidth)
+    
+    private var cropWidth: CGFloat {
+        screenWidth - 48
+    }
+    
+    private var cropHeight: CGFloat {
+        cropWidth * (300 / screenWidth)
+    }
+    
     private let cornerLength: CGFloat = 20
     private let cornerThickness: CGFloat = 4
     private let cropColor = Color(hex: "#800080")
@@ -204,7 +217,7 @@ struct ImageCropperView: View {
                     .resizable()
                     .scaledToFill()
                     .frame(width: previewSize.width, height: previewSize.height) // Match the screen geometry
-                    .clipped() // Clip to screen bounds first if desired, but not strictly necessary for the center crop
+                    //.clipped() // REMOVED: Clipping here loses off-screen data needed for zoom/pan
                     .scaleEffect(scale)
                     .offset(offset)
             }

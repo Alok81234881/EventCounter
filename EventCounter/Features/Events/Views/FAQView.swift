@@ -27,20 +27,36 @@ struct FAQView: View {
             answer: "Tap the + button on the home screen and fill in the event details such as title, date, and category."
         ),
         FAQItem(
-            question: "Can I share my countdown?",
-            answer: "Yes. Open the event and tap the Share button to share your countdown with others."
+            question: "How do I enable Live Activities?",
+            answer: "Go to the event details screen, tap 'Settings', and toggle 'Live Activity'. This will pin the event countdown to your Lock Screen and Dynamic Island."
         ),
         FAQItem(
-            question: "How do I change the theme?",
-            answer: "You can change the theme from the Settings screen under Appearance."
+            question: "Can I have multiple widgets?",
+            answer: "Yes, you can add as many widgets as you like to your Home Screen. Long press a widget and tap 'Edit Widget' to choose which event it displays."
+        ),
+        FAQItem(
+            question: "How do I add a Lock Screen widget?",
+            answer: "Long press on your Lock Screen, tap Customize, select your Lock Screen, tap the widget area, and select Pulse from the list."
+        ),
+        FAQItem(
+            question: "Can I share my countdown?",
+            answer: "Yes. Open the event and tap the Share button to share your countdown with others."
         ),
         FAQItem(
             question: "Is the app free to use?",
             answer: "Yes, the app is free to use with optional premium features available."
         ),
         FAQItem(
-            question: "How do I delete an event?",
-            answer: "Open the event, scroll down, and tap Delete Event. Confirm the action to delete it permanently."
+            question: "Why do I need to sign in?",
+            answer: "We use 'Sign in with Apple' to secure your data and sync your events across all your devices via iCloud. No personal data is stored on our servers."
+        ),
+        FAQItem(
+            question: "Does my data sync across devices?",
+            answer: "Yes! As long as you are signed in with the same Apple ID on all devices, your events will automatically sync via iCloud."
+        ),
+        FAQItem(
+            question: "How do I delete my account?",
+            answer: "Go to Settings > Delete Account. This will permanently remove all your data from iCloud and your local device. This action cannot be undone."
         )
     ]
 

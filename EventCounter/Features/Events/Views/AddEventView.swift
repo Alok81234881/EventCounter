@@ -484,10 +484,16 @@ struct AddEventView: View {
         } label: {
             ZStack {
                 if let selectedImageData, let uiImage = UIImage(data: selectedImageData) {
+                    let screenWidth = UIScreen.main.bounds.width
+                    // Padding is 20 + 20 = 40
+                    let width = screenWidth - 40
+                    // Height ratio: same as detail view (300/Screen)
+                    let height = width * (300 / screenWidth)
+                    
                     Image(uiImage: uiImage)
                         .resizable()
                         .scaledToFill()
-                        .frame(height: 220)
+                        .frame(height: height)
                         .clipShape(RoundedRectangle(cornerRadius: 24))
                         .overlay(
                             RoundedRectangle(cornerRadius: 24)
