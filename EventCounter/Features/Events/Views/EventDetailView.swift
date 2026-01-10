@@ -68,55 +68,56 @@ struct EventDetailView: View {
                                 let timeUntil = event.date.timeIntervalSince(context.date)
                                 let thirtyDays: TimeInterval = 30 * 24 * 3600
                                 let oneDay: TimeInterval = 24 * 3600
+                                let themeColor = Color(hex: event.colorHex) ?? .purple
                                 
                                 HStack(spacing: 0) {
                                     if event.isCountUp {
                                         // Count-up: always show Mo, d, h (or whatever makes sense)
                                         // But following the "3 components" rule:
                                         if components.months > 0 {
-                                            CountdownUnitView(value: components.months, unit: "mo", showPadding: false)
-                                            SeparatorView()
-                                            CountdownUnitView(value: components.days, unit: "d")
-                                            SeparatorView()
-                                            CountdownUnitView(value: components.hours, unit: "h")
+                                            CountdownUnitView(value: components.months, unit: "mo", color: themeColor, showPadding: false)
+                                            SeparatorView(color: themeColor)
+                                            CountdownUnitView(value: components.days, unit: "d", color: themeColor)
+                                            SeparatorView(color: themeColor)
+                                            CountdownUnitView(value: components.hours, unit: "h", color: themeColor)
                                         } else if components.days > 0 {
-                                            CountdownUnitView(value: components.days, unit: "d", showPadding: false)
-                                            SeparatorView()
-                                            CountdownUnitView(value: components.hours, unit: "h")
-                                            SeparatorView()
-                                            CountdownUnitView(value: components.minutes, unit: "m")
+                                            CountdownUnitView(value: components.days, unit: "d", color: themeColor, showPadding: false)
+                                            SeparatorView(color: themeColor)
+                                            CountdownUnitView(value: components.hours, unit: "h", color: themeColor)
+                                            SeparatorView(color: themeColor)
+                                            CountdownUnitView(value: components.minutes, unit: "m", color: themeColor)
                                         } else {
-                                            CountdownUnitView(value: components.hours, unit: "h", showPadding: false)
-                                            SeparatorView()
-                                            CountdownUnitView(value: components.minutes, unit: "m")
-                                            SeparatorView()
-                                            CountdownUnitView(value: components.seconds, unit: "s")
+                                            CountdownUnitView(value: components.hours, unit: "h", color: themeColor, showPadding: false)
+                                            SeparatorView(color: themeColor)
+                                            CountdownUnitView(value: components.minutes, unit: "m", color: themeColor)
+                                            SeparatorView(color: themeColor)
+                                            CountdownUnitView(value: components.seconds, unit: "s", color: themeColor)
                                         }
                                     } else if timeUntil > thirtyDays {
                                         // Mode 1: Months, Days, Hours
-                                        CountdownUnitView(value: components.months, unit: "mo", showPadding: false)
-                                        SeparatorView()
-                                        CountdownUnitView(value: components.days, unit: "d")
-                                        SeparatorView()
-                                        CountdownUnitView(value: components.hours, unit: "h")
+                                        CountdownUnitView(value: components.months, unit: "mo", color: themeColor, showPadding: false)
+                                        SeparatorView(color: themeColor)
+                                        CountdownUnitView(value: components.days, unit: "d", color: themeColor)
+                                        SeparatorView(color: themeColor)
+                                        CountdownUnitView(value: components.hours, unit: "h", color: themeColor)
                                     } else if timeUntil > oneDay {
                                         // Mode 2: Days, Hours, Minutes
-                                        CountdownUnitView(value: components.days, unit: "d", showPadding: false)
-                                        SeparatorView()
-                                        CountdownUnitView(value: components.hours, unit: "h")
-                                        SeparatorView()
-                                        CountdownUnitView(value: components.minutes, unit: "m")
+                                        CountdownUnitView(value: components.days, unit: "d", color: themeColor, showPadding: false)
+                                        SeparatorView(color: themeColor)
+                                        CountdownUnitView(value: components.hours, unit: "h", color: themeColor)
+                                        SeparatorView(color: themeColor)
+                                        CountdownUnitView(value: components.minutes, unit: "m", color: themeColor)
                                     } else if timeUntil > 0 {
                                         // Mode 3: Hours, Minutes, Seconds
-                                        CountdownUnitView(value: components.hours, unit: "h", showPadding: false)
-                                        SeparatorView()
-                                        CountdownUnitView(value: components.minutes, unit: "m")
-                                        SeparatorView()
-                                        CountdownUnitView(value: components.seconds, unit: "s")
+                                        CountdownUnitView(value: components.hours, unit: "h", color: themeColor, showPadding: false)
+                                        SeparatorView(color: themeColor)
+                                        CountdownUnitView(value: components.minutes, unit: "m", color: themeColor)
+                                        SeparatorView(color: themeColor)
+                                        CountdownUnitView(value: components.seconds, unit: "s", color: themeColor)
                                     } else {
                                         Text("Event Completed")
                                             .font(.system(size: 28, weight: .bold, design: .rounded))
-                                            .foregroundStyle(Color(hex: "#800080") ?? Color.purple)
+                                            .foregroundStyle(themeColor)
                                     }
                                 }
                                 
@@ -558,6 +559,7 @@ struct DetailRow: View {
 struct CountdownUnitView: View {
     let value: Int
     let unit: String
+    var color: Color = Color(hex: "#800080") ?? .purple
     var showPadding: Bool = true
     
     var body: some View {
@@ -567,14 +569,16 @@ struct CountdownUnitView: View {
             Text(unit)
                 .font(.system(size: 20, weight: .semibold))
         }
-        .foregroundStyle(Color(hex: "#800080") ?? Color.purple)
+        .foregroundStyle(color)
     }
 }
 
 struct SeparatorView: View {
+    var color: Color = Color(hex: "#800080") ?? .purple
+    
     var body: some View {
         Text(" : ")
             .font(.system(size: 36, weight: .bold))
-            .foregroundStyle(Color(hex: "#800080") ?? Color.purple)
+            .foregroundStyle(color)
     }
 }

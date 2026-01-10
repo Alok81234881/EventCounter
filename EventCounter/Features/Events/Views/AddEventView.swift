@@ -48,7 +48,7 @@ struct AddEventView: View {
         Color(hex: "#800080") ?? .purple, // Purple
         Color(hex: "#2F80ED") ?? .blue,   // Blue
         Color(hex: "#27AE60") ?? .green,  // Green
-        Color(hex: "#2C3E50") ?? .black   // Dark
+        Color(hex: "#FFB7A5") ?? Color(red: 1.0, green: 0.72, blue: 0.65)  // Dark
     ]
     
     // MARK: - Body
@@ -236,7 +236,7 @@ struct AddEventView: View {
                             labelView("EVENT TYPE")
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 12) {
-                                    ForEach(EventCategory.allCases, id: \.self) { cat in
+                                    ForEach(sortedCategories, id: \.self) { cat in
                                         Button {
                                             withAnimation { category = cat }
                                         } label: {
@@ -559,6 +559,12 @@ struct AddEventView: View {
     }
     
     // MARK: - Logic
+    
+    private var sortedCategories: [EventCategory] {
+        let otherCategories = EventCategory.allCases.filter { $0 != category }
+        let sorted = otherCategories.sorted { $0.displayName < $1.displayName }
+        return [category] + sorted
+    }
     
     private func loadEventData() {
         if let event = eventToEdit {
