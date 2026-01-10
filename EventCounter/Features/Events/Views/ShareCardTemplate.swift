@@ -19,12 +19,12 @@ struct ShareCardTemplate: View {
                 DarkTemplate(event: event, components: components)
             case .polaroid:
                 PolaroidTemplate(event: event, components: components)
-            case .circular:
-                CircularTemplate(event: event, components: components)
+//            case .circular:
+//                CircularTemplate(event: event, components: components)
             case .iconPill:
                 IconPillTemplate(event: event, components: components)
-            case .eventTicket:
-                EventTicketTemplate(event: event, components: components)
+//            case .eventTicket:
+//                EventTicketTemplate(event: event, components: components)
             case .cleanPhoto:
                 CleanPhotoTemplate(event: event, components: components)
             case .heroOverlay:

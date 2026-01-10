@@ -109,6 +109,19 @@ struct PrivacyPolicyView: View {
                             .lineSpacing(4)
                     }
                     
+                    // Online Privacy Policy Link
+                    VStack(alignment: .leading, spacing: 12) {
+                        Link(destination: URL(string: "https://redonelabs.in/products/pulse-ticker/privacy")!) {
+                            HStack {
+                                Text("View Online Privacy Policy")
+                                    .font(.system(size: 15, weight: .medium))
+                                Image(systemName: "arrow.up.right.square")
+                                    .font(.system(size: 14))
+                            }
+                            .foregroundStyle(Color.purple)
+                        }
+                    }
+                    
                     // Spacer for bottom button
                     if isOnboarding {
                         Color.clear.frame(height: 100)

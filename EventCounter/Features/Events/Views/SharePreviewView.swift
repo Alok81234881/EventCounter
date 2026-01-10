@@ -170,9 +170,9 @@ enum ShareCardStyle: Int {
     case minimal = 2
     case dark = 3
     case polaroid = 4
-    case circular = 5
+   // case circular = 5
     case iconPill = 6
-    case eventTicket = 7
+   // case eventTicket = 7
     case cleanPhoto = 8
     case heroOverlay = 9
     case handwritten = 10

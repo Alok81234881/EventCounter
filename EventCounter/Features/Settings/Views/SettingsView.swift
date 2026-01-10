@@ -218,7 +218,7 @@ struct SettingsView: View {
                                         .multilineTextAlignment(.center)
                                         .padding(.horizontal)
                                     
-                                    Text("Version 2.4.0 (124)")
+                                    Text("Version 1.0(1)")
                                         .font(.caption)
                                         .foregroundStyle(.gray.opacity(0.6))
                                         .padding(.top, 4)
