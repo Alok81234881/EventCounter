@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct EventCounterApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     init() {
         NotificationService.shared.requestPermissions()
         // Initialize LiveActivityService to start periodic cleanup

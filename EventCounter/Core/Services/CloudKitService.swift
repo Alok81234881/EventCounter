@@ -13,6 +13,9 @@ class CloudKitService: ObservableObject {
     private var database: CKDatabase {
         return container.privateCloudDatabase
     }
+    private var sharedDatabase: CKDatabase {
+        return container.sharedCloudDatabase
+    }
     
     private let zone = CKRecordZone(zoneName: "EventsZone")
     
@@ -142,6 +145,69 @@ class CloudKitService: ObservableObject {
             } catch {
                 print("CloudKit: Delete failed: \(error.localizedDescription)")
             }
+        }
+    }
+    
+    // MARK: - Sharing
+    
+    func createShare(for event: Event) async throws -> (CKShare, CKContainer) {
+        let recordID = CKRecord.ID(recordName: event.id.uuidString, zoneID: zone.zoneID)
+        let shareID = CKRecord.ID(recordName: UUID().uuidString, zoneID: zone.zoneID)
+        
+        // 1. Fetch Root Record First
+        let rootRecord = try await database.record(for: recordID)
+        
+        // 2. Initialize Share with Root Record (This automatically sets rootRecord.share)
+        let share = CKShare(rootRecord: rootRecord, shareID: shareID)
+        
+        share[CKShare.SystemFieldKey.title] = event.title
+        share[CKShare.SystemFieldKey.shareType] = "com.redonelabs.EventCounter.Event"
+        share.publicPermission = .readOnly
+        
+        // 3. Save both
+        let operation = CKModifyRecordsOperation(recordsToSave: [share, rootRecord], recordIDsToDelete: nil)
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            operation.modifyRecordsResultBlock = { result in
+                switch result {
+                case .success:
+                    continuation.resume(returning: (share, self.container))
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+            database.add(operation)
+        }
+    }
+    
+    func acceptShare(_ metadata: CKShare.Metadata) {
+        let acceptOperation = CKAcceptSharesOperation(shareMetadatas: [metadata])
+        acceptOperation.qualityOfService = .userInteractive
+        acceptOperation.perShareCompletionBlock = { metadata, share, error in
+            if let error = error {
+                print("CloudKit: Error accepting share: \(error.localizedDescription)")
+            } else {
+                print("CloudKit: Share accepted successfully!")
+                // Trigger a sync to fetch the shared data
+                Task { @MainActor in
+                    self.isSyncing = true
+                    // In a real app, you might want to specifically fetch the shared record here
+                    // For now, a full sync or zone fetch might be needed depending on how shared data is exposed
+                }
+            }
+        }
+        container.add(acceptOperation)
+    }
+    
+    /// Checks if we already have a share for this event (as owner)
+    func fetchShare(for event: Event) async -> CKShare? {
+        let recordID = CKRecord.ID(recordName: event.id.uuidString, zoneID: zone.zoneID)
+        do {
+            let record = try await database.record(for: recordID)
+            guard let shareReference = record.share else { return nil }
+            return try await database.record(for: shareReference.recordID) as? CKShare
+        } catch {
+            return nil
         }
     }
     
