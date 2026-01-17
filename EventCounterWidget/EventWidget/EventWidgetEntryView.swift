@@ -14,7 +14,7 @@ struct EventWidgetEntryView : View {
                 case .systemMedium:
                     MediumEventView(event: event, entryDate: entry.date)
                 case .accessoryCircular:
-                    AccessoryCircularView(event: event)
+                    AccessoryCircularView(event: event, entryDate: entry.date)
                 case .accessoryRectangular:
                     AccessoryRectangularView(event: event, entryDate: entry.date)
                 case .accessoryInline:
@@ -294,6 +294,7 @@ struct MediumEventView: View {
 
 struct AccessoryCircularView: View {
     let event: EventDTO
+    let entryDate: Date
     
     var body: some View {
         ZStack {
@@ -316,9 +317,12 @@ struct AccessoryCircularView: View {
                     .foregroundStyle(.secondary)
                     .padding(.bottom, -2)
                 
-                let components = CountdownService.calculateComponents(from: Date(), to: event.date, isCountUp: event.isCountUp)
+                let components = CountdownService.calculateComponents(from: entryDate, to: event.date, isCountUp: event.isCountUp)
                 
-                if components.days > 0 {
+                if components.months > 0 {
+                    Text("\(components.months)mo")
+                        .font(.system(size: 16, weight: .black, design: .rounded))
+                } else if components.days > 0 {
                     Text("\(components.days)d")
                         .font(.system(size: 16, weight: .black, design: .rounded))
                 } else if components.hours > 0 {
