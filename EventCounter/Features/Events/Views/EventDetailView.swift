@@ -245,7 +245,7 @@ struct EventDetailView: View {
                                                 Text("Notify Before")
                                                     .font(.system(size: 16, weight: .semibold))
                                                     .foregroundStyle(Color.adaptivePrimaryText)
-                                                Text(reminderText(event.notifyBefore))
+                                                Text(reminderText(event))
                                                     .font(.system(size: 13))
                                                     .foregroundStyle(Color.adaptiveSecondaryText)
                                             }
@@ -454,9 +454,14 @@ struct EventDetailView: View {
     
     private func updateReminder(_ minutes: Int?) {
         event.notifyBefore = minutes
+        if let mins = minutes {
+            event.notificationOffsets = [mins]
+        } else {
+            event.notificationOffsets = []
+        }
+        
         try? modelContext.save()
         
-        // Reschedule notification
         // Reschedule notification
         NotificationService.shared.scheduleNotification(for: event)
         
@@ -464,7 +469,19 @@ struct EventDetailView: View {
         CloudKitService.shared.syncEvent(event)
     }
     
-    private func reminderText(_ minutes: Int?) -> String {
+    private func reminderText(_ event: Event) -> String {
+        if !event.notificationOffsets.isEmpty {
+            let sorted = event.notificationOffsets.sorted()
+            if sorted.count == 1 {
+                return formatMinutes(sorted.first!)
+            } else {
+                return "\(sorted.count) Reminders"
+            }
+        }
+        return formatMinutes(event.notifyBefore)
+    }
+    
+    private func formatMinutes(_ minutes: Int?) -> String {
         guard let mins = minutes else { return "No reminder" }
         switch mins {
         case 0: return "At time of event"

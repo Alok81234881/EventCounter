@@ -381,6 +381,7 @@ struct AccessoryRectangularView: View {
                     // Days
                     Text("\(days)")
                         .font(.system(size: 28, weight: .heavy, design: .rounded))
+                        .minimumScaleFactor(0.7)
                     Text("days")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
                         .foregroundStyle(.primary.opacity(0.8))

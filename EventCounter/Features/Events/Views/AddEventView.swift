@@ -20,7 +20,9 @@ struct AddEventView: View {
     @State private var note = ""
     @State private var category: EventCategory = .personal
     @State private var selectedColor = Color(hex: "#800080") ?? .purple // Default per mockup (Travel/Orange)
-    @State private var notifyBefore: Int? = 15 // Default 15 min per mockup
+    
+    // New: Multiple notification offsets
+    @State private var selectedNotificationOffsets: Set<Int> = [15] // Default 15 min
     
     @State private var showDuplicateAlert = false
     
@@ -214,23 +216,6 @@ struct AddEventView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
                         
-//                        // 6. Import Button
-//                        Button {
-//                            showingCalendarPicker = true
-//                        } label: {
-//                            HStack {
-//                                Image(systemName: "calendar.badge.plus")
-//                                Text("Import from Calendar")
-//                                    .fontWeight(.medium)
-//                            }
-//                            .frame(maxWidth: .infinity)
-//                            .padding()
-//                            .background(Color.blue.opacity(0.1))
-//                            .foregroundStyle(.blue)
-//                            .clipShape(RoundedRectangle(cornerRadius: 16))
-//                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.blue.opacity(0.2), lineWidth: 1))
-//                        }
-                        
                         // 7. Event Type
                         VStack(alignment: .leading, spacing: 12) {
                             labelView("EVENT TYPE")
@@ -293,7 +278,7 @@ struct AddEventView: View {
                             .padding(.vertical, 4)
                         }
                         
-                        // 9. Reminders
+                        // 9. Reminders (Multi-Select)
                         VStack(alignment: .leading, spacing: 8) {
                             labelView("REMINDERS")
                             HStack {
@@ -315,19 +300,51 @@ struct AddEventView: View {
                                 Spacer()
                                 
                                 Menu {
-                                    Picker("Time", selection: $notifyBefore) {
-                                        Text("None").tag(nil as Int?)
-                                        Text("At time of event").tag(0 as Int?)
-                                        Text("5 min").tag(5 as Int?)
-                                        Text("15 min").tag(15 as Int?)
-                                        Text("30 min").tag(30 as Int?)
-                                        Text("1 hour").tag(60 as Int?)
-                                        Text("1 day").tag(1440 as Int?)
+                                    // Multi-selection Options
+                                    Button {
+                                        toggleOffset(0)
+                                    } label: {
+                                        Label("At time of event", systemImage: selectedNotificationOffsets.contains(0) ? "checkmark" : "")
+                                    }
+                                    Button {
+                                        toggleOffset(5)
+                                    } label: {
+                                        Label("5 minutes before", systemImage: selectedNotificationOffsets.contains(5) ? "checkmark" : "")
+                                    }
+                                    Button {
+                                        toggleOffset(15)
+                                    } label: {
+                                        Label("15 minutes before", systemImage: selectedNotificationOffsets.contains(15) ? "checkmark" : "")
+                                    }
+                                    Button {
+                                        toggleOffset(30)
+                                    } label: {
+                                        Label("30 minutes before", systemImage: selectedNotificationOffsets.contains(30) ? "checkmark" : "")
+                                    }
+                                    Button {
+                                        toggleOffset(60)
+                                    } label: {
+                                        Label("1 hour before", systemImage: selectedNotificationOffsets.contains(60) ? "checkmark" : "")
+                                    }
+                                    Button {
+                                        toggleOffset(1440)
+                                    } label: {
+                                        Label("1 day before", systemImage: selectedNotificationOffsets.contains(1440) ? "checkmark" : "")
+                                    }
+                                    
+                                    Divider()
+                                    
+                                    Button(role: .destructive) {
+                                        selectedNotificationOffsets.removeAll()
+                                    } label: {
+                                        Label("Clear All", systemImage: "trash")
                                     }
                                 } label: {
                                     HStack {
                                         Text(reminderText)
                                             .foregroundStyle(Color.adaptivePrimaryText)
+                                            .lineLimit(1)
+                                            .minimumScaleFactor(0.8)
                                         Image(systemName: "chevron.down")
                                             .font(.caption)
                                             .foregroundStyle(Color.adaptiveSecondaryText)
@@ -342,10 +359,6 @@ struct AddEventView: View {
                             .background(Color.adaptiveSecondaryBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 16))
                         }
-                        
-
-                        // Save Button Removed (Moved to Toolbar)
-
                     }
                     .padding(20)
                 }
@@ -380,7 +393,6 @@ struct AddEventView: View {
                             .font(.system(size: 16, weight: .bold))
                             .padding(6)
                             .background(title.isEmpty ? Color.clear : selectedColor)
-                            //.aspectRatio(contentMode: )
                             .clipShape(Circle())
                     }
                     .buttonStyle(.plain)
@@ -547,18 +559,30 @@ struct AddEventView: View {
             .padding(.leading, 4)
     }
     
-    private var reminderText: String {
-        guard let mins = notifyBefore else { return "None" }
-        if mins == 0 { return "At time" }
-        if mins == 5 { return "5 min" }
-        if mins == 15 { return "15 min" }
-        if mins == 30 { return "30 min" }
-        if mins == 60 { return "1 hour" }
-        if mins == 1440 { return "1 day" }
-        return "\(mins) min"
-    }
-    
     // MARK: - Logic
+    
+    private func toggleOffset(_ minutes: Int) {
+        if selectedNotificationOffsets.contains(minutes) {
+            selectedNotificationOffsets.remove(minutes)
+        } else {
+            selectedNotificationOffsets.insert(minutes)
+        }
+    }
+
+    private var reminderText: String {
+        if selectedNotificationOffsets.isEmpty { return "None" }
+        let sorted = selectedNotificationOffsets.sorted()
+        if sorted.count == 1 {
+            let val = sorted.first!
+            if val == 0 { return "At time" }
+            if val < 60 { return "\(val) min" }
+            if val == 60 { return "1 hour" }
+            if val == 1440 { return "1 day" }
+            return "\(val) min"
+        } else {
+            return "\(sorted.count) selected"
+        }
+    }
     
     private var sortedCategories: [EventCategory] {
         let otherCategories = EventCategory.allCases.filter { $0 != category }
@@ -574,7 +598,13 @@ struct AddEventView: View {
             selectedColor = Color(hex: event.colorHex) ?? Color(hex: "#800080") ?? .purple
             note = event.note ?? ""
             location = event.location ?? ""
-            notifyBefore = event.notifyBefore
+            if !event.notificationOffsets.isEmpty {
+                selectedNotificationOffsets = Set(event.notificationOffsets)
+            } else if let legacy = event.notifyBefore {
+                selectedNotificationOffsets = [legacy]
+            } else {
+                selectedNotificationOffsets = []
+            }
             selectedImageData = event.imageData
         }
     }
@@ -592,6 +622,7 @@ struct AddEventView: View {
         }
         
         let hex = selectedColor.toHex() ?? "#F5A623"
+        let sortedOffsets = Array(selectedNotificationOffsets).sorted()
         
         // Define finalEvent to capture the object for syncing
         let finalEvent: Event
@@ -603,7 +634,8 @@ struct AddEventView: View {
             event.colorHex = hex
             event.note = note.isEmpty ? nil : note
             event.location = location.isEmpty ? nil : location
-            event.notifyBefore = notifyBefore
+            event.notificationOffsets = sortedOffsets
+            event.notifyBefore = sortedOffsets.first // legacy sync
             event.imageData = selectedImageData
             
             finalEvent = event
@@ -614,7 +646,8 @@ struct AddEventView: View {
                 note: note.isEmpty ? nil : note,
                 category: category,
                 colorHex: hex,
-                notifyBefore: notifyBefore,
+                notifyBefore: sortedOffsets.first, // Legacy param
+                notificationOffsets: sortedOffsets, // New param
                 imageData: selectedImageData,
                 location: location.isEmpty ? nil : location
             )

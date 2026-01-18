@@ -19,7 +19,8 @@ final class Event {
     var colorHex: String
     var createdAt: Date
     var isPinned: Bool
-    var notifyBefore: Int? // minutes
+    var notifyBefore: Int? // minutes (Deprecated, kept for migration)
+    var notificationOffsets: [Int] = [] // New: Multiple offsets in minutes
     
     // New Properties
     @Attribute(.externalStorage) var imageData: Data?
@@ -44,6 +45,7 @@ final class Event {
         colorHex: String = "#FF0000",
         isPinned: Bool = false,
         notifyBefore: Int? = nil,
+        notificationOffsets: [Int] = [],
         imageData: Data? = nil,
         recurrence: RecurrenceType = .once,
         isCountUp: Bool = false,
@@ -59,6 +61,13 @@ final class Event {
         self.createdAt = Date()
         self.isPinned = isPinned
         self.notifyBefore = notifyBefore
+        self.notificationOffsets = notificationOffsets
+        
+        // Migration logic: If notifyBefore is set but offsets empty, populate offsets
+        if let nb = notifyBefore, notificationOffsets.isEmpty {
+            self.notificationOffsets = [nb]
+        }
+        
         self.imageData = imageData
         self.recurrence = recurrence
         self.isCountUp = isCountUp
