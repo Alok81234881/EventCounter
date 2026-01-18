@@ -390,6 +390,7 @@ struct AccessoryRectangularView: View {
                     if hours > 0 {
                         Text("\(hours)")
                             .font(.system(size: 28, weight: .heavy, design: .rounded))
+                            .minimumScaleFactor(0.7)
                         Text("hours")
                             .font(.system(size: 13, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary.opacity(0.8))
@@ -442,7 +443,6 @@ struct AccessoryRectangularView: View {
                             .font(.system(size: 16, weight: .heavy, design: .rounded))
                             .foregroundStyle(Color.primary)
                             .lineLimit(1)
-                            .minimumScaleFactor(0.8)
                     } else {
                          Text("00:00")
                             .font(.system(size: 16, weight: .heavy, design: .rounded))
