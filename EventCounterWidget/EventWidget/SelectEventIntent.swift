@@ -8,6 +8,9 @@ struct SelectEventIntent: WidgetConfigurationIntent {
 
     @Parameter(title: "Event")
     var event: EventEntity?
+    
+    @Parameter(title: "Smart Stack", default: false)
+    var smartRotation: Bool
 }
 
 struct EventEntity: AppEntity {

@@ -101,6 +101,7 @@ class CloudKitService: ObservableObject {
             recordToSave["createdAt"] = event.createdAt
             recordToSave["isPinned"] = event.isPinned
             recordToSave["notifyBefore"] = event.notifyBefore
+            recordToSave["notificationOffsets"] = event.notificationOffsets as NSArray
             
             recordToSave["recurrence"] = event.recurrence.rawValue
             recordToSave["isCountUp"] = event.isCountUp
@@ -265,6 +266,7 @@ class CloudKitService: ObservableObject {
         event.createdAt = dto.createdAt
         event.isPinned = dto.isPinned
         event.notifyBefore = dto.notifyBefore
+        event.notificationOffsets = dto.notificationOffsets
         
         if let rec = RecurrenceType(rawValue: dto.recurrenceRaw) {
             event.recurrence = rec
@@ -294,6 +296,7 @@ private struct CloudEventDTO {
     let createdAt: Date
     let isPinned: Bool
     let notifyBefore: Int?
+    let notificationOffsets: [Int]
     let recurrenceRaw: String
     let isCountUp: Bool
     let widgetDisplayStyleRaw: String
@@ -310,6 +313,17 @@ private struct CloudEventDTO {
         self.createdAt = record["createdAt"] as? Date ?? Date()
         self.isPinned = record["isPinned"] as? Bool ?? false
         self.notifyBefore = record["notifyBefore"] as? Int
+        
+        if let offsets = record["notificationOffsets"] as? [Int] {
+            self.notificationOffsets = offsets
+        } else {
+             // Fallback to legacy if available, else empty
+             if let legacy = record["notifyBefore"] as? Int {
+                 self.notificationOffsets = [legacy]
+             } else {
+                 self.notificationOffsets = []
+             }
+        }
         
         self.recurrenceRaw = record["recurrence"] as? String ?? "Once"
         self.isCountUp = record["isCountUp"] as? Bool ?? false

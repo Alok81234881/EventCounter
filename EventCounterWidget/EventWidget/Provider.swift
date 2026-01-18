@@ -17,10 +17,34 @@ struct Provider: AppIntentTimelineProvider {
 
     @MainActor
     func timeline(for configuration: SelectEventIntent, in context: Context) async -> Timeline<SimpleEntry> {
-        let (event, count) = fetchNextEventAndCount(for: context.family, selectedID: configuration.event?.id)
-        
         let entryDate = Date()
         var entries: [SimpleEntry] = []
+        
+        // SMART ROTATION LOGIC
+        if configuration.smartRotation {
+            let (smartEvents, count) = fetchSmartEvents(for: context.family)
+            
+            if smartEvents.isEmpty {
+                 entries.append(SimpleEntry(date: entryDate, event: nil, futureEventCount: count))
+            } else {
+                // Generate rotation: Every 15 minutes, switch event
+                // Plan for next 4 hours
+                let interval: TimeInterval = 15 * 60
+                let totalDuration: TimeInterval = 4 * 60 * 60
+                let steps = Int(totalDuration / interval)
+                
+                for i in 0..<steps {
+                    let date = entryDate.addingTimeInterval(Double(i) * interval)
+                    let eventIndex = i % smartEvents.count
+                    let event = smartEvents[eventIndex]
+                    entries.append(SimpleEntry(date: date, event: event, futureEventCount: count))
+                }
+            }
+             return Timeline(entries: entries, policy: .atEnd)
+        }
+        
+        // STANDARD LOGIC (Single Event)
+        let (event, count) = fetchNextEventAndCount(for: context.family, selectedID: configuration.event?.id)
         
         if let targetDate = event?.date {
             let timeUntil = targetDate.timeIntervalSince(entryDate)
@@ -62,6 +86,68 @@ struct Provider: AppIntentTimelineProvider {
             .sorted(by: { $0.date < $1.date })
         
         return Timeline(entries: uniqueEntries, policy: .atEnd)
+    }
+    
+    @MainActor
+    private func fetchSmartEvents(for family: WidgetFamily) -> ([EventDTO], Int) {
+        // Shared Model Container Logic
+        let schema = Schema([Event.self])
+        let modelConfiguration: ModelConfiguration
+        if let appGroupURL = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: "group.com.redonelabs.EventCounter") {
+             let storeURL = appGroupURL.appendingPathComponent("EventCout.sqlite")
+             modelConfiguration = ModelConfiguration(schema: schema, url: storeURL)
+        } else {
+             modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        }
+
+        do {
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let context = container.mainContext
+            let descriptor = FetchDescriptor<Event>(sortBy: [SortDescriptor(\.date, order: .forward)])
+            let allEvents = try context.fetch(descriptor)
+            let now = Date()
+            
+            // 1. Filter Future Events
+            let futureEvents = allEvents.filter { $0.date > now }
+            
+            // 2. Score/Rank
+            // Logic: Pinned first, then by date (soonest first)
+            let smartSorted = futureEvents.sorted {
+                if $0.isPinned != $1.isPinned {
+                    return $0.isPinned // Pinned (true) comes before Unpinned (false)
+                }
+                return $0.date < $1.date // Soonest date first
+            }
+            
+            // 3. Take Top 5
+            let topEvents = Array(smartSorted.prefix(5))
+            
+            // 4. Convert to DTOs
+            let dtos = topEvents.map { event -> EventDTO in
+                var resizedImageData: Data? = nil
+                if let originalData = event.imageData {
+                    resizedImageData = resizeImage(data: originalData, targetSize: CGSize(width: 300, height: 300))
+                }
+                return EventDTO(
+                    title: event.title,
+                    date: event.date,
+                    categoryIcon: event.category.icon,
+                    colorHex: event.colorHex,
+                    imageData: resizedImageData,
+                    isCountUp: event.isCountUp,
+                    categoryRaw: event.category.rawValue,
+                    widgetDisplayStyle: event.widgetDisplayStyle.rawValue,
+                    createdAt: event.createdAt,
+                    id: event.id.uuidString
+                )
+            }
+            
+            return (dtos, futureEvents.count)
+            
+        } catch {
+            print("Widget Smart Fetch Failed: \(error)")
+            return ([], 0)
+        }
     }
     
     @MainActor
