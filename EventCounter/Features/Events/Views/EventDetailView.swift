@@ -437,17 +437,6 @@ struct EventDetailView: View {
         }
 
     }
-    
-    
-    @MainActor
-    private func renderShareImage() -> UIImage? {
-        let components = CountdownService.calculateComponents(from: .now, to: event.date)
-        let renderer = ImageRenderer(content: SocialShareCardView(event: event, components: components))
-        renderer.scale = 3.0 // High quality
-        return renderer.uiImage
-    }
-    
-    
    
     
     private func deleteEvent() {

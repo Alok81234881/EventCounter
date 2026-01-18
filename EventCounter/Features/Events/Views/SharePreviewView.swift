@@ -14,7 +14,7 @@ struct SharePreviewView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 TabView(selection: $selectedTemplate) {
-                    ForEach(0..<15, id: \.self) { index in
+                    ForEach(0..<18, id: \.self) { index in
                         ShareCardTemplate(
                             event: event,
                             components: components,
@@ -28,7 +28,7 @@ struct SharePreviewView: View {
                 .tabViewStyle(.page(indexDisplayMode: .never))
                 
                 HStack(spacing: 8) {
-                    ForEach(0..<15, id: \.self) { index in
+                    ForEach(0..<18, id: \.self) { index in
                         Circle()
                             .fill(index == selectedTemplate ? Color.primary : Color.secondary.opacity(0.3))
                             .frame(width: 8, height: 8)
@@ -157,7 +157,10 @@ enum ShareCardStyle: Int {
     case horizontalSplit = 11
     case checkIn = 12
     case cornerBubble = 13
-    case simpleIcon = 14
+    //case simpleIcon = 14
+ //   case modernBlur = 15
+  //  case typographic = 16
+    case notification = 17
 }
 
 import LinkPresentation

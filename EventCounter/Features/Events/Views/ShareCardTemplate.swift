@@ -37,11 +37,17 @@ struct ShareCardTemplate: View {
                 CheckInTemplate(event: event, components: components)
             case .cornerBubble:
                 CornerBubbleTemplate(event: event, components: components)
-            case .simpleIcon:
-                SimpleIconTemplate(event: event, components: components)
+//            case .simpleIcon:
+//                SimpleIconTemplate(event: event, components: components)
+//            case .modernBlur:
+//                ModernBlurTemplate(event: event, components: components)
+//            case .typographic:
+//                TypographicTemplate(event: event, components: components)
+            case .notification:
+                NotificationTemplate(event: event, components: components)
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: 24))
+        //.clipShape(RoundedRectangle(cornerRadius: 24))
     }
 }
 
@@ -188,7 +194,7 @@ struct GradientTemplate: View {
                 .padding(24)
                 .frame(maxWidth: .infinity)
                 .background(.white.opacity(0.2))
-                .clipShape(RoundedRectangle(cornerRadius: 20))
+                //.clipShape(RoundedRectangle(cornerRadius: 20))
                 .padding(.horizontal, 24)
             }
         }
@@ -289,7 +295,7 @@ struct MinimalBox: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 20)
         .background(Color.gray.opacity(0.05))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
+       // .clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 
@@ -508,7 +514,7 @@ struct CountdownBox: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(color.opacity(0.3), lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        //.clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -1339,7 +1345,7 @@ struct CornerBubbleTemplate: View {
                     }
                     .padding(24)
                     .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+                   // .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
                     .padding(16)
                 }
             }
@@ -1436,6 +1442,209 @@ struct SimpleUnit: View {
         }
     }
 }
+
+// MARK: - Template 16: Modern Blur (Aura)
+struct ModernBlurTemplate: View {
+    let event: Event
+    let components: CountdownComponents
+    
+    var body: some View {
+        ZStack {
+            // Blurred Background
+            if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+                    .overlay(.regularMaterial) // Heavy blur
+            } else {
+                LinearGradient(
+                    colors: [Color(hex: event.colorHex) ?? .blue, .black],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            }
+            
+            // Content
+            VStack(spacing: 0) {
+                Spacer()
+                
+                // Big Days
+                VStack(spacing: -10) {
+                    Text("\(components.days)")
+                        .font(.system(size: 120, weight: .thin, design: .serif))
+                        .foregroundStyle(.white)
+                        .shadow(color: .white.opacity(0.5), radius: 20)
+                    
+                    Text("DAYS LEFT")
+                        .font(.system(size: 16, weight: .light, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.8))
+                        .tracking(6)
+                }
+                .padding(.bottom, 40)
+                
+                // Glass Card
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(event.title)
+                        .font(.system(size: 24, weight: .semibold, design: .serif))
+                        .foregroundStyle(.white)
+                        .lineLimit(2)
+                    
+                    Rectangle()
+                        .fill(
+                            LinearGradient(colors: [.white.opacity(0.5), .clear], startPoint: .leading, endPoint: .trailing)
+                        )
+                        .frame(height: 1)
+                    
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(event.date.formatted(date: .abbreviated, time: .omitted))
+                                .font(.system(size: 12))
+                                .foregroundStyle(.white.opacity(0.6))
+                        }
+                        Spacer()
+                        Image(systemName: event.category.icon)
+                            .foregroundStyle(.white)
+                    }
+                }
+                .padding(24)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
+                .padding(24)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+// MARK: - Template 17: Typographic (Bold)
+struct TypographicTemplate: View {
+    let event: Event
+    let components: CountdownComponents
+    
+    var body: some View {
+        ZStack {
+            Color(hex: event.colorHex) ?? .black
+            
+            VStack(spacing: 0) {
+                Spacer()
+                
+                VStack(alignment: .leading, spacing: -15) {
+                    Text("ONLY")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(.white.opacity(0.5))
+                        .padding(.leading, 8)
+                    
+                    Text("\(components.days)")
+                        .font(.system(size: 160, weight: .black, design: .rounded))
+                        .foregroundStyle(.white)
+                    
+                    Text("DAYS")
+                        .font(.system(size: 100, weight: .black, design: .rounded))
+                        .foregroundStyle(.white.opacity(0.9))
+                        .offset(y: -20)
+                }
+                
+                Spacer()
+                
+                HStack {
+                    Text(event.title.uppercased())
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(.black)
+                        .paddingbadge()
+                    
+                    Spacer()
+                }
+                .padding(24)
+                .background(Color.white)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+extension View {
+    func paddingbadge() -> some View {
+        self.padding(.horizontal, 12).padding(.vertical, 6).background(Color.white).clipShape(Capsule())
+    }
+}
+
+// MARK: - Template 18: Notification (Lock Screen)
+struct NotificationTemplate: View {
+    let event: Event
+    let components: CountdownComponents
+    
+    var body: some View {
+        ZStack {
+            // Wallpaper Background
+            if let imageData = event.imageData, let uiImage = UIImage(data: imageData) {
+                Image(uiImage: uiImage)
+                    .resizable()
+                   // .scaledToFill()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .clipped()
+            } else {
+                LinearGradient(colors: [.black, Color(hex: event.colorHex) ?? .purple], startPoint: .top, endPoint: .bottom)
+            }
+            
+            VStack {
+                // Time (Mock iOS Lock Screen Time)
+                Text(Date.now.formatted(date: .omitted, time: .shortened))
+                    .font(.system(size: 60, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white.opacity(0.9))
+                    .padding(.top, 60)
+                    .shadow(radius: 5)
+                
+                Text(Date.now.formatted(date: .complete, time: .omitted))
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.8))
+                    .shadow(radius: 5)
+                
+                Spacer()
+                
+                // Notification Bubble
+                HStack(spacing: 16) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(hex: event.colorHex) ?? .purple)
+                            .frame(width: 48, height: 48)
+                        Image(systemName: event.category.icon)
+                            .foregroundStyle(.white)
+                            .font(.title2)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text("EVENT REMINDER")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.white.opacity(0.6))
+                            Spacer()
+                            Text("now")
+                                .font(.system(size: 11))
+                                .foregroundStyle(.white.opacity(0.5))
+                        }
+                        
+                        Text(event.title)
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                        
+                        Text("\(components.days) days, \(components.hours) hours left")
+                            .font(.system(size: 15))
+                            .foregroundStyle(.white)
+                    }
+                }
+                .padding(16)
+                .background(.ultraThinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 20))
+                .padding(20)
+                .padding(.bottom, 100)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
 
 #Preview {
     HeroImageTemplate(event: Event(title: "test event", date: Date()), components: .init(months: 1, days: 1, hours: 1, minutes: 1, seconds: 1, isPast: false, isCountUp: false))
